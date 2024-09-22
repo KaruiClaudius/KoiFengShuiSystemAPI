@@ -8,11 +8,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="Services\Implement\" />
-		<Folder Include="Services\Interface\" />
+		<ProjectReference Include="..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
 	</ItemGroup>
 
 </Project>
