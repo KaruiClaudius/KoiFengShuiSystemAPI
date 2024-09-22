@@ -1,0 +1,118 @@
+﻿{
+   "CodeGenerationMode": 4,
+   "ContextClassName": "KoiFengShuiContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": true,
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "KoiFengShuiSystem.DataAccess",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[dbo].[Account]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Country]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[CustomerFaP]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Direction]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Element]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FengShuiDirection]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[FishPonds]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Follow]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[KoiBreeds]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MarketCategory]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[MarketplaceListings]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Post]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostCategory]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Recommendation]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Role]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[ShapeCategory]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[SubcriptionTiers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Subscription]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[Transaction]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDateOnlyTimeOnly": true,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false
+}
