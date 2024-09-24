@@ -2,8 +2,12 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +20,16 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
     {
         private readonly IJwtUtils _jwtUtils;
         private readonly GenericRepository<Account> _accountRepository;
+        private readonly EmailService _emailService;
+        private readonly ILogger<AccountService> _logger;
 
-        public AccountService(IJwtUtils jwtUtils, GenericRepository<Account> accountRepository)
+
+        public AccountService(IJwtUtils jwtUtils, GenericRepository<Account> accountRepository, EmailService emailService, ILogger<AccountService> logger)
         {
             _jwtUtils = jwtUtils;
             _accountRepository = accountRepository;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public AuthenticateResponse? Authenticate(AuthenticateRequest model)
@@ -97,6 +106,71 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _accountRepository.Save();
         }
 
+        public async Task<Account> GetAccountByEmail(string email)
+        {
+            return await _accountRepository.FindAsync(x => x.Email == email);
+        }
+
+        public async Task<bool> SendPasswordResetEmail(string email, string fullName, string newPassword)
+        {
+            var mailData = new MailData()
+            {
+                EmailToId = email,
+                EmailToName = fullName,
+                EmailBody = $@"
+<div style=""max-width: 400px; margin: 50px auto; padding: 30px; text-align: center; font-size: 120%; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); position: relative;"">
+    <img src=""https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRDn7YDq7gsgIdHOEP2_Mng6Ym3OzmvfUQvQ&usqp=CAU"" alt=""Noto Image"" style=""max-width: 100px; height: auto; display: block; margin: 0 auto; border-radius: 50%;"">
+    <h2 style=""text-transform: uppercase; color: #3498db; margin-top: 20px; font-size: 28px; font-weight: bold;"">Password Reset</h2>
+    <p>Your new password is: <span style=""font-weight: bold; color: #e74c3c;"">{newPassword}</span></p>
+    <p>Please log in and change your password.</p>
+    <p style=""color: #888; font-size: 14px;"">Powered by UniNest</p>
+</div>",
+                EmailSubject = "Password Reset"
+            };
+
+            return await _emailService.SendEmailAsync(mailData);
+        }
+
+        public async Task UpdateUserPassword(Account account, string newPassword)
+        {
+            if (account == null)
+            {
+                throw new ArgumentNullException(nameof(account), "Account object is null");
+            }
+            if (string.IsNullOrEmpty(newPassword))
+            {
+                throw new ArgumentException("New password is null or empty", nameof(newPassword));
+            }
+
+            try
+            {
+                var existedUser = await _accountRepository.FindAsync(x => x.AccountId == account.AccountId || x.Email == account.Email);
+                if (existedUser == null)
+                {
+                    throw new KeyNotFoundException($"User not found. AccountId: {account.AccountId}, Email: {account.Email}");
+                }
+
+                // Hash the new password before storing it
+                existedUser.Password = newPassword;
+                _accountRepository.Update(existedUser);
+                try
+                {
+                    _accountRepository.Save();
+                }
+                catch (DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "Failed to save account to database.");
+                    throw; // Optionally, rethrow the exception if you need to handle it further up
+                }
+
+                _logger.LogInformation($"Password updated successfully for user {existedUser.Email}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating user password. AccountId: {account.AccountId}, Email: {account.Email}");
+                throw; // Re-throw the exception to be handled by the calling method
+            }
+        }
     }
 }
 

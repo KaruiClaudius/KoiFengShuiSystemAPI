@@ -1,4 +1,4 @@
-﻿namespace KoiFengShuiSystem.Shared.Models
+﻿namespace KoiFengShuiSystem.Shared.Helpers
 {
     public class AppSettings
     {

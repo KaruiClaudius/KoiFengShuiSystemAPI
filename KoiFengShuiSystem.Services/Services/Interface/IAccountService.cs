@@ -17,6 +17,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Account Register(RegisterRequest model);
         void Update(int id, UpdateRequest model);
         void Delete(int id);
-
+        Task<Account> GetAccountByEmail(string email);
+        Task<bool> SendPasswordResetEmail(string email, string fullName, string newPassword);
+        Task UpdateUserPassword(Account account, string newPassword);
     }
 }

@@ -1,10 +1,10 @@
-﻿using KoiFengShuiSystem.Shared.Models;
-using KoiFengShuiSystem.DataAccess.Models;
+﻿using KoiFengShuiSystem.DataAccess.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using KoiFengShuiSystem.Shared.Helpers;
 
 namespace KoiFengShuiSystem.Api.Authorization
 {
