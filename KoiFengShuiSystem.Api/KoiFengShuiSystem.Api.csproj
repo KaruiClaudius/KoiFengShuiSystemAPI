@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -13,10 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
     <ProjectReference Include="..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Middleware\" />
   </ItemGroup>
 
 </Project>

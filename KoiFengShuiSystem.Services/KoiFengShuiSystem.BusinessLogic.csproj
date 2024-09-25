@@ -7,12 +7,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
+	  <PackageReference Include="MimeKit" Version="4.7.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Services\Implement\" />
-		<Folder Include="Services\Interface\" />
+		<ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
+		<ProjectReference Include="..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
 	</ItemGroup>
 
 </Project>
