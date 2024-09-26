@@ -16,7 +16,7 @@ public partial class Account
     public string Email { get; set; }
 
     [DataType(DataType.Date)]
-    public DateTime Dob { get; set; }
+    public DateTime? Dob { get; set; }
 
     public string Phone { get; set; }
 
