@@ -34,7 +34,12 @@ namespace KoiFengShuiSystem.Api.Authorization
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret!);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", account.AccountId.ToString()) }),
+                Subject = new ClaimsIdentity(new[]
+            {
+                new Claim("id", account.AccountId.ToString()),
+                new Claim(ClaimTypes.Email, account.Email),
+                new Claim(ClaimTypes.Role, account.RoleId.ToString())
+            }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -62,10 +67,10 @@ namespace KoiFengShuiSystem.Api.Authorization
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
+                var accountId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
 
                 // return user id from JWT token if validation successful
-                return userId;
+                return accountId;
             }
             catch
             {

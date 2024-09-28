@@ -31,6 +31,8 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddHttpClient();
+
 
 // Controller configuration
 builder.Services.AddControllers()

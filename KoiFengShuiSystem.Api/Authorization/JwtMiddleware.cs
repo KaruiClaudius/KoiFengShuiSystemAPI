@@ -18,7 +18,7 @@ namespace KoiFengShuiSystem.Api.Authorization
             if (accountId != null)
             {
                 // attach user to context on successful jwt validation
-                context.Items["User"] = accountService.GetById(accountId.Value);
+                context.Items["Account"] = accountService.GetById(accountId.Value);
             }
 
             await _next(context);

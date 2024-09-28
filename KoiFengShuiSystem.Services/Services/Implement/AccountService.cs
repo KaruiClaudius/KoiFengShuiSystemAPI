@@ -171,6 +171,19 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 throw; // Re-throw the exception to be handled by the calling method
             }
         }
+
+        public async Task<Account> CreateAsync(Account account)
+        {
+            // Prepare the account entity for creation
+            _accountRepository.PrepareCreate(account);
+
+            // Save changes asynchronously
+            await _accountRepository.SaveAsync();
+
+            // Return the newly created account
+            return account;
+        }
+
     }
 }
 
