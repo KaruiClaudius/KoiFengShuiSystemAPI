@@ -106,6 +106,7 @@ namespace KoiFengShuiSystem.Api.Controllers
             return Ok("If a user with this email exists, a password reset email has been sent.");
         }
 
+        [AllowAnonymous]
         [HttpPost("google-login")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
