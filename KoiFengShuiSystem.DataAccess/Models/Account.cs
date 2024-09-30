@@ -2,8 +2,6 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace KoiFengShuiSystem.DataAccess.Models;
 
@@ -15,7 +13,8 @@ public partial class Account
 
     public string Email { get; set; }
 
-    [DataType(DataType.Date)]
+    public string Password { get; set; }
+
     public DateTime? Dob { get; set; }
 
     public string Phone { get; set; }
@@ -37,7 +36,4 @@ public partial class Account
     public virtual Role Role { get; set; }
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
-
-    [JsonIgnore]
-    public string? Password { get; set; }
 }
