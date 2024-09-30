@@ -134,6 +134,16 @@ namespace KoiFengShuiSystem.DataAccess.Base
         {
             return await _context.Set<T>().FindAsync(code);
         }
+
+        public async Task<List<T>> GetAllWithIncludeAsync(params Expression<Func<T, object>>[] includeProperties)
+        {
+            IQueryable<T> query = _context.Set<T>();
+            foreach (var includeProperty in includeProperties)
+            {
+                query = query.Include(includeProperty);
+            }
+            return await query.ToListAsync();
+        }
     }
 }
 

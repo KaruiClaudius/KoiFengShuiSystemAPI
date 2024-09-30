@@ -40,7 +40,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
             var koiBreeds = await _koiBreedRepository.GetAllAsync();
             var shapeCategories = await _shapeCategoryRepository.GetAllAsync();
-            var fengShuiDirections = await _fengShuiDirectionRepository.GetAllAsync();
+            var fengShuiDirections = await _fengShuiDirectionRepository.GetAllWithIncludeAsync(f => f.Direction);
 
             var matchingBreeds = koiBreeds.Where(k => k.ElementId == element.ElementId).ToList();
             var matchingShapes = shapeCategories.Where(s => s.ElementId == element.ElementId).ToList();
