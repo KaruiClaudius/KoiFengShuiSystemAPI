@@ -73,31 +73,20 @@ public partial class KoiFengShuiContext : DbContext
     {
         modelBuilder.Entity<Account>(entity =>
         {
-            entity.HasKey(e => e.AccountId).HasName("PK__Account__349DA5A667C5ED4E");
+            entity.HasKey(e => e.AccountId).HasName("PK__Account__349DA5A60265EA69");
 
             entity.ToTable("Account");
 
             entity.Property(e => e.Dob).HasColumnType("datetime");
             entity.Property(e => e.Email)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
             entity.Property(e => e.FullName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Gender)
-                .IsRequired()
-                .HasMaxLength(10)
-                .IsUnicode(false);
-            entity.Property(e => e.Password)
-                .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.Phone)
-                .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false);
+                .HasMaxLength(50);
+            entity.Property(e => e.Gender).HasMaxLength(10);
+            entity.Property(e => e.Password).HasMaxLength(100);
+            entity.Property(e => e.Phone).HasMaxLength(20);
 
             entity.HasOne(d => d.Element).WithMany(p => p.Accounts)
                 .HasForeignKey(d => d.ElementId)
@@ -110,31 +99,28 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Country>(entity =>
         {
-            entity.HasKey(e => e.CountryId).HasName("PK__Country__10D1609FFC0A0646");
+            entity.HasKey(e => e.CountryId).HasName("PK__Country__10D1609F197E3593");
 
             entity.ToTable("Country");
 
             entity.Property(e => e.CountryName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
         });
 
         modelBuilder.Entity<CustomerFaP>(entity =>
         {
-            entity.HasKey(e => e.FapId).HasName("PK__Customer__9D4BF20A522A28C2");
+            entity.HasKey(e => e.FapId).HasName("PK__Customer__9D4BF20A9817A47B");
 
             entity.ToTable("CustomerFaP");
 
             entity.Property(e => e.Direction)
                 .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false);
+                .HasMaxLength(20);
             entity.Property(e => e.DoB).HasColumnType("datetime");
             entity.Property(e => e.FishBreed)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
 
             entity.HasOne(d => d.Element).WithMany(p => p.CustomerFaPs)
                 .HasForeignKey(d => d.ElementId)
@@ -144,42 +130,41 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Direction>(entity =>
         {
-            entity.HasKey(e => e.DirectionId).HasName("PK__Directio__876847C6F3279889");
+            entity.HasKey(e => e.DirectionId).HasName("PK__Directio__876847C63EFAA25B");
 
             entity.ToTable("Direction");
 
             entity.Property(e => e.DirectionName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
         });
 
         modelBuilder.Entity<Element>(entity =>
         {
-            entity.HasKey(e => e.ElementId).HasName("PK__Element__A429721A2C579C40");
+            entity.HasKey(e => e.ElementId).HasName("PK__Element__A429721A033E67B8");
 
             entity.ToTable("Element");
 
             entity.Property(e => e.Description)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
             entity.Property(e => e.ElementName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
+            entity.Property(e => e.LuckyNumber)
+                .IsRequired()
+                .HasMaxLength(1);
         });
 
         modelBuilder.Entity<FengShuiDirection>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__FengShui__3214EC07C446B49D");
+            entity.HasKey(e => e.Id).HasName("PK__FengShui__3214EC07406B4730");
 
             entity.ToTable("FengShuiDirection");
 
             entity.Property(e => e.Description)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
 
             entity.HasOne(d => d.Direction).WithMany(p => p.FengShuiDirections)
                 .HasForeignKey(d => d.DirectionId)
@@ -194,7 +179,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<FishPond>(entity =>
         {
-            entity.HasKey(e => e.PondId).HasName("PK__FishPond__D18BF8345B435DDB");
+            entity.HasKey(e => e.PondId).HasName("PK__FishPond__D18BF834C7C4AF0D");
 
             entity.HasOne(d => d.DirectionPlacementNavigation).WithMany(p => p.FishPonds)
                 .HasForeignKey(d => d.DirectionPlacement)
@@ -209,7 +194,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Follow>(entity =>
         {
-            entity.HasKey(e => e.FollowId).HasName("PK__Follow__2CE810AEC1B02B10");
+            entity.HasKey(e => e.FollowId).HasName("PK__Follow__2CE810AEF29B960D");
 
             entity.ToTable("Follow");
 
@@ -226,20 +211,17 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<KoiBreed>(entity =>
         {
-            entity.HasKey(e => e.BreedId).HasName("PK__KoiBreed__D1E9AE9DED56E4D4");
+            entity.HasKey(e => e.BreedId).HasName("PK__KoiBreed__D1E9AE9D8CE961CD");
 
             entity.Property(e => e.BreedName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
             entity.Property(e => e.Color)
                 .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false);
+                .HasMaxLength(20);
             entity.Property(e => e.Description)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
 
             entity.HasOne(d => d.Country).WithMany(p => p.KoiBreeds)
                 .HasForeignKey(d => d.CountryId)
@@ -254,31 +236,28 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<MarketCategory>(entity =>
         {
-            entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__190606234AEC51E7");
+            entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__190606238D06DE7D");
 
             entity.ToTable("MarketCategory");
 
             entity.Property(e => e.CategoryName)
                 .IsRequired()
-                .HasMaxLength(20)
-                .IsUnicode(false);
+                .HasMaxLength(20);
         });
 
         modelBuilder.Entity<MarketplaceListing>(entity =>
         {
-            entity.HasKey(e => e.ListingId).HasName("PK__Marketpl__BF3EBED0F4EF2D03");
+            entity.HasKey(e => e.ListingId).HasName("PK__Marketpl__BF3EBED00B8F4650");
 
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.Description)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
             entity.Property(e => e.ExpiresAt).HasColumnType("datetime");
             entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
             entity.Property(e => e.Title)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
 
             entity.HasOne(d => d.Account).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.AccountId)
@@ -298,15 +277,14 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Post>(entity =>
         {
-            entity.HasKey(e => e.PostId).HasName("PK__Post__AA126018E9E5D158");
+            entity.HasKey(e => e.PostId).HasName("PK__Post__AA12601833275ACB");
 
             entity.ToTable("Post");
 
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
             entity.Property(e => e.CreateBy)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
             entity.Property(e => e.Description)
                 .IsRequired()
                 .HasColumnType("text");
@@ -328,19 +306,18 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<PostCategory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostCate__3214EC07A3795304");
+            entity.HasKey(e => e.Id).HasName("PK__PostCate__3214EC0742A10455");
 
             entity.ToTable("PostCategory");
 
             entity.Property(e => e.PostType)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
         });
 
         modelBuilder.Entity<Recommendation>(entity =>
         {
-            entity.HasKey(e => e.RecommendationId).HasName("PK__Recommen__AA15BEE4695893D1");
+            entity.HasKey(e => e.RecommendationId).HasName("PK__Recommen__AA15BEE40CCD34C3");
 
             entity.ToTable("Recommendation");
 
@@ -364,30 +341,27 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1A430B48DC");
+            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1AC279A8A6");
 
             entity.ToTable("Role");
 
             entity.Property(e => e.RoleName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
         });
 
         modelBuilder.Entity<ShapeCategory>(entity =>
         {
-            entity.HasKey(e => e.ShapeId).HasName("PK__ShapeCat__70FC83815DBC34A3");
+            entity.HasKey(e => e.ShapeId).HasName("PK__ShapeCat__70FC8381B974CC53");
 
             entity.ToTable("ShapeCategory");
 
             entity.Property(e => e.Description)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
             entity.Property(e => e.ShapeName)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
 
             entity.HasOne(d => d.Element).WithMany(p => p.ShapeCategories)
                 .HasForeignKey(d => d.ElementId)
@@ -397,33 +371,29 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<SubcriptionTier>(entity =>
         {
-            entity.HasKey(e => e.TierId).HasName("PK__Subcript__362F561D2E1F3E64");
+            entity.HasKey(e => e.TierId).HasName("PK__Subcript__362F561DB3240F84");
 
-            entity.Property(e => e.TierName)
-                .HasMaxLength(1)
-                .IsUnicode(false);
+            entity.Property(e => e.TierName).HasMaxLength(1);
         });
 
         modelBuilder.Entity<Subscription>(entity =>
         {
-            entity.HasKey(e => e.SubscriptionId).HasName("PK__Subscrip__9A2B249DC128A749");
+            entity.HasKey(e => e.SubscriptionId).HasName("PK__Subscrip__9A2B249DC1C8EA4B");
 
             entity.ToTable("Subscription");
 
             entity.Property(e => e.Description)
                 .IsRequired()
-                .HasMaxLength(100)
-                .IsUnicode(false);
+                .HasMaxLength(100);
             entity.Property(e => e.Name)
                 .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
+                .HasMaxLength(50);
             entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
         });
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.HasKey(e => e.TransactionId).HasName("PK__Transact__55433A6B864B4D23");
+            entity.HasKey(e => e.TransactionId).HasName("PK__Transact__55433A6B2329E773");
 
             entity.ToTable("Transaction");
 
