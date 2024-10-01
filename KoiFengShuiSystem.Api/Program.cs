@@ -28,9 +28,11 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 
 // Service registrations
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<PostService>();
 builder.Services.AddHttpClient();
 
 

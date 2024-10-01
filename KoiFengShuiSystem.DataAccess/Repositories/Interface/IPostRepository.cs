@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.DataAccess.Repositories.Interface
 {
-    public interface IUnitOfWorkRepository
+    public interface IPostRepository
     {
-        public int SaveChangesWithTransaction();
-        public Task<int> SaveChangesWithTransactionAsync();
-       
+
     }
 }

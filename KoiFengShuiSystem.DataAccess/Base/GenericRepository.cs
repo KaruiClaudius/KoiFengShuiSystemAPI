@@ -136,4 +136,3 @@ namespace KoiFengShuiSystem.DataAccess.Base
         }
     }
 }
-
