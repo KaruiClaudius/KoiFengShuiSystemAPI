@@ -33,6 +33,8 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<AdminAccountService>();
+
 
 builder.Services.AddHttpClient();
 
@@ -78,6 +80,13 @@ builder.Logging.AddDebug();
 
 var app = builder.Build();
 
+// Ensure admin account exists
+using (var scope = app.Services.CreateScope())
+{
+    var adminAccountService = scope.ServiceProvider.GetRequiredService<AdminAccountService>();
+    await adminAccountService.EnsureAdminAccountExistsAsync();
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -89,6 +98,8 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
+
+
 
 app.UseCors(x => x
     .AllowAnyOrigin()

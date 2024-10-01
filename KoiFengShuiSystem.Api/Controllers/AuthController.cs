@@ -44,7 +44,11 @@ namespace KoiFengShuiSystem.Api.Controllers
             if (response == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
 
-            return Ok(response);
+            return Ok(new
+            {
+                Token = response.Token,
+                Email = response.Email // Make sure AuthenticateResponse includes the Email property
+            });
         }
 
         [AllowAnonymous]
@@ -62,15 +66,6 @@ namespace KoiFengShuiSystem.Api.Controllers
             }
         }
 
-        [HttpDelete("logout")]
-        public IActionResult Logout()
-        {
-            // Clear the user's session data
-            HttpContext.Session.Clear();
-
-            // Return a success response
-            return Ok(new { message = "Logged out successfully" });
-        }
 
         [AllowAnonymous]
         [HttpPost("ForgotPassword")]
@@ -135,6 +130,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                     {
                         Email = googleUser.Email,
                         FullName = googleUser.Name,
+                        Password = "123456",
                         Dob = DateTime.Now,
                         Gender = "male",
                         RoleId = 2,

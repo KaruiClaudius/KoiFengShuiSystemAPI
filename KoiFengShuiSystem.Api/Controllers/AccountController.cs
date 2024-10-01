@@ -70,6 +70,25 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
 
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> GetByEmail(string email)
+        {
+            try
+            {
+                var account = await _accountService.GetAccountByEmailAsync(email);
+                if (account == null)
+                {
+                    return NotFound(new { message = "Account not found" });
+                }
+                return Ok(account);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving account for email: {email}");
+                return StatusCode(500, new { message = "An error occurred while retrieving the account" });
+            }
+        }
+
 
     }
 }

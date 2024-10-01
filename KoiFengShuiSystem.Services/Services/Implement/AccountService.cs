@@ -6,6 +6,7 @@ using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Org.BouncyCastle.Crypto.Generators;
 using System;
@@ -24,12 +25,15 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly ILogger<AccountService> _logger;
 
 
-        public AccountService(IJwtUtils jwtUtils, GenericRepository<Account> accountRepository, EmailService emailService, ILogger<AccountService> logger)
+
+        public AccountService(IJwtUtils jwtUtils, GenericRepository<Account> accountRepository, 
+               EmailService emailService, ILogger<AccountService> logger
+              )
         {
             _jwtUtils = jwtUtils;
             _accountRepository = accountRepository;
             _emailService = emailService;
-            _logger = logger;
+            _logger = logger;        
         }
 
         public AuthenticateResponse? Authenticate(AuthenticateRequest model)
@@ -67,6 +71,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Dob = model.Dob.Date,
                 Phone = model.Phone,
                 Gender = model.Gender,
+                RoleId = 2
             };
 
             // Save account
@@ -183,6 +188,26 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Return the newly created account
             return account;
         }
+
+        public async Task<AccountResponse> GetAccountByEmailAsync(string email)
+        {
+            var account = await _accountRepository.FindAsync(x => x.Email == email);
+            if (account == null)
+            {
+                return null;
+            }
+
+            return new AccountResponse
+            {
+                AccountId = account.AccountId,
+                FullName = account.FullName,
+                Email = account.Email,
+                RoleId = account.RoleId
+                // Add any other properties you need
+            };
+
+        }
+
 
     }
 }
