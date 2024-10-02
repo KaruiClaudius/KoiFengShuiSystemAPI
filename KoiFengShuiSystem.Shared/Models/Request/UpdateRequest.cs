@@ -12,11 +12,10 @@ namespace KoiFengShuiSystem.Shared.Models.Request
         [EmailAddress]
         public string Email { get; set; }
 
-        [MinLength(6)]
-        public string Password { get; set; }
-
         public string FullName { get; set; }
-        [DataType(DataType.Date)]
-        public DateTime? DateOfBirth { get; set; }
+        public DateTime? Dob { get; set; }
+
+        public string Gender { get; set; }
+        public string Phone { get; set; }
     }
 }

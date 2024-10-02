@@ -4,9 +4,13 @@ using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 // Database context
 builder.Services.AddDbContext<KoiFengShuiContext>(options =>
