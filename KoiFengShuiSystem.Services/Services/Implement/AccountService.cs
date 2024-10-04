@@ -85,6 +85,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Dob = model.Dob.Date,
                 Phone = model.Phone,
                 Gender = model.Gender,
+                CreateAt = DateTime.Now,
                 RoleId = 2
             };
 

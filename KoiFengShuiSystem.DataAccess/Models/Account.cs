@@ -21,6 +21,8 @@ public partial class Account
 
     public string Gender { get; set; }
 
+    public DateTime? CreateAt { get; set; }
+
     public int? ElementId { get; set; }
 
     public int? RoleId { get; set; }
@@ -34,6 +36,8 @@ public partial class Account
     public virtual ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
 
     public virtual Role Role { get; set; }
+
+    public virtual ICollection<TrafficLog> TrafficLogs { get; set; } = new List<TrafficLog>();
 
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

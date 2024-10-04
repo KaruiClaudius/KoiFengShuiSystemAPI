@@ -3,7 +3,7 @@
    "ContextClassName": "KoiFengShuiContext",
    "ContextNamespace": null,
    "FilterSchemas": false,
-   "IncludeConnectionString": true,
+   "IncludeConnectionString": false,
    "ModelNamespace": null,
    "OutputContextPath": null,
    "OutputPath": "Models",
@@ -84,6 +84,10 @@
       },
       {
          "Name": "[dbo].[Subscription]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[TrafficLog]",
          "ObjectType": 0
       },
       {
