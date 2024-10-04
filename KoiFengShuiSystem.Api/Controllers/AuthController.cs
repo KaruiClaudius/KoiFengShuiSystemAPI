@@ -44,7 +44,11 @@ namespace KoiFengShuiSystem.Api.Controllers
             if (response == null)
                 return BadRequest(new { message = "Username or password is incorrect" });
 
-            return Ok(response);
+            return Ok(new
+            {
+                Token = response.Token,
+                Email = response.Email // Make sure AuthenticateResponse includes the Email property
+            });
         }
 
         [AllowAnonymous]
@@ -62,15 +66,6 @@ namespace KoiFengShuiSystem.Api.Controllers
             }
         }
 
-        [HttpDelete("logout")]
-        public IActionResult Logout()
-        {
-            // Clear the user's session data
-            HttpContext.Session.Clear();
-
-            // Return a success response
-            return Ok(new { message = "Logged out successfully" });
-        }
 
         [AllowAnonymous]
         [HttpPost("ForgotPassword")]
@@ -131,16 +126,29 @@ namespace KoiFengShuiSystem.Api.Controllers
                 if (account == null)
                 {
                     _logger.LogInformation($"Creating new account for email: {googleUser.Email}");
+                    var defaultPassword = "123456"; // Default password
                     account = new Account
                     {
                         Email = googleUser.Email,
                         FullName = googleUser.Name,
+                        Password = defaultPassword,
                         Dob = DateTime.Now,
                         Gender = "male",
                         RoleId = 2,
                     };
                     await _accountService.CreateAsync(account);
                     _logger.LogInformation($"New account created with ID: {account.AccountId}");
+
+                    // Send email with default password
+                    var emailSent = await _accountService.SendDefaultPassword(googleUser.Email, googleUser.Name, defaultPassword);
+                    if (emailSent)
+                    {
+                        _logger.LogInformation($"Email sent successfully to {googleUser.Email}");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Failed to send email to {googleUser.Email}");
+                    }
                 }
                 else
                 {

@@ -6,6 +6,7 @@ using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
@@ -70,8 +71,58 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
 
+        [HttpGet("email/{email}")]
+        public async Task<IActionResult> GetByEmail(string email)
+        {
+            try
+            {
+                var account = await _accountService.GetAccountByEmailAsync(email);
+                if (account == null)
+                {
+                    return NotFound(new { message = "Account not found" });
+                }
+                return Ok(account);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error retrieving account for email: {email}");
+                return StatusCode(500, new { message = "An error occurred while retrieving the account" });
+            }
+        }
 
+        [HttpPut("{id}/change-password")]
+        public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var success = await _accountService.ChangePasswordAsync(id, model.CurrentPassword, model.NewPassword);
+                if (!success)
+                {
+                    return BadRequest(new { message = "Current password is incorrect" });
+                }
+
+                return Ok(new { message = "Password changed successfully" });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound(new { message = "Account not found" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error changing password for account {id}");
+                return StatusCode(500, new { message = "An unexpected error occurred while changing the password" });
+            }
+        }
     }
+
+
+
 }
+
 
 
