@@ -1,5 +1,6 @@
 ﻿using KoiFengShuiSystem.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,31 +12,32 @@ namespace KoiFengShuiSystem.DataAccess.Base
 {
     public class GenericRepository<T> where T : class
     {
-        protected readonly KoiFengShuiContext _context;
-
+        protected KoiFengShuiContext _context;
+        protected readonly DbSet<T> _dbSet;
 
         #region Separating asign entity and save operators
 
-        public GenericRepository(KoiFengShuiContext context)
+        public GenericRepository()
         {
-            _context = context;
+            _context ??= new KoiFengShuiContext(new DbContextOptions<KoiFengShuiContext>());
+            _dbSet = _context.Set<T>();
         }
 
 
         public void PrepareCreate(T entity)
         {
-            _context.Add(entity);
+            _dbSet.Add(entity);
         }
 
         public void PrepareUpdate(T entity)
         {
-            var tracker = _context.Attach(entity);
+            var tracker = _dbSet.Attach(entity);
             tracker.State = EntityState.Modified;
         }
 
         public void PrepareRemove(T entity)
         {
-            _context.Remove(entity);
+            _dbSet.Remove(entity);
         }
 
         public int Save()
@@ -53,26 +55,26 @@ namespace KoiFengShuiSystem.DataAccess.Base
 
         public List<T> GetAll()
         {
-            return _context.Set<T>().ToList();
+            return _dbSet.ToList();
         }
         public async Task<List<T>> GetAllAsync()
         {
-            return await _context.Set<T>().ToListAsync();
+            return await _dbSet.ToListAsync();
         }
         public async Task<T> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _context.Set<T>().FirstOrDefaultAsync(predicate);
+            return await _dbSet.FirstOrDefaultAsync(predicate);
         }
 
         public void Create(T entity)
         {
-            _context.Add(entity);
+            _dbSet.Add(entity);
             _context.SaveChanges();
         }
 
         public async Task<int> CreateAsync(T entity)
         {
-            _context.Add(entity);
+            _dbSet.Add(entity);
             return await _context.SaveChangesAsync();
         }
 
@@ -93,46 +95,46 @@ namespace KoiFengShuiSystem.DataAccess.Base
 
         public bool Remove(T entity)
         {
-            _context.Remove(entity);
+            _dbSet.Remove(entity);
             _context.SaveChanges();
             return true;
         }
 
         public async Task<bool> RemoveAsync(T entity)
         {
-            _context.Remove(entity);
+            _dbSet.Remove(entity);
             await _context.SaveChangesAsync();
             return true;
         }
 
         public T GetById(int id)
         {
-            return _context.Set<T>().Find(id);
+            return _dbSet.Find(id);
         }
 
         public async Task<T> GetByIdAsync(int id)
         {
-            return await _context.Set<T>().FindAsync(id);
+            return await _dbSet.FindAsync(id);
         }
 
         public T GetById(string code)
         {
-            return _context.Set<T>().Find(code);
+            return _dbSet.Find(code);
         }
 
         public async Task<T> GetByIdAsync(string code)
         {
-            return await _context.Set<T>().FindAsync(code);
+            return await _dbSet.FindAsync(code);
         }
 
         public T GetById(Guid code)
         {
-            return _context.Set<T>().Find(code);
+            return _dbSet.Find(code);
         }
 
         public async Task<T> GetByIdAsync(Guid code)
         {
-            return await _context.Set<T>().FindAsync(code);
+            return await _dbSet.FindAsync(code);
         }
 
         public async Task<List<T>> GetAllWithIncludeAsync(params Expression<Func<T, object>>[] includeProperties)
@@ -146,4 +148,3 @@ namespace KoiFengShuiSystem.DataAccess.Base
         }
     }
 }
-

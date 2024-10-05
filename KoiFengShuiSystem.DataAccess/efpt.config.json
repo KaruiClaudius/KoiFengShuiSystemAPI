@@ -47,6 +47,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[Image]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[KoiBreeds]",
          "ObjectType": 0
       },
@@ -64,6 +68,10 @@
       },
       {
          "Name": "[dbo].[PostCategory]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[dbo].[PostImage]",
          "ObjectType": 0
       },
       {

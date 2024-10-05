@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35303.130
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KoiFengShuiSystem.Api", "KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj", "{37D9681C-9011-4E36-83EB-518D7BEAD5D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.Api", "KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj", "{37D9681C-9011-4E36-83EB-518D7BEAD5D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KoiFengShuiSystem.BusinessLogic", "KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj", "{673C1C8A-D053-44EC-B262-F0C5688CB1E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.BusinessLogic", "KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj", "{673C1C8A-D053-44EC-B262-F0C5688CB1E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KoiFengShuiSystem.DataAccess", "KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj", "{B405B8A6-4C3A-41D3-8A3C-77E40C18C119}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.DataAccess", "KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj", "{B405B8A6-4C3A-41D3-8A3C-77E40C18C119}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KoiFengShuiSystem.Shared", "KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj", "{5CC74CE2-7CC1-476F-8591-FA9780A7CF84}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.Shared", "KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj", "{5CC74CE2-7CC1-476F-8591-FA9780A7CF84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KoiFengShuiSystem.Common", "KoiFengShuiSystem.Common\KoiFengShuiSystem.Common.csproj", "{427AB135-A0D7-4E50-BBE7-26B7A040E21F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{5CC74CE2-7CC1-476F-8591-FA9780A7CF84}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5CC74CE2-7CC1-476F-8591-FA9780A7CF84}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5CC74CE2-7CC1-476F-8591-FA9780A7CF84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{427AB135-A0D7-4E50-BBE7-26B7A040E21F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{427AB135-A0D7-4E50-BBE7-26B7A040E21F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{427AB135-A0D7-4E50-BBE7-26B7A040E21F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{427AB135-A0D7-4E50-BBE7-26B7A040E21F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

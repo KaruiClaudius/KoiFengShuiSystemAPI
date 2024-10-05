@@ -25,11 +25,17 @@ public partial class Account
 
     public int? RoleId { get; set; }
 
+    public DateTime CreateAt { get; set; }
+
+    public DateTime UpdateAt { get; set; }
+
     public virtual Element Element { get; set; }
 
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
     public virtual ICollection<MarketplaceListing> MarketplaceListings { get; set; } = new List<MarketplaceListing>();
+
+    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     public virtual ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
 
