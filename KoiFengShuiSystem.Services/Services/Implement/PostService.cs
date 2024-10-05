@@ -1,70 +1,152 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.BusinessLogic.ViewModel;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Shared.Models.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using KoiFengShuiSystem.Common;
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class PostService : IPostService
     {
-        private readonly GenericRepository<Post> _postRepository;
-        public PostService(GenericRepository<Post> postRepository)
-        {
-            _postRepository = postRepository;
-        }
-        public async Task<Post> CreateAsync(Post post)
-        {
-            _postRepository.PrepareCreate(post);
+        private readonly UnitOfWorkRepository _unitOfWork;
 
-            // Save changes asynchronously
-            await _postRepository.SaveAsync();
-            // Return the newly created 
-            return post;
+        public PostService()
+        {
+            _unitOfWork = new UnitOfWorkRepository();
         }
 
-        public void Delete(int id)
+        public async Task<IBusinessResult> GetAll()
         {
-            var post = _postRepository.GetById(id);
-            if (post == null)
-                throw new ApplicationException("Account not found");
-
-            _postRepository.PrepareRemove(post);
-            _postRepository.Save();
+            try
+            {
+                var posts = await _unitOfWork.PostRepository.GetAllWithElementAsync();
+                if (posts == null)
+                {
+                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                }
+                else
+                {
+                    return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, posts);
+                }
+            }
+            catch (Exception e)
+            {
+                return new BusinessResult(-4, e.Message.ToString());
+            }
         }
 
-        public IEnumerable<Post> GetAll()
+        public async Task<IBusinessResult> GetPostById(int id)
         {
-            return _postRepository.GetAll();
+            try
+            {
+                var Post = await _unitOfWork.PostRepository.GetByIdAsync(id);
+                if (Post == null)
+                {
+                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                }
+                else
+                {
+                    return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, Post);
+                }
+            }
+            catch (Exception e)
+            {
+                return new BusinessResult(Const.ERROR_EXCEPTION, e.Message);
+            }
         }
 
-        public Post? GetById(int id)
+        public async Task<IBusinessResult> CreatePost(Post post)
         {
-            return _postRepository.GetById(id);
+            try
+            {
+                var entityInDb = await _unitOfWork.PostRepository.GetByIdAsync(post.PostId);
+
+                // If Post already exists, return an error indicating duplicate Post
+                if (entityInDb != null)
+                {
+                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, "Post already exists. Cannot create a new Post with the same ID.");
+                }
+
+                // If Post doesn't exist, create a new one
+                await _unitOfWork.PostRepository.CreateAsync(post);
+                return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG);
+            }
+            catch (Exception ex)
+            {
+                return new BusinessResult(-4, ex.Message);
+            }
         }
 
-       /* public void Update(int id, UpdateRequest model)
+        // Helper method to compare two payments
+      /*  private bool PostAreEqual(Post post, Post entityInDb)
         {
-            var post = _postRepository.GetById(id);
-
-            // Validate
-            if (post == null)
-                throw new ApplicationException("Account not found");
-           *//* if (!string.IsNullOrEmpty(model.Email) && model.Email != account.Email && _accountRepository.GetAll().Any(x => x.Email == model.Email))
-                throw new ApplicationException("Email '" + model.Email + "' is already taken");*//*
-
-            // Update account properties
-            if (!string.IsNullOrEmpty(model.Email))
-                account.Email = model.Email;
-            if (!string.IsNullOrEmpty(model.Password))
-                account.Password = model.Password; // Note: In a real application, you should hash this password
-
-            _accountRepository.PrepareUpdate(account);
-            _accountRepository.Save();
+            return post.PostId == entityInDb.PostId &&
+                   post.Id == entityInDb.Id &&
+                   post.Name == entityInDb.Name &&
+                   post.Description == entityInDb.Description &&
+                   post.CreateAt == entityInDb.CreateAt &&
+                   post.UpdateAt == entityInDb.UpdateAt &&
+                   post.CreateBy == entityInDb.CreateBy &&
+                   post.ElementId == entityInDb.ElementId &&
+                   post.Price == entityInDb.Price;
         }*/
+
+
+        public async Task<IBusinessResult> DeletePost(int id)
+        {
+            try
+            {
+                var Post = await _unitOfWork.PostRepository.GetByIdAsync(id);
+                if (Post != null)
+                {
+                    var result = await _unitOfWork.PostRepository.RemoveAsync(Post);
+                    if (result)
+                    {
+                        return new BusinessResult(Const.SUCCESS_DELETE_CODE, Const.SUCCESS_DELETE_MSG);
+                    }
+                    else
+                    {
+                        return new BusinessResult(Const.FAIL_DELETE_CODE, Const.FAIL_DELETE_MSG);
+                    }
+                }
+                else
+                {
+                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.WARNING_NO_DATA__MSG);
+                }
+            }
+            catch (Exception ex)
+            {
+                return new BusinessResult(-4, ex.ToString());
+            }
+        }
+
+        public async Task<IBusinessResult> Save()
+        {
+            try
+            {
+                var result = await _unitOfWork.PostRepository.SaveAsync();
+                if (result > 0)
+                {
+                    return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG);
+                }
+                else
+                {
+                    return new BusinessResult(Const.FAIL_CREATE_CODE, Const.FAIL_CREATE_MSG);
+                }
+            }
+            catch (Exception e)
+            {
+                return new BusinessResult(-4, e.Message.ToString());
+            }
+        }
+
+
     }
 }
+

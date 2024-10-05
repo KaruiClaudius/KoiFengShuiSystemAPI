@@ -1,4 +1,6 @@
-﻿using KoiFengShuiSystem.DataAccess.Models;
+﻿using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using System;
 using System.Collections.Generic;
@@ -10,11 +12,11 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
     public interface IPostService
     {
-        IEnumerable<Post> GetAll();
-        Task<Post> CreateAsync(Post post);
-        Post? GetById(int id);
-        /*void Update(int id, UpdateRequest model);*/
-        void Delete(int id);
-        
+        Task<IBusinessResult> GetAll();
+        Task<IBusinessResult> GetPostById(int id);
+        Task<IBusinessResult> CreatePost(Post post);
+        // Helper method to compare two payments
+        Task<IBusinessResult> DeletePost(int id);
+        Task<IBusinessResult> Save();
     }
 }

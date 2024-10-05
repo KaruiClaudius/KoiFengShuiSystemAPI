@@ -13,7 +13,7 @@ public partial class Element
 
     public string Description { get; set; }
 
-    public int LuckyNumber { get; set; }
+    public string LuckyNumber { get; set; }
 
     public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 

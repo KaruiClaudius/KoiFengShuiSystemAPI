@@ -1,6 +1,8 @@
 ﻿using Azure;
+using Azure.Core;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.BusinessLogic.ViewModel;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
@@ -22,39 +24,49 @@ namespace KoiFengShuiSystem.Api.Controllers
             _postService = postService;
             _logger = logger;
         }
-        [HttpGet]
-        public IActionResult GetAll()
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll()
         {
-            var posts = _postService.GetAll();
-            return Ok(posts);
+            var postResponse = await _postService.GetAll();
+            if (postResponse.Data == null)
+            {
+                return NotFound(postResponse);
+            }
+            return Ok(postResponse);
         }
         //[Authorize]
-        [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            var post = _postService.GetById(id);
-            return post == null ? NotFound() : Ok(post);
+            var postResponse = await _postService.GetPostById(id);
+            if (postResponse.Data == null)
+            {
+                return NotFound(postResponse);
+            }
+            return Ok(postResponse);
         }
 
         //[Authorize]
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpDelete("Delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            try
+            var postResponse = await _postService.DeletePost(id);
+            if (postResponse.Data == null)
             {
-                _postService.Delete(id);
-                return Ok(new { message = "Account deleted successfully" });
+                return BadRequest(postResponse.Message);
             }
-            catch (ApplicationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return Ok(postResponse);
         }
-        [HttpPost]
+        [HttpPost("Create")]
         //[Authorize=]
-        public async Task<Post> CreateAsync(Post posts)
+        public async Task<IActionResult> CreateAsync([FromBody] Post posts)
         {
-           return await _postService.CreateAsync(posts);
+            var postResponse = await _postService.CreatePost(posts);
+            if (postResponse.Data != null)
+            {
+                return BadRequest(postResponse);
+            }
+            return Ok(postResponse);
         }
     }
 }
