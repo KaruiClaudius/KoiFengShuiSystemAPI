@@ -174,9 +174,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 recommendations.Add($"Hình dạng ao của bạn ({currentShape}) nhìn chung là tương thích, nhưng có thể không lý tưởng. Hãy cân nhắc điều chỉnh thành {await GetOptimalShape(elementId)} để cải thiện sự cân bằng Phong thủy.");
 
             if (colorScore < 50.0)
-                recommendations.Add($"Koi đã chọn màu ({currentColor}) có thể không phù hợp nhất. Hãy cân nhắc khám phá các màu khác như {await GetRecommendedColors(elementId)} để có khả năng tương thích tốt hơn.");
+                recommendations.Add($"Koi đã chọn màu ({currentColor}) có thể không phù hợp nhất. Hãy cân nhắc khám phá các màu khác như {await GetRecommendedColor(elementId)} để có khả năng tương thích tốt hơn.");
             else if (colorScore < 75.0)
-                recommendations.Add($"Koi đã chọn màu ({currentColor}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc khám phá các màu khác như {await GetRecommendedColors(elementId)} để cải thiện sự hài hòa.");
+                recommendations.Add($"Koi đã chọn màu ({currentColor}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc khám phá các màu khác như {await GetRecommendedColor(elementId)} để cải thiện sự hài hòa.");
 
             if (quantityScore < 25.0)
                 recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} để cân bằng Phong thủy tốt hơn.");
@@ -239,19 +239,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return optimalShape?.Key ?? "Unknown";
         }
 
-        private async Task<List<string>> GetRecommendedColors(int elementId, int topCount = 3)
+        private async Task<string> GetRecommendedColor(int elementId)
         {
             var breeds = await _koiBreedRepository.GetAllAsync();
 
-            var recommendedColors = breeds
+            var recommendedColor = breeds
                 .Where(b => b.ElementId == elementId)
                 .GroupBy(b => b.Color)
                 .OrderByDescending(g => g.Count())
-                .Take(topCount)
-                .Select(g => g.Key)
-                .ToList();
+                .FirstOrDefault();
 
-            return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
+            return recommendedColor?.Key ?? "Unknown";
         }
 
 

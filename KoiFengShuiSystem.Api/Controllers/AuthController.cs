@@ -134,7 +134,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                         Password = defaultPassword,
                         Dob = DateTime.Now,
                         Gender = "male",
-                        CreateAt=DateTime.Now,
+                        CreateAt = DateTime.Now,
                         RoleId = 2,
                     };
                     await _accountService.CreateAsync(account);
