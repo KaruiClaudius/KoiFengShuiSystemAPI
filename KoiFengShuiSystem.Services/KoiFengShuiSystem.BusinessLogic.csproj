@@ -11,6 +11,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\KoiFengShuiSystem.Common\KoiFengShuiSystem.Common.csproj" />
 		<ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
 		<ProjectReference Include="..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
 	</ItemGroup>
