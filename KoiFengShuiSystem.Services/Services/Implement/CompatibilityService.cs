@@ -47,14 +47,14 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
             var directionScore = await GetDirectionCompatibilityScore(request.Direction, userElement.ElementId);
             var shapeScore = await GetShapeCompatibilityScore(request.PondShape, userElement.ElementId);
-            var colorScore = await GetColorCompatibilityScore(request.FishColor, userElement.ElementId);
+            var colorScores = await GetColorCompatibilityScores(request.FishColors, userElement.ElementId);
             var quantityScore = await GetQuantityCompatibilityScore(request.FishQuantity, userElement.ElementId);
 
-            var overallScore = CalculateOverallScore(directionScore, shapeScore, colorScore, quantityScore);
+            var overallScore = CalculateOverallScore(directionScore, shapeScore, colorScores.Values.Average(), quantityScore);
 
             var recommendations = await GenerateRecommendations(
-                directionScore, shapeScore, colorScore, quantityScore,
-                request.Direction, request.PondShape, request.FishColor, request.FishQuantity,
+                directionScore, shapeScore, colorScores, quantityScore,
+                request.Direction, request.PondShape, request.FishColors, request.FishQuantity,
                 userElement.ElementId);
 
             return new CompatibilityResponse
@@ -62,7 +62,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 OverallCompatibilityScore = overallScore,
                 DirectionScore = directionScore,
                 ShapeScore = shapeScore,
-                ColorScore = colorScore,
+                ColorScores = colorScores,
                 QuantityScore = quantityScore,
                 Recommendations = recommendations
             };
@@ -121,33 +121,36 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return shapeCategory != null ? 100.0 : 0.0;
         }
 
-        private async Task<double> GetColorCompatibilityScore(string color, int elementId)
+        private async Task<Dictionary<string, double>> GetColorCompatibilityScores(List<string> colors, int elementId)
         {
             var compatibleBreeds = await _koiBreedRepository.GetAllAsync();
-            var matchingBreeds = compatibleBreeds.Where(b => b.Color.Equals(color, StringComparison.OrdinalIgnoreCase) && b.ElementId == elementId).ToList();
+            var colorScores = new Dictionary<string, double>();
 
-            if (matchingBreeds.Any())
+            foreach (var color in colors)
             {
-                return 100.0; // Full compatibility if there's a match
-            }
-            else
-            {
-                // If no exact match, check if there are any breeds with the same color (regardless of element)
-                var sameColorBreeds = compatibleBreeds.Where(b => b.Color.Equals(color, StringComparison.OrdinalIgnoreCase)).ToList();
-                if (sameColorBreeds.Any())
+                var matchingBreeds = compatibleBreeds.Where(b => b.Color.Equals(color, StringComparison.OrdinalIgnoreCase) && b.ElementId == elementId).ToList();
+
+                if (matchingBreeds.Any())
                 {
-                    return 50.0; // Partial compatibility if the color exists but doesn't match the element
+                    colorScores[color] = 100.0; // Full compatibility if there's a match
                 }
                 else
                 {
-                    return 0.0; // No compatibility if the color doesn't exist in the database
+                    // If no exact match, check if there are any breeds with the same color (regardless of element)
+                    var sameColorBreeds = compatibleBreeds.Where(b => b.Color.Equals(color, StringComparison.OrdinalIgnoreCase)).ToList();
+                    colorScores[color] = sameColorBreeds.Any() ? 50.0 : 0.0;
                 }
             }
+
+            return colorScores;
         }
 
         private async Task<double> GetQuantityCompatibilityScore(int quantity, int elementId)
         {
-            var customerFaP = await _customerFaPRepository.FindAsync(c => c.ElementId == elementId && c.FishQuantity == quantity);
+            // Extract the last digit of the quantity
+            int lastDigit = Math.Abs(quantity % 10);
+
+            var customerFaP = await _customerFaPRepository.FindAsync(c => c.ElementId == elementId && c.FishQuantity == lastDigit);
             return customerFaP != null ? customerFaP.Percentage * 100.0 : 0.0;
         }
 
@@ -157,26 +160,33 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         }
 
         private async Task<List<string>> GenerateRecommendations(
-       double directionScore, double shapeScore, double colorScore, double quantityScore,
-       string currentDirection, string currentShape, string currentColor, int currentQuantity,
-       int elementId)
+     double directionScore, double shapeScore, Dictionary<string, double> colorScores, double quantityScore,
+     string currentDirection, string currentShape, List<string> currentColors, int currentQuantity,
+     int elementId)
         {
             var recommendations = new List<string>();
 
             if (directionScore < 50.0)
-                recommendations.Add($"Hãy cân nhắc thay đổi hướng ao của bạn từ {currentDirection} thành {await GetOptimalDirection(elementId)} để tương thích tốt hơn.");
+                recommendations.Add($"Hãy cân nhắc thay đổi hướng ao của bạn từ ({currentDirection}) thành ({await GetOptimalDirection(elementId)}) để tương thích tốt hơn.");
             else if (directionScore < 75.0)
                 recommendations.Add($"Hướng của ao của bạn ({currentDirection}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc điều chỉnh nó theo hướng {await GetOptimalDirection(elementId)}.");
 
             if (shapeScore < 50.0)
-                recommendations.Add($"Hình dạng của ao của bạn ({currentShape}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc thay đổi nó thành {await GetOptimalShape(elementId)} để có sự hài hòa tốt hơn.");
+                recommendations.Add($"Hình dạng của ao của bạn ({currentShape}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc thay đổi nó thành ({await GetOptimalShape(elementId)}) để có sự hài hòa tốt hơn.");
             else if (shapeScore < 75.0)
-                recommendations.Add($"Hình dạng ao của bạn ({currentShape}) nhìn chung là tương thích, nhưng có thể không lý tưởng. Hãy cân nhắc điều chỉnh thành {await GetOptimalShape(elementId)} để cải thiện sự cân bằng Phong thủy.");
+                recommendations.Add($"Hình dạng ao của bạn ({currentShape}) nhìn chung là tương thích, nhưng có thể không lý tưởng. Hãy cân nhắc điều chỉnh thành ({await GetOptimalShape(elementId)}) để cải thiện sự cân bằng Phong thủy.");
 
-            if (colorScore < 50.0)
-                recommendations.Add($"Koi đã chọn màu ({currentColor}) có thể không phù hợp nhất. Hãy cân nhắc khám phá các màu khác như {await GetRecommendedColor(elementId)} để có khả năng tương thích tốt hơn.");
-            else if (colorScore < 75.0)
-                recommendations.Add($"Koi đã chọn màu ({currentColor}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc khám phá các màu khác như {await GetRecommendedColor(elementId)} để cải thiện sự hài hòa.");
+            var averageColorScore = colorScores.Values.Average();
+            if (averageColorScore < 50.0)
+            {
+                var recommendedColors = await GetRecommendedColors(elementId, 3); // Get top 3 recommended colors
+                recommendations.Add($"Các màu Koi đã chọn ({string.Join(", ", currentColors)}) có thể không phù hợp nhất. Hãy cân nhắc khám phá các màu khác như ({string.Join(", ", recommendedColors)}) để có khả năng tương thích tốt hơn.");
+            }
+            else if (averageColorScore < 75.0)
+            {
+                var recommendedColors = await GetRecommendedColors(elementId, 2); // Get top 2 recommended colors
+                recommendations.Add($"Các màu Koi đã chọn ({string.Join(", ", currentColors)}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc khám phá thêm các màu như ({string.Join(", ", recommendedColors)}) để cải thiện sự hài hòa.");
+            }
 
             if (quantityScore < 25.0)
                 recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} để cân bằng Phong thủy tốt hơn.");
@@ -239,17 +249,19 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return optimalShape?.Key ?? "Unknown";
         }
 
-        private async Task<string> GetRecommendedColor(int elementId)
+        private async Task<List<string>> GetRecommendedColors(int elementId, int count)
         {
             var breeds = await _koiBreedRepository.GetAllAsync();
 
-            var recommendedColor = breeds
+            var recommendedColors = breeds
                 .Where(b => b.ElementId == elementId)
                 .GroupBy(b => b.Color)
                 .OrderByDescending(g => g.Count())
-                .FirstOrDefault();
+                .Take(count)
+                .Select(g => g.Key)
+                .ToList();
 
-            return recommendedColor?.Key ?? "Unknown";
+            return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
         }
 
 
