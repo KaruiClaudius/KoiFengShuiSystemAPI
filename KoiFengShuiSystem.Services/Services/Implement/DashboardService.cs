@@ -30,14 +30,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<int> CountNewUsersAsync(int days)
         {
-            if (days <= 0)
-            {
-                throw new ArgumentException("Days must be a positive integer.", nameof(days));
-            }
-
-            var cutoffDate = DateTime.UtcNow.AddDays(-days);
-            return await _accountRepository.GetAllQuery().AsQueryable()
-                .CountAsync(a => a.CreateAt.HasValue && a.CreateAt.Value >= cutoffDate);
+            return (await ListNewUsersAsync(days)).Count;
         }
 
         public async Task<List<Account>> ListNewUsersAsync(int days)
@@ -49,7 +42,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
             var cutoffDate = DateTime.UtcNow.AddDays(-days);
             return await _accountRepository.GetAllQuery().AsQueryable()
-                .Where(a => a.CreateAt.HasValue && a.CreateAt.Value >= cutoffDate)
+                .Where(a => a.CreateAt != null && a.CreateAt >= cutoffDate)
                 .ToListAsync();
         }
 

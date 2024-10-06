@@ -15,17 +15,23 @@ public partial class Post
 
     public string Description { get; set; }
 
+    public double Price { get; set; }
+
     public DateTime CreateAt { get; set; }
 
     public DateTime UpdateAt { get; set; }
 
-    public string CreateBy { get; set; }
+    public int AccountId { get; set; }
 
     public int ElementId { get; set; }
+
+    public virtual Account Account { get; set; }
 
     public virtual Element Element { get; set; }
 
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
     public virtual PostCategory IdNavigation { get; set; }
+
+    public virtual ICollection<PostImage> PostImages { get; set; } = new List<PostImage>();
 }
