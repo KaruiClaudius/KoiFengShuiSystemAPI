@@ -10,7 +10,7 @@ namespace KoiFengShuiSystem.Shared.Models.Request
     {
         public int DateOfBirth { get; set; }
         public string Direction { get; set; }
-        public string FishColor { get; set; }
+        public List<string> FishColors { get; set; }
         public int FishQuantity { get; set; }
         public string PondShape { get; set; }
     }

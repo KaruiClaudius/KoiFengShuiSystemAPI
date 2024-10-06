@@ -85,6 +85,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Dob = model.Dob.Date,
                 Phone = model.Phone,
                 Gender = model.Gender,
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now,
                 RoleId = 2
             };
 
@@ -123,6 +125,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 account.Dob = model.Dob.Value;
             if (!string.IsNullOrEmpty(model.Gender))
                 account.Gender = model.Gender;
+            account.UpdateAt = DateTime.Now;
 
             // Calculate and update element
             if (account.Dob.HasValue)

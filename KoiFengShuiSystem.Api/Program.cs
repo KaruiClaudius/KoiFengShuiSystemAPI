@@ -22,6 +22,13 @@ builder.Configuration.AddEnvironmentVariables();
 builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.MaxDepth = 32;
+    });
+
 // Database context
 builder.Services.AddDbContext<KoiFengShuiContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -36,6 +43,7 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>(); 
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
@@ -119,6 +127,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<TrafficLoggingMiddleware>();
 
 app.MapControllers();
 

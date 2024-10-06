@@ -11,7 +11,7 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public double OverallCompatibilityScore { get; set; }
         public double DirectionScore { get; set; }
         public double ShapeScore { get; set; }
-        public double ColorScore { get; set; }
+        public Dictionary<string, double> ColorScores { get; set; }
         public double QuantityScore { get; set; }
         public List<string> Recommendations { get; set; }
     }

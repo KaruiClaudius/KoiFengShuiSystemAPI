@@ -36,6 +36,8 @@ public class AdminAccountService
                 RoleId = 1, // Assuming 1 is the admin role
                 Dob = DateTime.Now,
                 Gender = "Other",
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now,
                 Phone = "0379499630"
             };
 

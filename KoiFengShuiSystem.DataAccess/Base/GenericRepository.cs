@@ -57,6 +57,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
         {
             return _dbSet.ToList();
         }
+        public virtual IQueryable<T> GetAllQuery()
+        {
+            return _context.Set<T>().AsQueryable();
+        }
+
+
         public async Task<List<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
