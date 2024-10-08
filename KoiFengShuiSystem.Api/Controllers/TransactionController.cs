@@ -1,9 +1,7 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Models.Request;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using static KoiFengShuiSystem.Shared.Models.Response.TransactionResponseDto;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
@@ -19,43 +17,23 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
         [HttpPost("process")]
-        public async Task<IActionResult> ProcessTransaction([FromBody] Transaction transaction)
+        public async Task<IActionResult> ProcessTransaction([FromBody] TransactionRequestDto transactionRequest)
         {
-            if (transaction == null)
+            
+            var transaction = await _transactionService.ProcessTransactionAsync(transactionRequest);
+
+         
+            var response = new
             {
-                return BadRequest(new { message = "Invalid transaction data." });
-            }
+                TransactionId = transaction.TransactionId,
+                AccountId = transaction.AccountId, 
+                TierId = transaction.TierId,
+                SubscriptionId = transaction.SubscriptionId,
+                Amount = transaction.Amount,
+                TransactionDate = transaction.TransactionDate
+            };
 
-            await _transactionService.AddAsync(transaction);
-            return Ok(new { message = "Transaction successful" });
-        }
-
-        [HttpGet("{accountId}")]
-        public async Task<IActionResult> GetAllTransactions(int accountId)
-        {
-            var transactions = await _transactionService.GetTransactionsByAccountIdAsync(accountId);
-            return Ok(transactions);
-        }
-
-        [HttpGet("date/{accountId}/{date}")]
-        public async Task<IActionResult> GetTransactionsByDate(int accountId, DateTime date)
-        {
-            var transactions = await _transactionService.GetTransactionsByAccountIdAndDateAsync(accountId, date);
-            return Ok(transactions);
-        }
-
-        [HttpGet("total/{accountId}")]
-        public async Task<IActionResult> GetTotalAmount(int accountId)
-        {
-            var totalAmount = await _transactionService.GetTotalAmountByAccountIdAsync(accountId);
-            return Ok(new { totalAmount });
-        }
-
-        [HttpDelete("delete/{accountId}")]
-        public async Task<IActionResult> DeleteTransactions(int accountId)
-        {
-            await _transactionService.DeleteByAccountIdAsync(accountId);
-            return Ok(new { message = "All transactions deleted." });
+            return Ok(response);
         }
     }
 }

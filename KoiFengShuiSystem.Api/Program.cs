@@ -3,14 +3,12 @@ using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.DataAccess.Repositories.Implement;
+using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Shared.Helpers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,8 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
 
 // Database context
 builder.Services.AddDbContext<KoiFengShuiContext>(options =>
@@ -33,17 +29,13 @@ builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSet
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
 // Service registrations
-builder.Services.AddScoped<IConsultationService, ConsultationService>();
-builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<AdminAccountService>();
-
-
 builder.Services.AddScoped<PostService>();
 builder.Services.AddHttpClient();
 
@@ -89,13 +81,6 @@ builder.Logging.AddDebug();
 
 var app = builder.Build();
 
-// Ensure admin account exists
-using (var scope = app.Services.CreateScope())
-{
-    var adminAccountService = scope.ServiceProvider.GetRequiredService<AdminAccountService>();
-    await adminAccountService.EnsureAdminAccountExistsAsync();
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -107,8 +92,6 @@ else
     app.UseExceptionHandler("/Error");
     app.UseHsts();
 }
-
-
 
 app.UseCors(x => x
     .AllowAnyOrigin()
