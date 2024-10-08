@@ -1,3 +1,4 @@
+using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
@@ -6,6 +7,7 @@ using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 
@@ -39,6 +41,7 @@ builder.Services.AddHttpClient();
 // Controller configuration
 builder.Services.AddControllers()
     .AddJsonOptions(x => x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
+
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();

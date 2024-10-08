@@ -10,8 +10,4 @@
     <ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Post\" />
-  </ItemGroup>
-
 </Project>

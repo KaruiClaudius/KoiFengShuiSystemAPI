@@ -1,4 +1,5 @@
-﻿using System;
+﻿using KoiFengShuiSystem.DataAccess.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,5 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Interface
 {
     public interface IPostRepository
     {
-
     }
 }

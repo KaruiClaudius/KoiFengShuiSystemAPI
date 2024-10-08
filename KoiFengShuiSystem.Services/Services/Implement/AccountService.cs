@@ -66,6 +66,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Password = model.Password, // Note: In a real application, you should hash this password
                 Dob = model.Dob.Date,
                 Phone = model.Phone,
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now,
                 Gender = model.Gender,
             };
 

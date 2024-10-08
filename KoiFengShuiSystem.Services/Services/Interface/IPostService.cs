@@ -14,6 +14,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
     {
         Task<IBusinessResult> GetAll();
         Task<IBusinessResult> GetPostById(int id);
+        Task<IBusinessResult> GetPostByPostTypeId(int postTypeId, int page, int pageSize);
         Task<IBusinessResult> CreatePost(Post post);
         // Helper method to compare two payments
         Task<IBusinessResult> DeletePost(int id);

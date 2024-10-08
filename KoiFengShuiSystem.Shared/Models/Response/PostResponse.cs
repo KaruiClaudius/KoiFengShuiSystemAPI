@@ -1,11 +1,11 @@
-﻿using System;
+﻿using KoiFengShuiSystem.DataAccess.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using KoiFengShuiSystem.DataAccess.Models;
 
-namespace KoiFengShuiSystem.DataAccess.DTO
+namespace KoiFengShuiSystem.Shared.Models.Response
 {
     public class PostResponse
     {
@@ -18,6 +18,7 @@ namespace KoiFengShuiSystem.DataAccess.DTO
         public int AccountId { get; set; }
         public int ElementId { get; set; }
         public double? Price { get; set; }
+        public string Status { get; set; }
         public string ElementName { get; set; } // Added ElementName here
         public string AccountName { get; set; } // Added Account Name
         public ICollection<Follow> Follows { get; set; }

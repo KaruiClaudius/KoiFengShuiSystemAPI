@@ -3,12 +3,17 @@ using Azure.Core;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Org.BouncyCastle.Asn1.Ocsp;
+using System.Drawing.Printing;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
@@ -28,6 +33,19 @@ namespace KoiFengShuiSystem.Api.Controllers
         public async Task<IActionResult> GetAll()
         {
             var postResponse = await _postService.GetAll();
+            
+            if (postResponse.Data == null)
+            {
+                return NotFound(postResponse);
+            }
+            return Ok(postResponse);
+        }
+     
+        [HttpGet("GetAllByPostType/{postTypeId}")]
+        public async Task<IActionResult> GetByPostTypeId(int postTypeId, [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+        {
+            var postResponse = await _postService.GetPostByPostTypeId(postTypeId, page, pageSize);
             if (postResponse.Data == null)
             {
                 return NotFound(postResponse);
