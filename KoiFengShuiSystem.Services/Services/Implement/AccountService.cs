@@ -278,11 +278,37 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
             }
 
-            int stem = yearOfBirth % 10;
-            int branch = yearOfBirth % 12;
+            // Lấy 2 số cuối cùng của năm sinh
+            int lastTwoDigits = yearOfBirth % 100;
 
-            int elementIndex = (stem + branch) % 5;
-            if (elementIndex == 0) elementIndex = 5;
+            // Quy đổi Thiên Can
+            int stem = yearOfBirth % 10;
+            int stemValue = stem switch
+            {
+                0 or 1 => 4, // Canh, Tân
+                2 or 3 => 5, // Nhâm, Quý
+                4 or 5 => 1, // Giáp, Ất
+                6 or 7 => 2, // Bính, Đinh
+                8 or 9 => 3, // Mậu, Kỷ
+                _ => throw new ArgumentException($"Invalid stem calculation for year: {yearOfBirth}")
+            };
+
+            // Quy đổi Địa Chi (dựa trên 2 số cuối của năm sinh chia cho 12)
+            int branch = lastTwoDigits % 12;
+            int branchValue = branch switch
+            {
+                4 or 5 or 10 or 11 => 0, // Tý, Sửu, Ngọ, Mùi
+                0 or 1 or 6 or 7 => 1, // Dần, Mão, Thân, Dậu
+                2 or 3 or 8 or 9 => 2, // Thìn, Tỵ, Tuất, Hợi
+                _ => throw new ArgumentException($"Invalid branch calculation for year: {yearOfBirth}")
+            };
+
+            // Tính ngũ hành dựa trên giá trị Can và Chi
+            int elementIndex = stemValue + branchValue;
+            if (elementIndex > 5)
+            {
+                elementIndex -= 5;
+            }
 
             string element = elementIndex switch
             {
