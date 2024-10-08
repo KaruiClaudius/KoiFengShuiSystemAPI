@@ -11,6 +11,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var posts = await _dbSet
                 .Include(p => p.Element) // Include the Element to access ElementName
+                .ThenInclude(p => p.Accounts)
                 .ToListAsync();
 
             if (posts != null)
@@ -27,7 +28,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                     Id = po.Id,
                     IdNavigation = po.IdNavigation,
                     Name = po.Name,
-                    Price = po.Price,
+                    Price = (po.Price/1000),
                     ElementName = po.Element.ElementName, // Access ElementName
                     AccountName = po.Account.FullName, // Access ElementName
                 }).ToList();

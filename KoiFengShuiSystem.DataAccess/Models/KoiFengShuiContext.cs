@@ -58,6 +58,8 @@ public partial class KoiFengShuiContext : DbContext
 
     public virtual DbSet<Subscription> Subscriptions { get; set; }
 
+    public virtual DbSet<TrafficLog> TrafficLogs { get; set; }
+
     public virtual DbSet<Transaction> Transactions { get; set; }
 
     public static string GetConnectionString(string connectionStringName)
@@ -72,7 +74,6 @@ public partial class KoiFengShuiContext : DbContext
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
-
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -306,6 +307,9 @@ public partial class KoiFengShuiContext : DbContext
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasColumnType("text");
+            entity.Property(e => e.Status)
+                .HasMaxLength(255)
+                .IsUnicode(false);
             entity.Property(e => e.UpdateAt).HasColumnType("datetime");
 
             entity.HasOne(d => d.Account).WithMany(p => p.Posts)
@@ -426,6 +430,23 @@ public partial class KoiFengShuiContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50);
             entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
+        });
+
+        modelBuilder.Entity<TrafficLog>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__TrafficL__3214EC07DACD61F7");
+
+            entity.ToTable("TrafficLog");
+
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.RequestMethod).HasMaxLength(10);
+            entity.Property(e => e.RequestPath).HasMaxLength(255);
+            entity.Property(e => e.Timestamp).HasColumnType("datetime");
+            entity.Property(e => e.UserAgent).HasMaxLength(255);
+
+            entity.HasOne(d => d.Account).WithMany(p => p.TrafficLogs)
+                .HasForeignKey(d => d.AccountId)
+                .HasConstraintName("FK_TrafficLog_Account");
         });
 
         modelBuilder.Entity<Transaction>(entity =>

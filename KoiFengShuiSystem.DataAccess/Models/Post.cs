@@ -25,6 +25,8 @@ public partial class Post
 
     public int ElementId { get; set; }
 
+    public string Status { get; set; }
+
     public virtual Account Account { get; set; }
 
     public virtual Element Element { get; set; }
