@@ -43,7 +43,7 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>(); 
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped(typeof(GenericRepository<>));

@@ -37,7 +37,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 
             return new List<PostResponse>();
         }
-        public async Task<IEnumerable<PostResponse>>GetAllByElementIdAsync(int elementId)
+        public async Task<IEnumerable<PostResponse>> GetAllByElementIdAsync(int elementId)
         {
             var posts = await _dbSet
                 .Where(p => p.ElementId == elementId)

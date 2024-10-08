@@ -107,31 +107,31 @@ namespace KoiFengShuiSystem.Api.Controllers
         {
             try
             {
-                _logger.LogInformation($"Received Google login request for token: {request.AccessToken.Substring(0, 10)}...");
+                //_logger.LogInformation($"Received Google login request for token: {request.AccessToken.Substring(0, 10)}...");
 
                 var httpClient = _httpClientFactory.CreateClient();
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", request.AccessToken);
 
                 var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v3/userinfo");
-                _logger.LogInformation($"Google API response status: {response.StatusCode}");
+                //_logger.LogInformation($"Google API response status: {response.StatusCode}");
 
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync();
-                _logger.LogInformation($"Google API response content: {content}");
+                //_logger.LogInformation($"Google API response content: {content}");
 
                 var googleUser = JsonSerializer.Deserialize<GoogleUserInfo>(content);
-                _logger.LogInformation($"Deserialized Google user info: {JsonSerializer.Serialize(googleUser)}");
+                //_logger.LogInformation($"Deserialized Google user info: {JsonSerializer.Serialize(googleUser)}");
 
                 var account = await _accountService.GetAccountByEmail(googleUser.Email);
                 if (account == null)
                 {
-                    _logger.LogInformation($"Creating new account for email: {googleUser.Email}");
+                    //_logger.LogInformation($"Creating new account for email: {googleUser.Email}");
                     var defaultPassword = "123456"; // Default password
                     account = new Account
                     {
                         Email = googleUser.Email,
                         FullName = googleUser.Name,
-                        Password = defaultPassword,
+                        //Password = defaultPassword,
                         Dob = DateTime.Now,
                         Gender = "male",
                         CreateAt = DateTime.Now,
@@ -139,7 +139,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                         RoleId = 2,
                     };
                     await _accountService.CreateAsync(account);
-                    _logger.LogInformation($"New account created with ID: {account.AccountId}");
+                    //_logger.LogInformation($"New account created with ID: {account.AccountId}");
 
                     // Send email with default password
                     var emailSent = await _accountService.SendDefaultPassword(googleUser.Email, googleUser.Name, defaultPassword);
@@ -158,13 +158,13 @@ namespace KoiFengShuiSystem.Api.Controllers
                 }
 
                 var token = _jwtUtils.GenerateJwtToken(account);
-                _logger.LogInformation($"JWT token generated successfully");
+                //_logger.LogInformation($"JWT token generated successfully");
 
                 return Ok(new AuthenticateResponse(account, token));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during Google login");
+                //_logger.LogError(ex, "Unexpected error during Google login");
                 return StatusCode(500, "An unexpected error occurred");
             }
         }
