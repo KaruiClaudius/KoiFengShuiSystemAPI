@@ -1,6 +1,9 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using static KoiFengShuiSystem.Shared.Models.Response.TransactionResponseDto;
 
 namespace KoiFengShuiSystem.Api.Controllers
@@ -16,17 +19,14 @@ namespace KoiFengShuiSystem.Api.Controllers
             _transactionService = transactionService;
         }
 
-        [HttpPost("process")]
+        [HttpPost("Create")]
         public async Task<IActionResult> ProcessTransaction([FromBody] TransactionRequestDto transactionRequest)
         {
-            
             var transaction = await _transactionService.ProcessTransactionAsync(transactionRequest);
-
-         
             var response = new
             {
                 TransactionId = transaction.TransactionId,
-                AccountId = transaction.AccountId, 
+                AccountId = transaction.AccountId,
                 TierId = transaction.TierId,
                 SubscriptionId = transaction.SubscriptionId,
                 Amount = transaction.Amount,
@@ -34,6 +34,28 @@ namespace KoiFengShuiSystem.Api.Controllers
             };
 
             return Ok(response);
+        }
+
+
+        [HttpGet("{accountId}")]
+        public async Task<IActionResult> GetTransactionsByAccountId(int accountId)
+        {
+            var transactions = await _transactionService.GetByAccountIdAsync(accountId);
+            return Ok(transactions);
+        }
+
+        [HttpDelete("{transactionId}")]
+        public async Task<IActionResult> DeleteTransaction(int transactionId)
+        {
+            await _transactionService.DeleteTransactionAsync(transactionId);
+            return NoContent(); // Trả về 204 No Content
+        }
+
+        [HttpGet("total/{accountId}")]
+        public async Task<IActionResult> GetTotalAmountByAccountId(int accountId)
+        {
+            var totalAmount = await _transactionService.GetTotalAmountByAccountIdAsync(accountId);
+            return Ok(totalAmount);
         }
     }
 }

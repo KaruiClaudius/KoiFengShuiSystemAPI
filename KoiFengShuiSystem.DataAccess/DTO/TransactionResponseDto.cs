@@ -10,6 +10,7 @@ namespace KoiFengShuiSystem.Shared.Models.Response
     {
         public class TransactionRequestDto
         {
+            public int TransactionId { get; set; }
             public int AccountId { get; set; }
             public int TierId { get; set; }
             public int SubscriptionId { get; set; }

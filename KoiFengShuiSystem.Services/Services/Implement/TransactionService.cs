@@ -1,7 +1,7 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.DataAccess.Repositories.Interface; 
-using System;
+using KoiFengShuiSystem.DataAccess.Repositories.Interface;
+using KoiFengShuiSystem.Shared.Models.Request;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static KoiFengShuiSystem.Shared.Models.Response.TransactionResponseDto;
@@ -30,6 +30,25 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
             await _transactionRepository.AddAsync(transaction);
             return transaction;
+        }
+
+        public async Task<List<Transaction>> GetByAccountIdAsync(int accountId)
+        {
+            return await _transactionRepository.GetByAccountIdAsync(accountId);
+        }
+
+        public async Task DeleteTransactionAsync(int transactionId)
+        {
+            var transaction = await _transactionRepository.GetByIdAsync(transactionId);
+            if (transaction != null)
+            {
+                await _transactionRepository.DeleteByAccountIdAsync(transaction.AccountId);
+            }
+        }
+
+        public async Task<decimal> GetTotalAmountByAccountIdAsync(int accountId)
+        {
+            return await _transactionRepository.GetTotalAmountByAccountIdAsync(accountId);
         }
     }
 }

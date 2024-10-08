@@ -56,8 +56,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 
         public async Task<bool> ValidateAsync(Transaction transaction)
         {
-            // Logic kiểm tra tính hợp lệ
-            return true; // Hoặc false nếu không hợp lệ
+            return true; 
         }
     }
 }
