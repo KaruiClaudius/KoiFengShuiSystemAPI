@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Models;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
@@ -18,16 +19,12 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
         [HttpPost("process")]
-        public async Task<IActionResult> ProcessTransaction(int accountId, int tierId, int subscriptionId, decimal amount)
+        public async Task<IActionResult> ProcessTransaction([FromBody] Transaction transaction)
         {
-            var transaction = new Transaction
+            if (transaction == null)
             {
-                AccountId = accountId,
-                TierId = tierId,
-                SubscriptionId = subscriptionId,
-                Amount = amount,
-                TransactionDate = DateTime.UtcNow
-            };
+                return BadRequest(new { message = "Invalid transaction data." });
+            }
 
             await _transactionService.AddAsync(transaction);
             return Ok(new { message = "Transaction successful" });
@@ -36,14 +33,14 @@ namespace KoiFengShuiSystem.Api.Controllers
         [HttpGet("{accountId}")]
         public async Task<IActionResult> GetAllTransactions(int accountId)
         {
-            var transactions = await _transactionService.GetAllByAccountIdAsync(accountId);
+            var transactions = await _transactionService.GetTransactionsByAccountIdAsync(accountId);
             return Ok(transactions);
         }
 
         [HttpGet("date/{accountId}/{date}")]
         public async Task<IActionResult> GetTransactionsByDate(int accountId, DateTime date)
         {
-            var transactions = await _transactionService.GetAllByAccountIdAndDateAsync(accountId, date);
+            var transactions = await _transactionService.GetTransactionsByAccountIdAndDateAsync(accountId, date);
             return Ok(transactions);
         }
 
