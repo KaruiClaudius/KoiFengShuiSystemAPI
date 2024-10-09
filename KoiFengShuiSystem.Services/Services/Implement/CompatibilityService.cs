@@ -5,7 +5,10 @@ using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
@@ -150,27 +153,100 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         private async Task<Dictionary<string, double>> GetColorCompatibilityScores(List<string> colors, int elementId)
         {
-            var compatibleBreeds = await _koiBreedRepository.GetAllAsync();
+            var breeds = await _koiBreedRepository.GetAllAsync();
             var colorScores = new Dictionary<string, double>();
+            var cleanedToOriginalMap = new Dictionary<string, string>();
 
-            foreach (var color in colors)
+            Console.WriteLine($"Calculating color scores for element ID: {elementId}");
+
+            // Clean input colors and create a mapping
+            var cleanedColors = colors.Select(color =>
             {
-                var matchingBreeds = compatibleBreeds.Where(b => b.Color.Equals(color, StringComparison.OrdinalIgnoreCase) && b.ElementId == elementId).ToList();
+                var cleaned = CleanColorName(color);
+                cleanedToOriginalMap[cleaned] = color;
+                Console.WriteLine($"Cleaned color: {cleaned} (Original: {color})");
+                return cleaned;
+            }).Distinct().ToList();
 
-                if (matchingBreeds.Any())
+            // Get all colors associated with the user's element
+            var elementColors = breeds
+                .Where(b => b.ElementId == elementId)
+                .SelectMany(b => CleanColorName(b.Color).Split(' '))
+                .Distinct()
+                .ToList();
+
+            Console.WriteLine($"Colors associated with element {elementId}: {string.Join(", ", elementColors)}");
+
+            // Get the most common colors for the element (top 3)
+            var recommendedColors = breeds
+                .Where(b => b.ElementId == elementId)
+                .SelectMany(b => CleanColorName(b.Color).Split(' '))
+                .GroupBy(c => c)
+                .OrderByDescending(g => g.Count())
+                .Take(3)
+                .Select(g => g.Key)
+                .ToList();
+
+            Console.WriteLine($"Top 3 recommended colors: {string.Join(", ", recommendedColors)}");
+
+            foreach (var cleanedColor in cleanedColors)
+            {
+                var originalColor = cleanedToOriginalMap[cleanedColor];
+
+                if (recommendedColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                 {
-                    colorScores[color] = 100.0; // Full compatibility if there's a match
+                    colorScores[originalColor] = 100.0;
+                    Console.WriteLine($"Color {originalColor} scored 100.0 (Top recommended)");
+                }
+                else if (elementColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
+                {
+                    colorScores[originalColor] = 75.0;
+                    Console.WriteLine($"Color {originalColor} scored 75.0 (Matches element)");
+                }
+                else if (breeds.Any(b => CleanColorName(b.Color).Split(' ').Contains(cleanedColor, StringComparer.OrdinalIgnoreCase)))
+                {
+                    colorScores[originalColor] = 50.0;
+                    Console.WriteLine($"Color {originalColor} scored 50.0 (Exists in breeds)");
                 }
                 else
                 {
-                    // If no exact match, check if there are any breeds with the same color (regardless of element)
-                    var sameColorBreeds = compatibleBreeds.Where(b => b.Color.Equals(color, StringComparison.OrdinalIgnoreCase)).ToList();
-                    colorScores[color] = sameColorBreeds.Any() ? 50.0 : 0.0;
+                    colorScores[originalColor] = 0.0;
+                    Console.WriteLine($"Color {originalColor} scored 0.0 (No match found)");
                 }
             }
 
             return colorScores;
         }
+
+        private string CleanColorName(string color)
+        {
+            // Remove diacritics
+            color = RemoveDiacritics(color);
+
+            // Remove semicolons, extra whitespace, and the word "và"
+            color = Regex.Replace(color, @"[;]|\s*va\s*|\s+", " ", RegexOptions.IgnoreCase).Trim();
+
+            // Convert to lowercase
+            return color.ToLowerInvariant();
+        }
+
+        private string RemoveDiacritics(string text)
+        {
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        }
+
 
         private async Task<double> GetQuantityCompatibilityScore(int quantity, int elementId)
         {
@@ -223,13 +299,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             else if (averageColorScore < 75.0)
             {
                 var recommendedColors = await GetRecommendedColors(elementId, 2); // Get top 2 recommended colors
-                recommendations.Add($"Các màu Koi đã chọn ({string.Join(", ", currentColors)}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc khám phá thêm các màu như ({string.Join(", ", recommendedColors)}) để cải thiện sự hài hòa.");
+                var notRecommendedColors = currentColors.Where(c => colorScores[c] < 75.0).ToList();
+                if (notRecommendedColors.Any())
+                {
+                    recommendations.Add($"Các màu Koi ({string.Join(", ", notRecommendedColors)}) có thể không tối ưu. Hãy cân nhắc thay thế bằng các màu như ({string.Join(", ", recommendedColors)}) để cải thiện sự hài hòa.");
+                }
             }
 
             if (quantityScore < 25.0)
-                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} để cân bằng Phong thủy tốt hơn.");
+                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} hoặc chữ số có hàng đơn vị là {await GetRecommendedQuantity(elementId)} để cân bằng Phong thủy tốt hơn.");
             else if (quantityScore < 50.0)
-                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} để cải thiện sự hài hòa.");
+                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} hoặc chữ số có hàng đơn vị là {await GetRecommendedQuantity(elementId)} để cải thiện sự hài hòa.");
 
             return recommendations;
         }
