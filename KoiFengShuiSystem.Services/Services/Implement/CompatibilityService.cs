@@ -177,9 +177,20 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Extract the last digit of the quantity
             int lastDigit = Math.Abs(quantity % 10);
 
-            var customerFaP = await _customerFaPRepository.FindAsync(c => c.ElementId == elementId && c.FishQuantity == lastDigit);
-            return customerFaP != null ? customerFaP.Percentage * 100.0 : 0.0;
+            // Convert the last digit to a string for comparison
+            string lastDigitStr = lastDigit.ToString();
+
+            // Find the element with the matching lucky number
+            var matchingElement = await _elementRepository.FindAsync(e => e.LuckyNumber.Contains(lastDigitStr) && e.ElementId == elementId);
+
+            if (matchingElement == null)
+            {
+                return 0.0; // Number not found or not matching the element
+            }
+
+            return 100.0; // Matching number found for the element
         }
+
 
         private double CalculateOverallScore(double directionScore, double shapeScore, double breedScore, double quantityScore)
         {
@@ -260,20 +271,30 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         private async Task<string> GetOptimalShape(int elementId)
         {
-            var recommendations = await _recommendationRepository.GetAllAsync();
-            var ponds = await _fishPondRepository.GetAllAsync();
-            var shapes = await _shapeCategoryRepository.GetAllAsync();
+            try
+            {
+                // Get all shape categories
+                var shapeCategories = await _shapeCategoryRepository.GetAllAsync();
 
-            var optimalShape = recommendations
-                .GroupJoin(ponds, r => r.PondId, p => p.PondId, (r, p) => new { Recommendation = r, Ponds = p })
-                .SelectMany(x => x.Ponds.DefaultIfEmpty(), (x, p) => new { x.Recommendation, Pond = p })
-                .GroupJoin(shapes, x => x.Pond.ShapeId, s => s.ShapeId, (x, s) => new { x.Recommendation, x.Pond, Shapes = s })
-                .SelectMany(x => x.Shapes.DefaultIfEmpty(), (x, s) => new { x.Recommendation, x.Pond, Shape = s })
-                .GroupBy(x => x.Shape.ShapeName)
-                .OrderByDescending(g => g.Count())
-                .FirstOrDefault();
+                // Filter shape categories by the user's element
+                var compatibleShapes = shapeCategories.Where(s => s.ElementId == elementId).ToList();
 
-            return optimalShape?.Key ?? "Unknown";
+                if (compatibleShapes.Any())
+                {
+                    // If there are compatible shapes, return the first one (or you could implement some priority logic here)
+                    return compatibleShapes.First().ShapeName;
+                }
+                else
+                {
+                    // If no compatible shapes found for the user's element, return the first shape from all categories
+                    return shapeCategories.Any() ? shapeCategories.First().ShapeName : "Unknown";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred in GetOptimalShape: {ex.Message}");
+                return "Unknown";
+            }
         }
 
         private async Task<List<string>> GetRecommendedColors(int elementId, int count)
