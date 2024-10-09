@@ -41,5 +41,7 @@ public partial class Account
 
     public virtual Role Role { get; set; }
 
+    public virtual ICollection<TrafficLog> TrafficLogs { get; set; } = new List<TrafficLog>();
+
     public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

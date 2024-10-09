@@ -17,7 +17,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.MaxDepth = 32;
+    });
 // Database context
 builder.Services.AddDbContext<KoiFengShuiContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -34,6 +42,9 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
+builder.Services.AddScoped<IConsultationService, ConsultationService>();
+
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PostService>();

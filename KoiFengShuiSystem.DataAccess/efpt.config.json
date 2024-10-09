@@ -95,6 +95,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[TrafficLog]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[Transaction]",
          "ObjectType": 0
       }
