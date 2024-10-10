@@ -29,9 +29,17 @@ public partial class MarketplaceListing
 
     public bool IsActive { get; set; }
 
+    public string Status { get; set; }
+
+    public int? ElementId { get; set; }
+
     public virtual Account Account { get; set; }
 
     public virtual MarketCategory Category { get; set; }
+
+    public virtual Element Element { get; set; }
+
+    public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
 
     public virtual SubcriptionTier Tier { get; set; }
 }

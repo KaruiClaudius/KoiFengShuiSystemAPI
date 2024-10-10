@@ -15,8 +15,6 @@ public partial class Post
 
     public string Description { get; set; }
 
-    public double Price { get; set; }
-
     public DateTime CreateAt { get; set; }
 
     public DateTime UpdateAt { get; set; }
@@ -25,7 +23,7 @@ public partial class Post
 
     public string Status { get; set; }
 
-    public int ElementId { get; set; }
+    public int? ElementId { get; set; }
 
     public virtual Account Account { get; set; }
 

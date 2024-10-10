@@ -29,11 +29,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CreateAt = po.CreateAt,
                         AccountId = po.AccountId,
                         UpdateAt = po.UpdateAt,
-                        ElementId = po.ElementId,
+                        ElementId = (int) po.ElementId,
                         Follows = po.Follows,
                         Id = po.Id,
                         Name = po.Name,
-                        Price = (po.Price / 1000),
                         ElementName = po.Element.ElementName, // Access ElementName
                         AccountName = po.Account.FullName, // Access ElementName
                         Status = po.Status,
@@ -70,11 +69,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CreateAt = po.CreateAt,
                         AccountId = po.AccountId,
                         UpdateAt = po.UpdateAt,
-                        ElementId = po.ElementId,
+                        ElementId = (int) po.ElementId,
                         Follows = po.Follows,
                         Id = po.Id,
                         Name = po.Name,
-                        Price = (po.Price / 1000),
                         ElementName = po.Element.ElementName, // Access ElementName
                         AccountName = po.Account.FullName, // Access ElementName
                         Status = po.Status,

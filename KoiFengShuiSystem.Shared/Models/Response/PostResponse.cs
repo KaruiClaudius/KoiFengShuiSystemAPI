@@ -17,7 +17,6 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public DateTime UpdateAt { get; set; }
         public int AccountId { get; set; }
         public int ElementId { get; set; }
-        public double? Price { get; set; }
         public string Status { get; set; }
         public string ElementName { get; set; } // Added ElementName here
         public string AccountName { get; set; } // Added Account Name

@@ -23,8 +23,8 @@ namespace KoiFengShuiSystem.Api.Controllers
     public class PostController : Controller
     {
         private IPostService _postService;
-        private readonly ILogger<PostService> _logger;
-        public PostController(IPostService postService, ILogger<PostService> logger)
+        private readonly ILogger<PostController> _logger;
+        public PostController(IPostService postService, ILogger<PostController> logger)
         {
             _postService = postService;
             _logger = logger;

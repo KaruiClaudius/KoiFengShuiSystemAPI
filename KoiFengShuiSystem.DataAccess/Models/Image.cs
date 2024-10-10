@@ -11,5 +11,7 @@ public partial class Image
 
     public string ImageUrl { get; set; }
 
+    public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
+
     public virtual ICollection<PostImage> PostImages { get; set; } = new List<PostImage>();
 }
