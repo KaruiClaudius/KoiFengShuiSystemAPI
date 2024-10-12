@@ -1,15 +1,9 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.BusinessLogic.ViewModel;
-using KoiFengShuiSystem.DataAccess.Base;
+using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
-using KoiFengShuiSystem.Shared.Models.Request;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Shared.Models.Response;
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class PostService : IPostService
@@ -26,14 +20,74 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var posts = await _unitOfWork.PostRepository.GetAllWithElementAsync();
-                if (posts == null)
+                if (posts != null)
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    var postResponses = posts.Select(po => new PostResponse
+                    {
+                        PostId = po.PostId,
+                        Description = po.Description,
+                        CreateAt = po.CreateAt,
+                        AccountId = po.AccountId,
+                        UpdateAt = po.UpdateAt,
+                        ElementId = (int) po.ElementId,
+                        Follows = po.Follows,
+                        Id = po.Id,
+                        Name = po.Name,
+                        ElementName = po.Element.ElementName, // Access ElementName
+                        AccountName = po.Account.FullName, // Access ElementName
+                        Status = po.Status,
+                    }).ToList();
+                    if (postResponses == null)
+                    {
+                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    }
+                    else
+                    {
+                        return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, postResponses);
+                    }
                 }
-                else
+                return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+
+            }
+            catch (Exception e)
+            {
+                return new BusinessResult(-4, e.Message.ToString());
+            }
+        }
+
+        public async Task<IBusinessResult> GetPostByPostTypeId(int postTypeId,  int pageNumber, int pageSize)
+        {
+            try
+            {
+                var posts = await _unitOfWork.PostRepository.GetAllByPostTypeIdAsync(postTypeId, pageNumber, pageSize);
+                if (posts != null)
                 {
-                    return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, posts);
+                    var postResponses = posts.Select(po => new PostResponse
+                    {
+                        PostId = po.PostId,
+                        Description = po.Description,
+                        CreateAt = po.CreateAt,
+                        AccountId = po.AccountId,
+                        UpdateAt = po.UpdateAt,
+                        ElementId = (int) po.ElementId,
+                        Follows = po.Follows,
+                        Id = po.Id,
+                        Name = po.Name,
+                        ElementName = po.Element.ElementName, // Access ElementName
+                        AccountName = po.Account.FullName, // Access ElementName
+                        Status = po.Status,
+                    }).ToList();
+                    if (postResponses == null)
+                    {
+                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    }
+                    else
+                    {
+                        return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, postResponses);
+                    }
                 }
+                return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+
             }
             catch (Exception e)
             {
@@ -61,6 +115,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
         }
 
+
+
         public async Task<IBusinessResult> CreatePost(Post post)
         {
             try
@@ -84,18 +140,18 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         }
 
         // Helper method to compare two payments
-      /*  private bool PostAreEqual(Post post, Post entityInDb)
-        {
-            return post.PostId == entityInDb.PostId &&
-                   post.Id == entityInDb.Id &&
-                   post.Name == entityInDb.Name &&
-                   post.Description == entityInDb.Description &&
-                   post.CreateAt == entityInDb.CreateAt &&
-                   post.UpdateAt == entityInDb.UpdateAt &&
-                   post.CreateBy == entityInDb.CreateBy &&
-                   post.ElementId == entityInDb.ElementId &&
-                   post.Price == entityInDb.Price;
-        }*/
+        /*  private bool PostAreEqual(Post post, Post entityInDb)
+          {
+              return post.PostId == entityInDb.PostId &&
+                     post.Id == entityInDb.Id &&
+                     post.Name == entityInDb.Name &&
+                     post.Description == entityInDb.Description &&
+                     post.CreateAt == entityInDb.CreateAt &&
+                     post.UpdateAt == entityInDb.UpdateAt &&
+                     post.CreateBy == entityInDb.CreateBy &&
+                     post.ElementId == entityInDb.ElementId &&
+                     post.Price == entityInDb.Price;
+          }*/
 
 
         public async Task<IBusinessResult> DeletePost(int id)

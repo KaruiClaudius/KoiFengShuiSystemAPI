@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.DataAccess.Base
 {
-    public class GenericRepository<T> where T : class
+    public class GenericRepository<T> : List<T> where T : class
     {
         protected KoiFengShuiContext _context;
         protected readonly DbSet<T> _dbSet;
@@ -152,5 +152,26 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             return await query.ToListAsync();
         }
+        #region Pagination
+
+        public int PageIndex { get; private set; }
+        public int PageSize { get; private set; }
+        public int TotalCount { get; private set; }
+
+        public GenericRepository(List<T> items, int totalCount)
+        {
+            this.AddRange(items);
+            PageIndex = 1;
+            PageSize = items.Count;
+            TotalCount = totalCount;
+        }
+
+        public static async Task<GenericRepository<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize)
+        {
+            var count = await source.CountAsync();
+            var paginatedItems = await source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            return new GenericRepository<T>(paginatedItems, count);
+        }
+        #endregion
     }
 }

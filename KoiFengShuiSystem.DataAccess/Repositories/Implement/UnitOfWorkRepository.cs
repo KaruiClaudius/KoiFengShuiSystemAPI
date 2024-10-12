@@ -13,6 +13,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
     {
         private readonly KoiFengShuiContext _unitOfWorkContext;
         private PostRepository _postRepository;
+        private MarketplaceListingRepository _marketplaceListingsRepository;
         public UnitOfWorkRepository()
         {
             _unitOfWorkContext ??= new KoiFengShuiContext(new DbContextOptions<KoiFengShuiContext>());
@@ -22,6 +23,14 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
             get
             {
                 return _postRepository ??= new PostRepository();
+            }
+        }
+
+        public MarketplaceListingRepository MarketplaceListingRepository
+        {
+            get
+            {
+                return _marketplaceListingsRepository ??= new MarketplaceListingRepository();
             }
         }
 

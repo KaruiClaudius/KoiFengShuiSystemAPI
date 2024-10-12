@@ -1,7 +1,5 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.ViewModel;
-using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.Shared.Models.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
-    public interface IPostService
+    public interface IMarketplaceListingService
     {
         Task<IBusinessResult> GetAll();
-        Task<IBusinessResult> GetPostById(int id);
-        Task<IBusinessResult> GetPostByPostTypeId(int postTypeId, int page, int pageSize);
-        Task<IBusinessResult> CreatePost(Post post);
+        Task<IBusinessResult> GetMarketplaceListingById(int id);
+        Task<IBusinessResult> GetMarketplaceListingByCategoryId(int categoryId, int pageNumber, int pageSize);
+        Task<IBusinessResult> CreateMarketplaceListing(MarketplaceListing marketplaceListing);
         // Helper method to compare two payments
-        Task<IBusinessResult> DeletePost(int id);
+        Task<IBusinessResult> DeleteMarketplaceListing(int id);
         Task<IBusinessResult> Save();
     }
 }

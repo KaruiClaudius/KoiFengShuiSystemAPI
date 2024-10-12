@@ -55,6 +55,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[ListingImage]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[MarketCategory]",
          "ObjectType": 0
       },
