@@ -21,12 +21,13 @@ namespace KoiFengShuiSystem.Api.Authorization
             var log = new TrafficLog
             {
                 Timestamp = DateTime.UtcNow,
-                IsRegistered = isRegistered,
-                AccountId = isRegistered ? int.Parse(userId) : null,
                 IpAddress = context.Connection.RemoteIpAddress?.ToString(),
                 UserAgent = context.Request.Headers["User-Agent"].ToString(),
                 RequestPath = context.Request.Path,
-                RequestMethod = context.Request.Method
+                RequestMethod = context.Request.Method,
+                IsRegistered = context.User.Identity.IsAuthenticated,
+                AccountId = context.User.Identity.IsAuthenticated ?
+                int.Parse(context.User.FindFirst(ClaimTypes.NameIdentifier).Value) : (int?)null
             };
 
             dbContext.TrafficLogs.Add(log);
