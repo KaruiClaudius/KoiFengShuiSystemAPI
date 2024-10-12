@@ -41,11 +41,19 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _elementRepository = elementRepository;
         }
 
-        public AuthenticateResponse? Authenticate(AuthenticateRequest model)
+        public AuthenticationResult Authenticate(AuthenticateRequest model)
         {
-            var account = _accountRepository.GetAll().SingleOrDefault(x => x.Email == model.Email && x.Password == model.Password);
+            var account = _accountRepository.GetAll().SingleOrDefault(x => x.Email == model.Email);
 
-            if (account == null) return null;
+            if (account == null)
+            {
+                return new AuthenticationResult { ErrorMessage = "Email not found." };
+            }
+
+            if (account.Password != model.Password)
+            {
+                return new AuthenticationResult { ErrorMessage = "Incorrect password." };
+            }
 
             // Calculate and update element
             if (account.Dob.HasValue)
@@ -57,8 +65,11 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
 
             var token = _jwtUtils.GenerateJwtToken(account);
-            return new AuthenticateResponse(account, token);
+            var response = new AuthenticateResponse(account, token);
+
+            return new AuthenticationResult { Response = response };
         }
+
 
         public IEnumerable<Account> GetAll()
         {

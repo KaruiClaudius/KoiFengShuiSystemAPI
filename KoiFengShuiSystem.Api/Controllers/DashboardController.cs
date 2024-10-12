@@ -60,12 +60,22 @@ namespace KoiFengShuiSystem.API.Controllers
             try
             {
                 var registeredUsers = await _dashboardService.GetRegisteredUsersTrafficCount();
-                var guests = await _dashboardService.GetGuestsTrafficCount();
+                var uniqueGuests = await _dashboardService.GetUniqueGuestsTrafficCount();
 
-                return Ok(new { registeredUsers, guests });
+                var total = registeredUsers + uniqueGuests;
+                var registeredPercentage = (double)registeredUsers / total * 100;
+                var uniqueGuestsPercentage = (double)uniqueGuests / total * 100;
+
+                return Ok(new
+                {
+                    RegisteredUsers = Math.Round(registeredPercentage, 2),
+                    UniqueGuests = Math.Round(uniqueGuestsPercentage, 2),
+                    TotalVisitors = total
+                });
             }
             catch (Exception ex)
             {
+                // Log the exception
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
