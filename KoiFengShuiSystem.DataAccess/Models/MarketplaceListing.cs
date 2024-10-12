@@ -42,4 +42,6 @@ public partial class MarketplaceListing
     public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
 
     public virtual SubcriptionTier Tier { get; set; }
+
+    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

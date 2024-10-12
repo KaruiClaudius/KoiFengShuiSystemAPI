@@ -17,8 +17,6 @@ public partial class Element
 
     public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 
-    public virtual ICollection<CustomerFaP> CustomerFaPs { get; set; } = new List<CustomerFaP>();
-
     public virtual ICollection<FengShuiDirection> FengShuiDirections { get; set; } = new List<FengShuiDirection>();
 
     public virtual ICollection<KoiBreed> KoiBreeds { get; set; } = new List<KoiBreed>();

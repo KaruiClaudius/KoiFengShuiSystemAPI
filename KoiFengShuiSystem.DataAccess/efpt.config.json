@@ -23,10 +23,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[CustomerFaP]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[Direction]",
          "ObjectType": 0
       },

@@ -19,7 +19,11 @@ public partial class Transaction
 
     public DateTime TransactionDate { get; set; }
 
+    public int ListingId { get; set; }
+
     public virtual Account Account { get; set; }
+
+    public virtual MarketplaceListing Listing { get; set; }
 
     public virtual Subscription Subscription { get; set; }
 
