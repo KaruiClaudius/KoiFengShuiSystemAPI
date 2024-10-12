@@ -3,13 +3,11 @@ using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Authentication.Cookies;
-//using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-//using Google.Apis.Auth;
-using KoiFengShuiSystem.Shared.Models.Response;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using KoiFengShuiSystem.Shared.Helpers;
@@ -39,17 +37,21 @@ namespace KoiFengShuiSystem.Api.Controllers
         [HttpPost("SignIn")]
         public IActionResult Authenticate(AuthenticateRequest model)
         {
-            var response = _accountService.Authenticate(model);
+            var result = _accountService.Authenticate(model);
 
-            if (response == null)
-                return BadRequest(new { message = "Username or password is incorrect" });
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.ErrorMessage });
+            }
 
+            var response = result.Response;
             return Ok(new
             {
                 Token = response.Token,
-                Email = response.Email // Make sure AuthenticateResponse includes the Email property
+                Email = response.Email
             });
         }
+
 
         [AllowAnonymous]
         [HttpPost("SignUp")]
