@@ -98,8 +98,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 CreateAt = DateTime.Now,
                 UpdateAt = DateTime.Now,
                 Gender = model.Gender,
-                CreateAt = DateTime.Now,
-                UpdateAt = DateTime.Now,
                 RoleId = 2
             };
 

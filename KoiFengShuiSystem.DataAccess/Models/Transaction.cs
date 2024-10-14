@@ -7,6 +7,8 @@ namespace KoiFengShuiSystem.DataAccess.Models;
 
 public partial class Transaction
 {
+    public int Id { get; set; }
+
     public int TransactionId { get; set; }
 
     public int AccountId { get; set; }
@@ -18,6 +20,8 @@ public partial class Transaction
     public decimal Amount { get; set; }
 
     public DateTime TransactionDate { get; set; }
+
+    public string Status { get; set; }
 
     public int ListingId { get; set; }
 

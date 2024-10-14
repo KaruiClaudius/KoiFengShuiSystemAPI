@@ -17,5 +17,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<int> CountNewMarketListingsAsync(int days);
         Task<List<CategoryListingCount>> CountNewMarketListingsByCategoryAsync(int days);
         Task<List<MarketListingSummary>> ListMarketListingsAsync(int page = 1, int pageSize = 10);
+        Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync();
     }
 }

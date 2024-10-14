@@ -17,6 +17,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly GenericRepository<Account> _accountRepository;
         private readonly GenericRepository<TrafficLog> _trafficLogRepository;
         private readonly GenericRepository<MarketplaceListing> _marketplaceListingRepository;
+        private readonly GenericRepository<Transaction> _transactionRepository;
+
         private readonly ILogger<TrafficLog> _logger;
 
 
@@ -24,11 +26,13 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             GenericRepository<Account> accountRepository,
             GenericRepository<TrafficLog> trafficLogRepository,
             GenericRepository<MarketplaceListing> marketplaceListingRepository,
+            GenericRepository<Transaction> transactionRepository,
             ILogger<TrafficLog> logger)
         {
             _accountRepository = accountRepository;
             _trafficLogRepository = trafficLogRepository;
             _marketplaceListingRepository = marketplaceListingRepository;
+            _transactionRepository = transactionRepository;
             _logger = logger;
         }
 
@@ -132,6 +136,36 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 })
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync()
+        {
+            var query = _transactionRepository.GetAllQuery()
+                .Where(t => t.Status == "Active")
+                .OrderByDescending(t => t.TransactionDate);
+
+            var transactions = await query.ToListAsync();
+
+            var result = await MapToDTO(transactions);
+            return result;
+        }
+
+        private async Task<IEnumerable<TransactionDashboardRequest>> MapToDTO(IEnumerable<Transaction> transactions)
+        {
+            var accountIds = transactions.Select(t => t.AccountId).Distinct().ToList();
+            var accounts = await _accountRepository.GetAllQuery()
+                .Where(a => accountIds.Contains(a.AccountId))
+                .Select(a => new { a.AccountId, a.FullName })
+                .ToListAsync();
+
+            return transactions.Select(t => new TransactionDashboardRequest
+            {
+                TransactionId = t.TransactionId,
+                AccountFullName = accounts.FirstOrDefault(a => a.AccountId == t.AccountId)?.FullName,
+                Status = t.Status,
+                Amount = t.Amount
+            });
+        }
+
     }
 
 

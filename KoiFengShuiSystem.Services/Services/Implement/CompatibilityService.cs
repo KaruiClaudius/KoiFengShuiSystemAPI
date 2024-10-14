@@ -15,7 +15,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class CompatibilityService : ICompatibilityService
     {
-        private readonly GenericRepository<CustomerFaP> _customerFaPRepository;
         private readonly GenericRepository<Element> _elementRepository;
         private readonly GenericRepository<FengShuiDirection> _fengShuiDirectionRepository;
         private readonly GenericRepository<ShapeCategory> _shapeCategoryRepository;
@@ -25,7 +24,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly GenericRepository<FishPond> _fishPondRepository;
 
         public CompatibilityService(
-             GenericRepository<CustomerFaP> customerFaPRepository,
              GenericRepository<Element> elementRepository,
              GenericRepository<FengShuiDirection> fengShuiDirectionRepository,
              GenericRepository<ShapeCategory> shapeCategoryRepository,
@@ -34,7 +32,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
              GenericRepository<Recommendation> recommendationRepository,
              GenericRepository<FishPond> fishPondRepository)
         {
-            _customerFaPRepository = customerFaPRepository;
             _elementRepository = elementRepository;
             _fengShuiDirectionRepository = fengShuiDirectionRepository;
             _shapeCategoryRepository = shapeCategoryRepository;

@@ -1,4 +1,6 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using KoiFengShuiSystem.BusinessLogic.Services.Implement;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.Shared.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -113,6 +115,13 @@ namespace KoiFengShuiSystem.API.Controllers
         {
             var listings = await _dashboardService.ListMarketListingsAsync(page, pageSize);
             return Ok(listings);
+        }
+
+        [HttpGet("transaction-listing")]
+        public async Task<ActionResult<IEnumerable<TransactionDashboardRequest>>> GetNewestTransactions()
+        {
+            var transactions = await _dashboardService.GetNewestTransactionsAsync();
+            return Ok(transactions);
         }
 
     }
