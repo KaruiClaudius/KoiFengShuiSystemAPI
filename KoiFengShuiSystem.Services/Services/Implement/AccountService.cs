@@ -270,7 +270,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 AccountId = account.AccountId,
                 FullName = account.FullName,
                 Email = account.Email,
-                RoleId = account.RoleId
+                RoleId = account.RoleId,
+                Phone = account.Phone,
+                Dob = (DateTime)account.Dob,
+                Gender = account.Gender,
                 // Add any other properties you need
             };
 
