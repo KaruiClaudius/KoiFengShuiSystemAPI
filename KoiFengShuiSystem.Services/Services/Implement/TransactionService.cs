@@ -25,7 +25,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 TierId = transactionRequest.TierId,
                 SubscriptionId = transactionRequest.SubscriptionId,
                 Amount = transactionRequest.Amount,
-                TransactionDate = transactionRequest.TransactionDate
+                TransactionDate = transactionRequest.TransactionDate,
+                Status = transactionRequest.Status,
+                ListingId = transactionRequest.ListingId
             };
 
             await _transactionRepository.AddAsync(transaction);

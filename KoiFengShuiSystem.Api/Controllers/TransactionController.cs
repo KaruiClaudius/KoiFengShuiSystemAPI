@@ -2,7 +2,6 @@
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using static KoiFengShuiSystem.Shared.Models.Response.TransactionResponseDto;
 
@@ -13,10 +12,12 @@ namespace KoiFengShuiSystem.Api.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
+        private readonly IVnPayService _vnPayService;
 
-        public TransactionController(ITransactionService transactionService)
+        public TransactionController(ITransactionService transactionService, IVnPayService vnPayService)
         {
             _transactionService = transactionService;
+            _vnPayService = vnPayService;
         }
 
         [HttpPost("Create")]
@@ -25,37 +26,34 @@ namespace KoiFengShuiSystem.Api.Controllers
             var transaction = await _transactionService.ProcessTransactionAsync(transactionRequest);
             var response = new
             {
-                TransactionId = transaction.TransactionId,
                 AccountId = transaction.AccountId,
                 TierId = transaction.TierId,
                 SubscriptionId = transaction.SubscriptionId,
                 Amount = transaction.Amount,
-                TransactionDate = transaction.TransactionDate
+                TransactionDate = transaction.TransactionDate,
+                Status = transaction.Status,
+                ListingId = transaction.ListingId
             };
 
             return Ok(response);
         }
 
-
-        [HttpGet("{accountId}")]
-        public async Task<IActionResult> GetTransactionsByAccountId(int accountId)
+        [HttpPost("CreatePayment")]
+        public IActionResult CreatePayment([FromBody] VnPaymentRequestModel paymentRequest)
         {
-            var transactions = await _transactionService.GetByAccountIdAsync(accountId);
-            return Ok(transactions);
+            var paymentUrl = _vnPayService.CreatePaymentUrl(HttpContext, paymentRequest);
+            return Ok(new { PaymentUrl = paymentUrl });
         }
 
-        [HttpDelete("{transactionId}")]
-        public async Task<IActionResult> DeleteTransaction(int transactionId)
+        [HttpPost("PaymentExecute")]
+        public IActionResult PaymentExecute(IQueryCollection collections)
         {
-            await _transactionService.DeleteTransactionAsync(transactionId);
-            return NoContent(); // Trả về 204 No Content
-        }
-
-        [HttpGet("total/{accountId}")]
-        public async Task<IActionResult> GetTotalAmountByAccountId(int accountId)
-        {
-            var totalAmount = await _transactionService.GetTotalAmountByAccountIdAsync(accountId);
-            return Ok(totalAmount);
+            var paymentResponse = _vnPayService.PaymentExecute(collections);
+            if (paymentResponse.Success)
+            {     
+                return Ok(paymentResponse);
+            }
+            return BadRequest("Thanh toán không thành công.");
         }
     }
 }

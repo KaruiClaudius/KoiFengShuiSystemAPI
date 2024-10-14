@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace KoiFengShuiSystem.DataAccess.Models;
 
@@ -62,16 +61,6 @@ public partial class KoiFengShuiContext : DbContext
 
     public virtual DbSet<Transaction> Transactions { get; set; }
 
-    public static string GetConnectionString(string connectionStringName)
-    {
-        var config = new ConfigurationBuilder()
-            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json")
-            .Build();
-
-        string connectionString = config.GetConnectionString(connectionStringName);
-        return connectionString;
-    }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
 
@@ -287,6 +276,10 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Element).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.ElementId)
                 .HasConstraintName("FK__Marketpla__Eleme__5629CD9C");
+
+            entity.HasOne(d => d.Element).WithMany(p => p.MarketplaceListings)
+                .HasForeignKey(d => d.ElementId)
+                .HasConstraintName("FK__Marketpla__Eleme__693CA210");
 
             entity.HasOne(d => d.Tier).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.TierId)

@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Bcpg.OpenPgp;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.Shared.Models.Response
 {
-
     public class VnPaymentResponseModel
     {
         public bool Success { get; set; }
@@ -19,9 +17,11 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public string Token { get; set; }
         public string VnPayResponseCode { get; set; }
     }
-    public class VnPaymentRequestModel 
+    public class VnPaymentRequestModel
     {
-        public string Amount { get; set; }
-        
+        public int OrderId { get; set; }
+        public string Description { get; set; }
+        public double Amount { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }
