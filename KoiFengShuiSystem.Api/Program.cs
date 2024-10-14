@@ -56,6 +56,7 @@ builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<PostService>();
 builder.Services.AddScoped<MarketplaceListingService>();
+builder.Services.AddScoped<AdminAccountService>();
 
 builder.Services.AddHttpClient();
 

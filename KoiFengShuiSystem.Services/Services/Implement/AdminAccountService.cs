@@ -32,6 +32,7 @@ public class AdminAccountService
             var newAdmin = new Account
             {
                 Email = adminEmail,
+                Password = adminPassword,
                 FullName = "System Administrator",
                 RoleId = 1, // Assuming 1 is the admin role
                 Dob = DateTime.Now,
