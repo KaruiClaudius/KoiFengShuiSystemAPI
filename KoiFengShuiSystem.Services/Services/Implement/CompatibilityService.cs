@@ -1,4 +1,4 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
@@ -41,9 +41,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _fishPondRepository = fishPondRepository;
         }
 
-        public async Task<CompatibilityResponse> AssessCompatibility(CompatibilityRequest request)
-        {
-            var userElement = await GetElementFromDateOfBirth(request.DateOfBirth);
+//        public async Task<CompatibilityResponse> AssessCompatibility(CompatibilityRequest request)
+//        {
+//            var userElement = await GetElementFromDateOfBirth(request.DateOfBirth);
 
             var directionScore = await GetDirectionCompatibilityScore(request.Direction, userElement.ElementId);
             var shapeScore = await GetShapeCompatibilityScore(request.PondShape, userElement.ElementId);
@@ -68,18 +68,18 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             };
         }
 
-        private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth)
-        {
-            string elementName = CalculateElement(yearOfBirth);
-            return await _elementRepository.FindAsync(e => e.ElementName == elementName);
-        }
+//        private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth)
+//        {
+//            string elementName = CalculateElement(yearOfBirth);
+//            return await _elementRepository.FindAsync(e => e.ElementName == elementName);
+//        }
 
-        private string CalculateElement(int yearOfBirth)
-        {
-            if (yearOfBirth <= 0)
-            {
-                throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
-            }
+//        private string CalculateElement(int yearOfBirth)
+//        {
+//            if (yearOfBirth <= 0)
+//            {
+//                throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
+//            }
 
             // Lấy 2 số cuối cùng của năm sinh
             int lastTwoDigits = yearOfBirth % 100;
@@ -113,40 +113,40 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 elementIndex -= 5;
             }
 
-            string element = elementIndex switch
-            {
-                1 => "Kim",
-                2 => "Thuỷ",
-                3 => "Hoả",
-                4 => "Thổ",
-                5 => "Mộc",
-                _ => throw new ArgumentException($"Invalid element calculation for year: {yearOfBirth}")
-            };
+//            string element = elementIndex switch
+//            {
+//                1 => "Kim",
+//                2 => "Thuỷ",
+//                3 => "Hoả",
+//                4 => "Thổ",
+//                5 => "Mộc",
+//                _ => throw new ArgumentException($"Invalid element calculation for year: {yearOfBirth}")
+//            };
 
-            return element;
-        }
+//            return element;
+//        }
 
 
         private async Task<double> GetDirectionCompatibilityScore(string direction, int elementId)
         {
             var directionEntity = await _directionRepository.FindAsync(d => d.DirectionName == direction);
 
-            if (directionEntity == null)
-            {
-                return 0.0; // Direction not found
-            }
+//            if (directionEntity == null)
+//            {
+//                return 0.0; // Direction not found
+//            }
 
-            var fengShuiDirection = await _fengShuiDirectionRepository.FindAsync(
-                f => f.DirectionId == directionEntity.DirectionId && f.ElementId == elementId);
+//            var fengShuiDirection = await _fengShuiDirectionRepository.FindAsync(
+//                f => f.DirectionId == directionEntity.DirectionId && f.ElementId == elementId);
 
-            return fengShuiDirection != null ? 100.0 : 0.0;
-        }
+//            return fengShuiDirection != null ? 100.0 : 0.0;
+//        }
 
-        private async Task<double> GetShapeCompatibilityScore(string shape, int elementId)
-        {
-            var shapeCategory = await _shapeCategoryRepository.FindAsync(s => s.ShapeName == shape && s.ElementId == elementId);
-            return shapeCategory != null ? 100.0 : 0.0;
-        }
+//        private async Task<double> GetShapeCompatibilityScore(string shape, int elementId)
+//        {
+//            var shapeCategory = await _shapeCategoryRepository.FindAsync(s => s.ShapeName == shape && s.ElementId == elementId);
+//            return shapeCategory != null ? 100.0 : 0.0;
+//        }
 
         private async Task<Dictionary<string, double>> GetColorCompatibilityScores(List<string> colors, int elementId)
         {
@@ -308,43 +308,43 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             else if (quantityScore < 50.0)
                 recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} hoặc chữ số có hàng đơn vị là {await GetRecommendedQuantity(elementId)} để cải thiện sự hài hòa.");
 
-            return recommendations;
-        }
+//            return recommendations;
+//        }
 
-        private async Task<string> GetOptimalDirection(int elementId)
-        {
-            try
-            {
-                var directions = await _directionRepository.GetAllAsync();
+//        private async Task<string> GetOptimalDirection(int elementId)
+//        {
+//            try
+//            {
+//                var directions = await _directionRepository.GetAllAsync();
 
-                Console.WriteLine($"Directions count: {directions.Count()}");
+//                Console.WriteLine($"Directions count: {directions.Count()}");
 
-                if (!directions.Any())
-                {
-                    Console.WriteLine("No directions found. Returning Unknown.");
-                    return "Unknown";
-                }
+//                if (!directions.Any())
+//                {
+//                    Console.WriteLine("No directions found. Returning Unknown.");
+//                    return "Unknown";
+//                }
 
-                // Sort directions by some criteria (e.g., alphabetical order, popularity, etc.)
-                var sortedDirections = directions.OrderBy(d => d.DirectionName).ToList();
+//                // Sort directions by some criteria (e.g., alphabetical order, popularity, etc.)
+//                var sortedDirections = directions.OrderBy(d => d.DirectionName).ToList();
 
-                // Select the first direction as the optimal one
-                var optimalDirection = sortedDirections.FirstOrDefault();
+//                // Select the first direction as the optimal one
+//                var optimalDirection = sortedDirections.FirstOrDefault();
 
-                if (optimalDirection == null)
-                {
-                    Console.WriteLine("Failed to select an optimal direction.");
-                    return "Unknown";
-                }
+//                if (optimalDirection == null)
+//                {
+//                    Console.WriteLine("Failed to select an optimal direction.");
+//                    return "Unknown";
+//                }
 
-                return optimalDirection.DirectionName;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred in GetOptimalDirection: {ex.Message}");
-                return "Unknown";
-            }
-        }
+//                return optimalDirection.DirectionName;
+//            }
+//            catch (Exception ex)
+//            {
+//                Console.WriteLine($"An error occurred in GetOptimalDirection: {ex.Message}");
+//                return "Unknown";
+//            }
+//        }
 
         private async Task<string> GetOptimalShape(int elementId)
         {
@@ -386,33 +386,33 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 .Select(g => g.Key)
                 .ToList();
 
-            return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
-        }
+//            return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
+//        }
 
 
-        private async Task<int> GetRecommendedQuantity(int elementId)
-        {
-            var element = await _elementRepository.GetByIdAsync(elementId);
+//        private async Task<int> GetRecommendedQuantity(int elementId)
+//        {
+//            var element = await _elementRepository.GetByIdAsync(elementId);
 
-            if (element != null && !string.IsNullOrEmpty(element.LuckyNumber))
-            {
-                var luckyNumbers = element.LuckyNumber.Split(',').Select(n => n.Trim()).ToArray();
+//            if (element != null && !string.IsNullOrEmpty(element.LuckyNumber))
+//            {
+//                var luckyNumbers = element.LuckyNumber.Split(',').Select(n => n.Trim()).ToArray();
 
-                if (luckyNumbers.Length > 0)
-                {
-                    var lastNumber = luckyNumbers.Last().Trim();
+//                if (luckyNumbers.Length > 0)
+//                {
+//                    var lastNumber = luckyNumbers.Last().Trim();
 
-                    if (!string.IsNullOrEmpty(lastNumber) && int.TryParse(lastNumber, out int parsedNumber))
-                    {
-                        // Return the absolute value of the last number
-                        return Math.Abs(parsedNumber % 10);
-                    }
-                }
-            }
+//                    if (!string.IsNullOrEmpty(lastNumber) && int.TryParse(lastNumber, out int parsedNumber))
+//                    {
+//                        // Return the absolute value of the last number
+//                        return Math.Abs(parsedNumber % 10);
+//                    }
+//                }
+//            }
 
-            // If the element doesn't exist or has no valid LuckyNumber, return a default value
-            return 9; // You can adjust this default value as needed
-        }
+//            // If the element doesn't exist or has no valid LuckyNumber, return a default value
+//            return 9; // You can adjust this default value as needed
+//        }
 
-    }
-}
+//    }
+//}

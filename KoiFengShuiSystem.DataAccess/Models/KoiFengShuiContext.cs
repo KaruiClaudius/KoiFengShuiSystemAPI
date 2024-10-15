@@ -239,6 +239,23 @@ public partial class KoiFengShuiContext : DbContext
                 .HasConstraintName("FK__ListingIm__Marke__6477ECF3");
         });
 
+        modelBuilder.Entity<ListingImage>(entity =>
+        {
+            entity.HasKey(e => e.ListingImageId).HasName("PK__ListingI__C6DC6D87BF6CBADA");
+
+            entity.ToTable("ListingImage");
+
+            entity.HasOne(d => d.Image).WithMany(p => p.ListingImages)
+                .HasForeignKey(d => d.ImageId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__ListingIm__Image__787EE5A0");
+
+            entity.HasOne(d => d.MarketListing).WithMany(p => p.ListingImages)
+                .HasForeignKey(d => d.MarketListingId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__ListingIm__Marke__778AC167");
+        });
+
         modelBuilder.Entity<MarketCategory>(entity =>
         {
             entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__19060623C6D525AE");
