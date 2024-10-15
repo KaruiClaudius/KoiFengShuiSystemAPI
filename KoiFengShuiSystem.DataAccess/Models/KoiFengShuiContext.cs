@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace KoiFengShuiSystem.DataAccess.Models;
 
@@ -60,7 +61,16 @@ public partial class KoiFengShuiContext : DbContext
     public virtual DbSet<TrafficLog> TrafficLogs { get; set; }
 
     public virtual DbSet<Transaction> Transactions { get; set; }
+    public static string GetConnectionString(string connectionStringName)
+    {
+        var config = new ConfigurationBuilder()
+            .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+            .AddJsonFile("appsettings.json")
+            .Build();
 
+        string connectionString = config.GetConnectionString(connectionStringName);
+        return connectionString;
+    }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
 

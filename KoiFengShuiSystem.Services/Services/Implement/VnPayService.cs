@@ -38,6 +38,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             vnpay.AddRequestData("vnp_OrderType", "order");
             vnpay.AddRequestData("vnp_ReturnUrl", _config["VnPay:PaymentBackReturnUrl"]);
             vnpay.AddRequestData("vnp_TxnRef", tick);
+            
             var paymentUrl = vnpay.CreateRequestUrl(_config["VnPay:BaseUrl"], (_config["VnPay:HashSecret"]));
             return paymentUrl;
         }
