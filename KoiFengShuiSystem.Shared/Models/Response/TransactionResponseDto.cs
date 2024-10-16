@@ -16,6 +16,8 @@ namespace KoiFengShuiSystem.Shared.Models.Response
             public int SubscriptionId { get; set; }
             public decimal Amount { get; set; }
             public DateTime TransactionDate { get; set; }
+            public string Status { get; set; }
+            public int  ListingId { get; set; }
         }
     }
 }

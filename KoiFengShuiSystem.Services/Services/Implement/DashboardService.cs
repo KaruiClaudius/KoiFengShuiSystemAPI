@@ -18,6 +18,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly GenericRepository<TrafficLog> _trafficLogRepository;
         private readonly GenericRepository<MarketplaceListing> _marketplaceListingRepository;
         private readonly GenericRepository<Transaction> _transactionRepository;
+        private readonly GenericRepository<SubcriptionTier> _subcriptionTierRepository;
+
 
         private readonly ILogger<TrafficLog> _logger;
 
@@ -27,12 +29,14 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             GenericRepository<TrafficLog> trafficLogRepository,
             GenericRepository<MarketplaceListing> marketplaceListingRepository,
             GenericRepository<Transaction> transactionRepository,
-            ILogger<TrafficLog> logger)
+            GenericRepository<SubcriptionTier> subcriptionTierRepository,
+        ILogger<TrafficLog> logger)
         {
             _accountRepository = accountRepository;
             _trafficLogRepository = trafficLogRepository;
             _marketplaceListingRepository = marketplaceListingRepository;
             _transactionRepository = transactionRepository;
+            _subcriptionTierRepository = subcriptionTierRepository;
             _logger = logger;
         }
 
@@ -137,11 +141,13 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync()
+        public async Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync(int page = 1, int pageSize = 10)
         {
             var query = _transactionRepository.GetAllQuery()
                 .Where(t => t.Status == "Active")
-                .OrderByDescending(t => t.TransactionDate);
+                .OrderByDescending(t => t.TransactionDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize);
 
             var transactions = await query.ToListAsync();
 
@@ -152,19 +158,38 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private async Task<IEnumerable<TransactionDashboardRequest>> MapToDTO(IEnumerable<Transaction> transactions)
         {
             var accountIds = transactions.Select(t => t.AccountId).Distinct().ToList();
+            var typeIds = transactions.Select(t => t.TierId).Distinct().ToList();
             var accounts = await _accountRepository.GetAllQuery()
                 .Where(a => accountIds.Contains(a.AccountId))
                 .Select(a => new { a.AccountId, a.FullName })
+                .ToListAsync();
+
+            var types = await _subcriptionTierRepository.GetAllQuery()
+                .Where(a => typeIds.Contains(a.TierId))
+                .Select(a => new { a.TierId, a.TierName })
                 .ToListAsync();
 
             return transactions.Select(t => new TransactionDashboardRequest
             {
                 TransactionId = t.TransactionId,
                 AccountFullName = accounts.FirstOrDefault(a => a.AccountId == t.AccountId)?.FullName,
+                TierName = types.FirstOrDefault(a => a.TierId == t.TierId)?.TierName,
                 Status = t.Status,
                 Amount = t.Amount
             });
         }
+
+        public async Task<TotalTransactionRequest> GetTotalTransactionAmountAsync()
+        {
+            var totalAmount = await _transactionRepository.GetAllQuery()
+                .SumAsync(t => t.Amount);
+
+            return new TotalTransactionRequest
+            {
+                TotalAmount = totalAmount
+            };
+        }
+
 
     }
 

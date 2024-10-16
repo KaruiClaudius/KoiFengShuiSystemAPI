@@ -25,7 +25,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 TierId = transactionRequest.TierId,
                 SubscriptionId = transactionRequest.SubscriptionId,
                 Amount = transactionRequest.Amount,
-                TransactionDate = transactionRequest.TransactionDate
+                TransactionDate = transactionRequest.TransactionDate,
+                Status = transactionRequest.Status,
+                ListingId = transactionRequest.ListingId
             };
 
             await _transactionRepository.AddAsync(transaction);
@@ -37,18 +39,22 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return await _transactionRepository.GetByAccountIdAsync(accountId);
         }
 
-        public async Task DeleteTransactionAsync(int transactionId)
-        {
-            var transaction = await _transactionRepository.GetByIdAsync(transactionId);
-            if (transaction != null)
-            {
-                await _transactionRepository.DeleteByAccountIdAsync(transaction.AccountId);
-            }
-        }
 
+
+      
         public async Task<decimal> GetTotalAmountByAccountIdAsync(int accountId)
         {
             return await _transactionRepository.GetTotalAmountByAccountIdAsync(accountId);
+        }
+
+    
+        public async Task DeleteAllTransactionsByAccountIdAsync(int accountId)
+        {
+            var transactions = await _transactionRepository.GetByAccountIdAsync(accountId);
+            foreach (var transaction in transactions)
+            {
+                await _transactionRepository.DeleteByAccountIdAsync(transaction.TransactionId);
+            }
         }
     }
 }

@@ -1,14 +1,13 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace KoiFengShuiSystem.Shared.Helpers
 {
@@ -122,6 +121,7 @@ namespace KoiFengShuiSystem.Shared.Helpers
         }
 
 
+        // có chế biến cho .NET Core MVC
         public static string GetIpAddress(HttpContext context)
         {
             var ipAddress = string.Empty;

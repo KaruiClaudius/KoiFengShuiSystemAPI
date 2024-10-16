@@ -10,7 +10,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
     {
         Task<Transaction> ProcessTransactionAsync(TransactionRequestDto transactionRequest);
         Task<List<Transaction>> GetByAccountIdAsync(int accountId);
-        Task DeleteTransactionAsync(int transactionId);
         Task<decimal> GetTotalAmountByAccountIdAsync(int accountId);
+        Task DeleteAllTransactionsByAccountIdAsync(int accountId);
     }
 }

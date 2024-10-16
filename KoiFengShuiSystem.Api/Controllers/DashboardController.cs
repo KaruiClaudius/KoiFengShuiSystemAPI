@@ -118,11 +118,17 @@ namespace KoiFengShuiSystem.API.Controllers
         }
 
         [HttpGet("transaction-listing")]
-        public async Task<ActionResult<IEnumerable<TransactionDashboardRequest>>> GetNewestTransactions()
+        public async Task<ActionResult<IEnumerable<TransactionDashboardRequest>>> GetNewestTransactions([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var transactions = await _dashboardService.GetNewestTransactionsAsync();
+            var transactions = await _dashboardService.GetNewestTransactionsAsync(page, pageSize);
             return Ok(transactions);
         }
 
+        [HttpGet("total-amount")]
+        public async Task<ActionResult<TotalTransactionRequest>> GetTotalTransactionAmount()
+        {
+            var total = await _dashboardService.GetTotalTransactionAmountAsync();
+            return Ok(total);
+        }
     }
 }

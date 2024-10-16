@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
-   public interface IVnPayService
+    public interface IVnPayService
     {
-        string CreatePaymentUrl(HttpContent content, VnPaymentResponseModel model);
+        string CreatePaymentUrl(HttpContext context, VnPaymentRequestModel model);
         VnPaymentResponseModel PaymentExecute(IQueryCollection collections);
     }
 }
