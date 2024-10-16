@@ -259,7 +259,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<AccountResponse> GetAccountByEmailAsync(string email)
         {
-            var account = await _accountRepository.FindAsync(x => x.Email == email);
+            var account = await _accountRepository.FindWithIncludeAsync(
+                x => x.Email == email,
+                x => x.Element
+            );
             if (account == null)
             {
                 return null;
@@ -274,7 +277,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Phone = account.Phone,
                 Dob = (DateTime)account.Dob,
                 Gender = account.Gender,
-                // Add any other properties you need
+                ElementName = account.Element?.ElementName
             };
 
         }

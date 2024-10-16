@@ -15,5 +15,7 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public string Phone { get; set; }
         public string Gender { get; set; }
         public int? RoleId { get; set; }
+        public string ElementName { get; set; }
+
     }
 }
