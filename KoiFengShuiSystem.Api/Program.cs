@@ -16,15 +16,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configuration
 
-builder.WebHost.UseUrls("https://0.0.0.0:7285", "http://0.0.0.0:7286");
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.Listen(IPAddress.Any, 7286); // HTTP
-    serverOptions.Listen(IPAddress.Any, 7285, listenOptions =>
-    {
-        listenOptions.UseHttps(); // HTTPS
-    });
-});
+// builder.WebHost.UseUrls("https://0.0.0.0:7285");
+// builder.WebHost.ConfigureKestrel(serverOptions =>
+// {
+//     serverOptions.Listen(IPAddress.Any, 7285, listenOptions =>
+//     {
+//         listenOptions.UseHttps(); // HTTPS
+//     });
+// });
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
