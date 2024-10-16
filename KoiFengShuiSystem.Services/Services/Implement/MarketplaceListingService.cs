@@ -81,7 +81,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
                     {
-                        ListingId = mp.ListingId,
                         AccountId = mp.AccountId,
                         TierId = mp.TierId,
                         Title = mp.Title,
@@ -91,10 +90,11 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CategoryId = mp.CategoryId,
                         CreateAt = DateTime.Now,
                         ExpiresAt = mp.ExpiresAt,
+                        //ListingImages = mp.ListingImages,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
-                        ElementName = mp.Element.ElementName,
+                        ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                     }).ToList();
@@ -120,7 +120,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
-                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByPostTypeIdAsync(categoryId, pageNumber, pageSize);
+                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByCategoryTypeIdAsync(categoryId, pageNumber, pageSize);
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
@@ -138,7 +138,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
-                        ElementName = mp.Element.ElementName,
+                        ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                     }).ToList();

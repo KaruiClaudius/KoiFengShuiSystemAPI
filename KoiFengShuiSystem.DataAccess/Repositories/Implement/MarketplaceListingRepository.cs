@@ -17,17 +17,23 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
             return await _dbSet
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
+                .Include(p => p.Tier)
+                .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
+                .ThenByDescending(p => p.CreateAt)
                 .ToListAsync();
 
         }
-        public async Task<GenericRepository<MarketplaceListing>> GetAllByPostTypeIdAsync(int categoryId, int pageNumber, int pageSize)
+        public async Task<GenericRepository<MarketplaceListing>> GetAllByCategoryTypeIdAsync(int categoryId, int pageNumber, int pageSize)
         {
             var marketplaces = await _dbSet
                 .Where(p => p.CategoryId == categoryId)
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
+                .Include(p => p.Tier)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
+                .ThenByDescending(p => p.CreateAt)
                 .ToListAsync();
             var totalCount = await _dbSet.CountAsync(p => p.CategoryId == categoryId);
 

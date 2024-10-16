@@ -29,7 +29,7 @@ namespace KoiFengShuiSystem.Api.Controllers
             return Ok(marketplaceListingResponse);
         }
 
-        [HttpGet("GetAllByPostType/{postTypeId}")]
+        [HttpGet("GetAllByCategoryType/{categoryId}")]
         public async Task<IActionResult> GetMarketplaceListingByCategoryId(int categoryId, [FromQuery] int page = 1,
     [FromQuery] int pageSize = 10)
         {

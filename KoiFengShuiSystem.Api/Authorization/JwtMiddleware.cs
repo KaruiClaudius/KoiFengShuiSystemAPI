@@ -1,4 +1,5 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using KoiFengShuiSystem.BusinessLogic.Services.Implement;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 
 namespace KoiFengShuiSystem.Api.Authorization
 {
