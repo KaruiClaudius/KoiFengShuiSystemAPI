@@ -58,7 +58,7 @@ builder.Services.AddScoped<MarketplaceListingService>();
 builder.Services.AddScoped<AdminAccountService>();
 
 builder.Services.AddHttpClient();
-builder.Services.AddSingleton<IVnPayService, VnPayService>();
+//builder.Services.AddSingleton<IVnPayService, VnPayService>();
 
 // Controller configuration
 builder.Services.AddControllers()
