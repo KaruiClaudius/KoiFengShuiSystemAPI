@@ -1,65 +1,89 @@
-﻿using KoiFengShuiSystem.Api.Authorization;
+﻿using Azure;
+using Azure.Core;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.DataAccess.Base;
+using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using Microsoft.Extensions.Hosting;
+using Org.BouncyCastle.Asn1.Ocsp;
+using System.Drawing.Printing;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
     [ApiController]
-    [Authorize]
     [Route("api/[controller]")]
-    public class FAQController : ControllerBase
+    public class FAQController : Controller
     {
-        private readonly IFAQService _faqService;
+        private IFAQService _faqService;
+        private readonly ILogger<FAQController> _logger;
 
-        public FAQController(IFAQService faqService)
+        public FAQController(IFAQService faqService, ILogger<FAQController> logger)
         {
             _faqService = faqService;
+            _logger = logger;
         }
 
-        [HttpGet("{GetAllFAQ}")]
+        [HttpGet("GetAll")]
         public async Task<IActionResult> GetAll()
         {
-            var faqs = await _faqService.GetAllFAQsAsync();
-            return Ok(faqs);
+            var faqResponse = await _faqService.GetAllFAQsAsync();
+
+            if (faqResponse == null)
+            {
+                return NotFound(faqResponse);
+            }
+            return Ok(faqResponse);
         }
 
-        [HttpGet]
+        [HttpGet("Details/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var faq = await _faqService.GetFAQByIdAsync(id);
-            if (faq == null) return NotFound();
-            return Ok(faq);
+            var faqResponse = await _faqService.GetFAQByIdAsync(id);
+            if (faqResponse == null)
+            {
+                return NotFound(faqResponse);
+            }
+            return Ok(faqResponse);
         }
 
-        [HttpPost("{CreateFAQ}")]
-        public async Task<IActionResult> Create([FromBody] FAQRequest faqRequest)
+        [HttpPost("Create")]
+        public async Task<IActionResult> CreateAsync([FromBody] FAQRequest faqRequest)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            var faq = await _faqService.CreateFAQAsync(faqRequest);
-            return CreatedAtAction(nameof(GetById), new { id = faq.FAQId }, faq);
+            var faqResponse = await _faqService.CreateFAQAsync(faqRequest);
+            if (faqResponse == null)
+            {
+                return BadRequest(faqResponse);
+            }
+            return Ok(faqResponse);
         }
 
-        [HttpPut("{UpdateFAQ}")]
+        [HttpPut("Update/{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] FAQRequest faqRequest)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-            var faq = await _faqService.UpdateFAQAsync(id, faqRequest);
-            if (faq == null) return NotFound();
-            return Ok(faq);
+            var faqResponse = await _faqService.UpdateFAQAsync(id, faqRequest);
+            if (faqResponse == null)
+            {
+                return NotFound(faqResponse);
+            }
+            return Ok(faqResponse);
         }
 
-        [HttpDelete("{UpdateFAQ}")]
+        [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _faqService.DeleteFAQAsync(id);
-            if (!success) return NotFound();
-            return NoContent();
+            var faqResponse = await _faqService.DeleteFAQAsync(id);
+            if (!faqResponse)
+            {
+                return BadRequest("Error deleting FAQ.");
+            }
+            return Ok("FAQ deleted successfully.");
         }
     }
 }
