@@ -6,19 +6,10 @@ using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Crypto.Generators;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
-
-
     public class AccountService : IAccountService
     {
         private readonly IJwtUtils _jwtUtils;
@@ -27,12 +18,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly ILogger<AccountService> _logger;
         private readonly GenericRepository<Element> _elementRepository;
 
-
-
-
         public AccountService(IJwtUtils jwtUtils, GenericRepository<Account> accountRepository,
-               EmailService emailService, ILogger<AccountService> logger, GenericRepository<Element> elementRepository
-              )
+               EmailService emailService, ILogger<AccountService> logger, GenericRepository<Element> elementRepository)
         {
             _jwtUtils = jwtUtils;
             _accountRepository = accountRepository;
@@ -41,9 +28,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _elementRepository = elementRepository;
         }
 
-        public AuthenticationResult Authenticate(AuthenticateRequest model)
+        public async Task<AuthenticationResult> AuthenticateAsync(AuthenticateRequest model)
         {
-            var account = _accountRepository.GetAll().SingleOrDefault(x => x.Email == model.Email);
+            var account = await _accountRepository.FindAsync(x => x.Email == model.Email);
 
             if (account == null)
             {
@@ -58,10 +45,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Calculate and update element
             if (account.Dob.HasValue)
             {
-                var element = GetElementFromDateOfBirth(account.Dob.Value.Year).Result;
+                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year);
                 account.ElementId = element.ElementId;
                 _accountRepository.PrepareUpdate(account);
-                _accountRepository.Save();
+                await _accountRepository.SaveAsync();
             }
 
             var token = _jwtUtils.GenerateJwtToken(account);
@@ -70,21 +57,20 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return new AuthenticationResult { Response = response };
         }
 
-
-        public IEnumerable<Account> GetAll()
+        public async Task<IEnumerable<Account>> GetAllAsync()
         {
-            return _accountRepository.GetAll();
+            return await _accountRepository.GetAllAsync();
         }
 
-        public Account? GetById(int id)
+        public async Task<Account?> GetByIdAsync(int id)
         {
-            return _accountRepository.GetById(id);
+            return await _accountRepository.GetByIdAsync(id);
         }
 
-        public Account Register(RegisterRequest model)
+        public async Task<Account> RegisterAsync(RegisterRequest model)
         {
             // Validate
-            if (_accountRepository.GetAll().Any(x => x.Email == model.Email))
+            if (await _accountRepository.FindAsync(x => x.Email == model.Email) != null)
                 throw new ApplicationException("Email '" + model.Email + "' is already taken");
 
             // Map model to new account object
@@ -104,25 +90,25 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Calculate and set element
             if (account.Dob.HasValue)
             {
-                var element = GetElementFromDateOfBirth(account.Dob.Value.Year).Result;
+                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year);
                 account.ElementId = element.ElementId;
             }
 
             // Save account
-            _accountRepository.PrepareCreate(account);
-            _accountRepository.Save();
+            await _accountRepository.CreateAsync(account);
 
             return account;
         }
 
-        public void Update(int id, UpdateRequest model)
+        public async Task UpdateAsync(int id, UpdateRequest model)
         {
-            var account = _accountRepository.GetById(id);
+            var account = await _accountRepository.GetByIdAsync(id);
 
             // Validate
             if (account == null)
                 throw new ApplicationException("Account not found");
-            if (!string.IsNullOrEmpty(model.Email) && model.Email != account.Email && _accountRepository.GetAll().Any(x => x.Email == model.Email))
+            if (!string.IsNullOrEmpty(model.Email) && model.Email != account.Email &&
+                await _accountRepository.FindAsync(x => x.Email == model.Email) != null)
                 throw new ApplicationException("Email '" + model.Email + "' is already taken");
 
             // Update account properties
@@ -141,30 +127,30 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Calculate and update element
             if (account.Dob.HasValue)
             {
-                var element = GetElementFromDateOfBirth(account.Dob.Value.Year).Result;
+                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year);
                 account.ElementId = element.ElementId;
             }
 
             _accountRepository.PrepareUpdate(account);
-            _accountRepository.Save();
+            await _accountRepository.SaveAsync();
         }
 
-        public void Delete(int id)
+        public async Task DeleteAsync(int id)
         {
-            var account = _accountRepository.GetById(id);
+            var account = await _accountRepository.GetByIdAsync(id);
             if (account == null)
                 throw new ApplicationException("Account not found");
 
             _accountRepository.PrepareRemove(account);
-            _accountRepository.Save();
+            await _accountRepository.SaveAsync();
         }
 
-        public async Task<Account> GetAccountByEmail(string email)
+        public async Task<Account> GetAccountByEmailAsync(string email)
         {
             return await _accountRepository.FindAsync(x => x.Email == email);
         }
 
-        public async Task<bool> SendPasswordResetEmail(string email, string fullName, string newPassword)
+        public async Task<bool> SendPasswordResetEmailAsync(string email, string fullName, string newPassword)
         {
             var mailData = new MailData()
             {
@@ -172,7 +158,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 EmailToName = fullName,
                 EmailBody = $@"
 <div style=""max-width: 400px; margin: 50px auto; padding: 30px; text-align: center; font-size: 120%; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); position: relative;"">
-    <img src=""https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRDn7YDq7gsgIdHOEP2_Mng6Ym3OzmvfUQvQ&usqp=CAU"" alt=""Noto Image"" style=""max-width: 100px; height: auto; display: block; margin: 0 auto; border-radius: 50%;"">
+    <img src=""https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRDn7YDq7gsgIdHOEP2_Mng6Ym3OzmvfUQvQ&usqp=CAU"" alt=""Noto Image"" style=""max-width: 100px```
+    // ... height: auto; display: block; margin: 0 auto; border-radius: 50%;"">
     <h2 style=""text-transform: uppercase; color: #3498db; margin-top: 20px; font-size: 28px; font-weight: bold;"">Password Reset</h2>
     <p>Your new password is: <span style=""font-weight: bold; color: #e74c3c;"">{newPassword}</span></p>
     <p>Please log in and change your password.</p>
@@ -184,7 +171,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return await _emailService.SendEmailAsync(mailData);
         }
 
-        public async Task<bool> SendDefaultPassword(string email, string fullName, string defaultPassword)
+        public async Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword)
         {
             var mailData = new MailData()
             {
@@ -198,13 +185,13 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
     <p>Please log in and change your password.</p>
     <p style=""color: #888; font-size: 14px;"">Powered by KoiFengShui</p>
 </div>",
-                EmailSubject = "Password Reset"
+                EmailSubject = "Default Password"
             };
 
             return await _emailService.SendEmailAsync(mailData);
         }
 
-        public async Task UpdateUserPassword(Account account, string newPassword)
+        public async Task UpdateUserPasswordAsync(Account account, string newPassword)
         {
             if (account == null)
             {
@@ -225,39 +212,26 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
                 // Hash the new password before storing it
                 existedUser.Password = newPassword;
-                _accountRepository.Update(existedUser);
-                try
-                {
-                    _accountRepository.Save();
-                }
-                catch (DbUpdateException ex)
-                {
-                    _logger.LogError(ex, "Failed to save account to database.");
-                    throw; // Optionally, rethrow the exception if you need to handle it further up
-                }
+                _accountRepository.PrepareUpdate(existedUser);
+                await _accountRepository.SaveAsync();
 
                 _logger.LogInformation($"Password updated successfully for user {existedUser.Email}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error updating user password. AccountId: {account.AccountId}, Email: {account.Email}");
-                throw; // Re-throw the exception to be handled by the calling method
+                throw;
             }
         }
 
         public async Task<Account> CreateAsync(Account account)
         {
-            // Prepare the account entity for creation
             _accountRepository.PrepareCreate(account);
-
-            // Save changes asynchronously
             await _accountRepository.SaveAsync();
-
-            // Return the newly created account
             return account;
         }
 
-        public async Task<AccountResponse> GetAccountByEmailAsync(string email)
+        public async Task<AccountResponse> GetAccountResponseByEmailAsync(string email)
         {
             var account = await _accountRepository.FindWithIncludeAsync(
                 x => x.Email == email,
@@ -275,11 +249,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Email = account.Email,
                 RoleId = account.RoleId,
                 Phone = account.Phone,
-                Dob = (DateTime)account.Dob,
+                Dob = account.Dob ?? DateTime.MinValue,
                 Gender = account.Gender,
                 ElementName = account.Element?.ElementName
             };
-
         }
 
         private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth)
@@ -295,10 +268,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
             }
 
-            // Lấy 2 số cuối cùng của năm sinh
             int lastTwoDigits = yearOfBirth % 100;
-
-            // Quy đổi Thiên Can
             int stem = yearOfBirth % 10;
             int stemValue = stem switch
             {
@@ -310,7 +280,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 _ => throw new ArgumentException($"Invalid stem calculation for year: {yearOfBirth}")
             };
 
-            // Quy đổi Địa Chi (dựa trên 2 số cuối của năm sinh chia cho 12)
             int branch = lastTwoDigits % 12;
             int branchValue = branch switch
             {
@@ -320,14 +289,13 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 _ => throw new ArgumentException($"Invalid branch calculation for year: {yearOfBirth}")
             };
 
-            // Tính ngũ hành dựa trên giá trị Can và Chi
             int elementIndex = stemValue + branchValue;
             if (elementIndex > 5)
             {
                 elementIndex -= 5;
             }
 
-            string element = elementIndex switch
+            return elementIndex switch
             {
                 1 => "Kim",
                 2 => "Thuỷ",
@@ -336,8 +304,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 5 => "Mộc",
                 _ => throw new ArgumentException($"Invalid element calculation for year: {yearOfBirth}")
             };
-
-            return element;
         }
 
         public async Task<bool> ChangePasswordAsync(int accountId, string currentPassword, string newPassword)
@@ -348,11 +314,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 if (account == null)
                     throw new KeyNotFoundException("Account not found");
 
-                // Verify current password
                 if (account.Password != currentPassword)
                     return false;
 
-                // Update password
                 account.Password = newPassword; // In a real-world scenario, you should hash this password
                 _accountRepository.PrepareUpdate(account);
                 await _accountRepository.SaveAsync();
@@ -362,11 +326,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error changing password for account id: {accountId}");
-                throw; // Rethrow the exception to be caught in the controller
+                throw;
             }
         }
-
-
     }
 }
-

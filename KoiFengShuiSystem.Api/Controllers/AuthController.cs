@@ -1,29 +1,25 @@
 ﻿using KoiFengShuiSystem.Api.Authorization;
-using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
     [ApiController]
     [Authorize]
     [Route("api/[controller]")]
-    public class AuthController : Controller
+    public class AuthController : ControllerBase
     {
         private readonly IAccountService _accountService;
         private readonly IJwtUtils _jwtUtils;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<AuthController> _logger;
-
 
         public AuthController(IAccountService accountService, IJwtUtils jwtUtils, IHttpClientFactory httpClientFactory, ILogger<AuthController> logger)
         {
@@ -35,9 +31,9 @@ namespace KoiFengShuiSystem.Api.Controllers
 
         [AllowAnonymous]
         [HttpPost("SignIn")]
-        public IActionResult Authenticate(AuthenticateRequest model)
+        public async Task<IActionResult> Authenticate(AuthenticateRequest model)
         {
-            var result = _accountService.Authenticate(model);
+            var result = await _accountService.AuthenticateAsync(model);
 
             if (!result.Success)
             {
@@ -52,14 +48,13 @@ namespace KoiFengShuiSystem.Api.Controllers
             });
         }
 
-
         [AllowAnonymous]
         [HttpPost("SignUp")]
-        public IActionResult Register(Shared.Models.Request.RegisterRequest model)
+        public async Task<IActionResult> Register(RegisterRequest model)
         {
             try
             {
-                var account = _accountService.Register(model);
+                var account = await _accountService.RegisterAsync(model);
                 return Ok(account);
             }
             catch (ApplicationException ex)
@@ -68,39 +63,44 @@ namespace KoiFengShuiSystem.Api.Controllers
             }
         }
 
-
         [AllowAnonymous]
         [HttpPost("ForgotPassword")]
-        public async Task<IActionResult> ForgotPassword(Shared.Models.Request.ForgotPasswordRequest request)
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
         {
             if (request == null || string.IsNullOrEmpty(request.Email))
             {
                 return BadRequest("Email is required.");
             }
 
-            //try
-            //{
-            var account = await _accountService.GetAccountByEmail(request.Email);
-            if (account == null)
+            try
             {
-                // Consider returning Ok here to prevent email enumeration attacks
+                var account = await _accountService.GetAccountByEmailAsync(request.Email);
+                if (account == null)
+                {
+                    // Consider returning Ok here to prevent email enumeration attacks
+                    return Ok("If a user with this email exists, a password reset email has been sent.");
+                }
+
+                // Generate new password
+                var newPassword = SecurityUtil.GenerateRandomPassword();
+
+                // Update the user's password
+                await _accountService.UpdateUserPasswordAsync(account, newPassword);
+
+                // Send email with new password
+                var emailSent = await _accountService.SendPasswordResetEmailAsync(request.Email, account.FullName, newPassword);
+                if (!emailSent)
+                {
+                    throw new ApplicationException("Failed to send the email.");
+                }
+
                 return Ok("If a user with this email exists, a password reset email has been sent.");
             }
-
-            // Generate new password
-            var newPassword = SecurityUtil.GenerateRandomPassword();
-
-            // Update the user's password
-            await _accountService.UpdateUserPassword(account, newPassword);
-
-            // Send email with new password
-            var emailSent = await _accountService.SendPasswordResetEmail(request.Email, account.FullName, newPassword);
-            if (!emailSent)
+            catch (Exception ex)
             {
-                throw new ApplicationException("Failed to send the email.");
+                _logger.LogError(ex, "Error in ForgotPassword");
+                return StatusCode(500, "An unexpected error occurred");
             }
-
-            return Ok("If a user with this email exists, a password reset email has been sent.");
         }
 
         [AllowAnonymous]
@@ -109,31 +109,30 @@ namespace KoiFengShuiSystem.Api.Controllers
         {
             try
             {
-                //_logger.LogInformation($"Received Google login request for token: {request.AccessToken.Substring(0, 10)}...");
+                _logger.LogInformation($"Received Google login request for token: {request.AccessToken[..10]}...");
 
                 var httpClient = _httpClientFactory.CreateClient();
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", request.AccessToken);
 
                 var response = await httpClient.GetAsync("https://www.googleapis.com/oauth2/v3/userinfo");
-                //_logger.LogInformation($"Google API response status: {response.StatusCode}");
+                _logger.LogInformation($"Google API response status: {response.StatusCode}");
 
                 response.EnsureSuccessStatusCode();
                 var content = await response.Content.ReadAsStringAsync();
-                //_logger.LogInformation($"Google API response content: {content}");
 
                 var googleUser = JsonSerializer.Deserialize<GoogleUserInfo>(content);
-                //_logger.LogInformation($"Deserialized Google user info: {JsonSerializer.Serialize(googleUser)}");
+                _logger.LogInformation($"Deserialized Google user info: {JsonSerializer.Serialize(googleUser)}");
 
-                var account = await _accountService.GetAccountByEmail(googleUser.Email);
+                var account = await _accountService.GetAccountByEmailAsync(googleUser.Email);
                 if (account == null)
                 {
-                    //_logger.LogInformation($"Creating new account for email: {googleUser.Email}");
-                    var defaultPassword = "123456"; // Default password
+                    _logger.LogInformation($"Creating new account for email: {googleUser.Email}");
+                    var defaultPassword = SecurityUtil.GenerateRandomPassword();
                     account = new Account
                     {
                         Email = googleUser.Email,
                         FullName = googleUser.Name,
-                        //Password = defaultPassword,
+                        Password = defaultPassword,
                         Dob = DateTime.Now,
                         Gender = "male",
                         CreateAt = DateTime.Now,
@@ -141,10 +140,10 @@ namespace KoiFengShuiSystem.Api.Controllers
                         RoleId = 2,
                     };
                     await _accountService.CreateAsync(account);
-                    //_logger.LogInformation($"New account created with ID: {account.AccountId}");
+                    _logger.LogInformation($"New account created with ID: {account.AccountId}");
 
                     // Send email with default password
-                    var emailSent = await _accountService.SendDefaultPassword(googleUser.Email, googleUser.Name, defaultPassword);
+                    var emailSent = await _accountService.SendDefaultPasswordAsync(googleUser.Email, googleUser.Name, defaultPassword);
                     if (emailSent)
                     {
                         _logger.LogInformation($"Email sent successfully to {googleUser.Email}");
@@ -160,19 +159,15 @@ namespace KoiFengShuiSystem.Api.Controllers
                 }
 
                 var token = _jwtUtils.GenerateJwtToken(account);
-                //_logger.LogInformation($"JWT token generated successfully");
+                _logger.LogInformation($"JWT token generated successfully");
 
                 return Ok(new AuthenticateResponse(account, token));
             }
             catch (Exception ex)
             {
-                //_logger.LogError(ex, "Unexpected error during Google login");
+                _logger.LogError(ex, "Unexpected error during Google login");
                 return StatusCode(500, "An unexpected error occurred");
             }
         }
     }
-
 }
-
-
-

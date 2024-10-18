@@ -1,79 +1,79 @@
-using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.DataAccess.Repositories.Implement;
-using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Shared.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Net;
+using Net.payOS;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuration
-
-// builder.WebHost.UseUrls("https://0.0.0.0:7285");
-// builder.WebHost.ConfigureKestrel(serverOptions =>
-// {
-//     serverOptions.Listen(IPAddress.Any, 7285, listenOptions =>
-//     {
-//         listenOptions.UseHttps(); // HTTPS
-//     });
-// });
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
-builder.Services.AddAuthentication();
+
+// PayOS configuration
+PayOS payOS = new PayOS(
+    builder.Configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find PAYOS_CLIENT_ID"),
+    builder.Configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find PAYOS_API_KEY"),
+    builder.Configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find PAYOS_CHECKSUM_KEY")
+);
+builder.Services.AddSingleton(payOS);
+
+// Authentication and Authorization
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Secret"])),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
 builder.Services.AddAuthorization();
 
+// Controller configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.MaxDepth = 32;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
-
-
 
 // Database context
 builder.Services.AddDbContext<KoiFengShuiContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// AppSettings configuration
+// AppSettings and MailSettings configuration
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
-
-// MailSettings configuration
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
 
 // Service registrations
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IMarketplaceListingService, MarketplaceListingService>();
-
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
-builder.Services.AddScoped<ITransactionService, TransactionService>();
-builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
-
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<PostService>();
-builder.Services.AddScoped<MarketplaceListingService>();
 builder.Services.AddScoped<AdminAccountService>();
 
 builder.Services.AddHttpClient();
-
-
-// Controller configuration
-builder.Services.AddControllers()
-    .AddJsonOptions(x => x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
-
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();
