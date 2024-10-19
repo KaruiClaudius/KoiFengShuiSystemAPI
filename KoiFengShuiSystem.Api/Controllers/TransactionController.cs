@@ -84,18 +84,17 @@ namespace KoiFengShuiSystem.Api.Controllers
                 CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
 
                 // Save the payment information to the database
-                var paymentTransaction = new DataAccess.Models.Transaction
-                {
-                    TransactionId = orderCode,
-                    AccountId = user.AccountId,
-                    Amount = body.price,
-                    Status = "PENDING",
-                    TransactionDate = DateTime.UtcNow,
-                    ListingId =
+                //var paymentTransaction = new DataAccess.Models.Transaction
+                //{
+                //    TransactionId = orderCode,
+                //    AccountId = user.AccountId,
+                //    Amount = body.price,
+                //    Status = "PENDING",
+                //    TransactionDate = DateTime.UtcNow,
 
-                };
+                //};
 
-                await _transactionRepository.CreateAsync(paymentTransaction);
+                //await _transactionRepository.CreateAsync(paymentTransaction);
 
                 // Prepare response with current user info
                 var currentUserInfo = new

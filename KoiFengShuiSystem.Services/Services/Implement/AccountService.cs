@@ -268,7 +268,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
             }
 
-            int lastTwoDigits = yearOfBirth % 100;
             int stem = yearOfBirth % 10;
             int stemValue = stem switch
             {
@@ -280,7 +279,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 _ => throw new ArgumentException($"Invalid stem calculation for year: {yearOfBirth}")
             };
 
-            int branch = lastTwoDigits % 12;
+            int branch = yearOfBirth % 12;
             int branchValue = branch switch
             {
                 4 or 5 or 10 or 11 => 0, // Tý, Sửu, Ngọ, Mùi
@@ -304,6 +303,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 5 => "Mộc",
                 _ => throw new ArgumentException($"Invalid element calculation for year: {yearOfBirth}")
             };
+
         }
 
         public async Task<bool> ChangePasswordAsync(int accountId, string currentPassword, string newPassword)
