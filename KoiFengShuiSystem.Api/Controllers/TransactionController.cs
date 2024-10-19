@@ -24,20 +24,24 @@ namespace KoiFengShuiSystem.Api.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly GenericRepository<Account> _accountRepository;
+        private readonly GenericRepository<MarketplaceListing> _marketplaceListingRepository;
         private readonly GenericRepository<DataAccess.Models.Transaction> _transactionRepository;
         private readonly PayOS _payOS;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public TransactionController(
             GenericRepository<Account> accountRepository,
+            GenericRepository<MarketplaceListing> marketplaceListingRepository,
             GenericRepository<DataAccess.Models.Transaction> transactionRepository,
             PayOS payOS,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor
+            )
         {
             _accountRepository = accountRepository;
             _transactionRepository = transactionRepository;
             _payOS = payOS;
             _httpContextAccessor = httpContextAccessor;
+            _marketplaceListingRepository = marketplaceListingRepository;
         }
 
         [HttpPost("CreatePayOSLink")]
@@ -54,6 +58,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                 }
 
                 var user = await _accountRepository.FindAsync(u => u.Email == userEmail);
+
                 if (user == null)
                 {
                     return NotFound("User not found");
@@ -78,18 +83,19 @@ namespace KoiFengShuiSystem.Api.Controllers
 
                 CreatePaymentResult createPayment = await _payOS.createPaymentLink(paymentData);
 
-                //// Save the payment information to the database
-                //var paymentTransaction = new DataAccess.Models.Transaction
-                //{
-                //    TransactionId = orderCode,
-                //    AccountId = user.AccountId,
-                //    Amount = body.price,
-                //    Status = "PENDING",
-                //    TransactionDate = DateTime.UtcNow,
+                // Save the payment information to the database
+                var paymentTransaction = new DataAccess.Models.Transaction
+                {
+                    TransactionId = orderCode,
+                    AccountId = user.AccountId,
+                    Amount = body.price,
+                    Status = "PENDING",
+                    TransactionDate = DateTime.UtcNow,
+                    ListingId =
 
-                //};
+                };
 
-                //await _transactionRepository.CreateAsync(paymentTransaction);
+                await _transactionRepository.CreateAsync(paymentTransaction);
 
                 // Prepare response with current user info
                 var currentUserInfo = new
@@ -157,5 +163,48 @@ namespace KoiFengShuiSystem.Api.Controllers
                 return Ok(new MessageResponse(-1, "fail", null));
             }
         }
+
+        [HttpPost("CheckOrder")]
+        public async Task<IActionResult> CheckOrder([FromBody] CheckOrderRequest request)
+        {
+            int orderCode = request.OrderCode;
+            try
+            {
+                // Get the current user's email from the JWT token
+                var userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Unauthorized("User not authenticated");
+                }
+
+                // Find the user in the database
+                var user = await _accountRepository.FindAsync(u => u.Email == userEmail);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                PaymentLinkInformation paymentLinkInformation = await _payOS.getPaymentLinkInformation(orderCode);
+
+                if (paymentLinkInformation.status == "PAID")
+                {
+                    return Ok(new MessageResponse(0, "Transaction Complete", new
+                    {
+                        paymentInfo = paymentLinkInformation,
+                    }));
+
+                }
+                else
+                {
+                    return Ok(new MessageResponse(0, "Payment not completed yet", new { paymentInfo = paymentLinkInformation }));
+                }
+            }
+            catch (System.Exception exception)
+            {
+                Console.WriteLine(exception);
+                return Ok(new MessageResponse(-1, "fail", null));
+            }
+        }
+
     }
 }

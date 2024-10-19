@@ -23,7 +23,7 @@ public partial class Transaction
 
     public string Status { get; set; }
 
-    public int? ListingId { get; set; }
+    public int ListingId { get; set; }
 
     public virtual Account Account { get; set; }
 
