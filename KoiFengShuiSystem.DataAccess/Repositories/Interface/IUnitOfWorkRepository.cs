@@ -8,8 +8,8 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Interface
 {
     public interface IUnitOfWorkRepository
     {
-        public int SaveChangesWithTransaction();
-        public Task<int> SaveChangesWithTransactionAsync();
-       
+        int SaveChangesWithTransaction();
+        Task<int> SaveChangesWithTransactionAsync();
+
     }
 }

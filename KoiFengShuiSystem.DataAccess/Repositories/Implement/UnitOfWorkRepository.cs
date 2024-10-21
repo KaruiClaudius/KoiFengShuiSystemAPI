@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
-    public class UnitOfWorkRepository
+    public class UnitOfWorkRepository : IUnitOfWorkRepository
     {
         private readonly KoiFengShuiContext _unitOfWorkContext;
         private PostRepository _postRepository;

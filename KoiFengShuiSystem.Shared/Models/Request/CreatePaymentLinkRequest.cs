@@ -14,5 +14,8 @@ namespace KoiFengShuiSystem.Shared.Models.Request
         public string cancelUrl { get; set; }
         public int price { get; set; }
         public string buyerName { get; set; }
+        public string buyerEmail { get; set; } // Add this line
+
+
     }
 }
