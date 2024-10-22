@@ -13,6 +13,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Azure;
+using Microsoft.EntityFrameworkCore;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
@@ -183,7 +185,33 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
                 if (paymentLinkInformation.status == "PAID")
                 {
-                    return new MessageResponse(0, "Transaction Complete", new { paymentInfo = paymentLinkInformation });
+                    // Find the existing payment transaction
+                    var paymentTransaction = await _transactionRepository
+                        .FindByCondition(pt => pt.TransactionId == request.OrderCode)
+                        .FirstOrDefaultAsync();
+
+                    if (paymentTransaction == null)
+                    {
+                        return new MessageResponse(-1, "Transaction not found", null);
+                    }
+
+                    // Update transaction status and date
+                    paymentTransaction.Status = "PAID";
+                    paymentTransaction.TransactionDate = DateTime.UtcNow;
+                    _transactionRepository.Update(paymentTransaction);
+                    user.Wallet = (user.Wallet ?? 0) + paymentLinkInformation.amountPaid;
+                    _accountRepository.Update(user);
+                    await _unitOfWork.SaveChangesWithTransactionAsync();
+
+                    var updatedUserInfo = new
+                    {
+                        user.AccountId,
+                        user.FullName,
+                        user.Email,
+                        user.Phone,
+                        user.Wallet
+                    };
+                    return new MessageResponse(0, "Transaction Complete", new { paymentInfo = paymentLinkInformation, userInfo = updatedUserInfo });
                 }
                 else
                 {

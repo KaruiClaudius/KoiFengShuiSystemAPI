@@ -162,6 +162,10 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             return await query.FirstOrDefaultAsync(predicate);
         }
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression)
+        {
+            return _dbSet.Where(expression);
+        }
         #region Pagination
 
         public int PageIndex { get; private set; }
