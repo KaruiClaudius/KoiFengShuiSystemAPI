@@ -11,7 +11,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
     public interface ITransactionService
     {
-        Task<MessageResponse> CreatePaymentLink(CreatePaymentLinkRequest body, int listingId, int tierId, string userEmail);
+        Task<MessageResponse> CreatePaymentLink(CreatePaymentLinkRequest body, string userEmail);
         //Task<MessageResponse> PaymentCallback(PaymentCallbackData callbackData);
         Task<MessageResponse> GetOrder(int orderCode);
         Task<MessageResponse> CancelOrder(int orderCode, string reason);

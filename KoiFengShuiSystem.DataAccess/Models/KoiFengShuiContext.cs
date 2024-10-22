@@ -26,6 +26,8 @@ public partial class KoiFengShuiContext : DbContext
 
     public virtual DbSet<Element> Elements { get; set; }
 
+    public virtual DbSet<Faq> Faqs { get; set; }
+
     public virtual DbSet<FengShuiDirection> FengShuiDirections { get; set; }
 
     public virtual DbSet<FishPond> FishPonds { get; set; }
@@ -141,6 +143,25 @@ public partial class KoiFengShuiContext : DbContext
             entity.Property(e => e.LuckyNumber)
                 .IsRequired()
                 .HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<Faq>(entity =>
+        {
+            entity.HasKey(e => e.Faqid).HasName("PK__FAQ__4B89D182E41EB381");
+
+            entity.ToTable("FAQ");
+
+            entity.Property(e => e.Faqid).HasColumnName("FAQId");
+            entity.Property(e => e.Answer).IsRequired();
+            entity.Property(e => e.CreateAt).HasColumnType("datetime");
+            entity.Property(e => e.Question)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.HasOne(d => d.Account).WithMany(p => p.Faqs)
+                .HasForeignKey(d => d.AccountId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__FAQ__AccountId__68487DD7");
         });
 
         modelBuilder.Entity<FengShuiDirection>(entity =>
@@ -453,7 +474,6 @@ public partial class KoiFengShuiContext : DbContext
 
             entity.HasOne(d => d.Listing).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.ListingId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Transacti__Listi__571DF1D5");
 
             entity.HasOne(d => d.Tier).WithMany(p => p.Transactions)

@@ -20,7 +20,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class TransactionService : ITransactionService
     {
-        private static readonly ConcurrentDictionary<int, (int ListingId, int TierId)> _pendingTransactions = new ConcurrentDictionary<int, (int, int)>();
         private readonly GenericRepository<Account> _accountRepository;
         private readonly GenericRepository<MarketplaceListing> _marketplaceListingRepository;
         private readonly GenericRepository<DataAccess.Models.Transaction> _transactionRepository;
@@ -41,7 +40,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<MessageResponse> CreatePaymentLink(CreatePaymentLinkRequest body, int listingId, int tierId, string userEmail)
+        public async Task<MessageResponse> CreatePaymentLink(CreatePaymentLinkRequest body, string userEmail)
         {
             try
             {
@@ -52,7 +51,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 }
 
                 int orderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff"));
-                _pendingTransactions[orderCode] = (listingId, tierId);
 
                 ItemData item = new ItemData(body.productName, 1, body.price);
                 List<ItemData> items = new List<ItemData> { item };
@@ -80,8 +78,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                     Amount = body.price,
                     Status = "PENDING",
                     TransactionDate = DateTime.UtcNow,
-                    ListingId = listingId,
-                    TierId = tierId
+
                 };
 
                 await _transactionRepository.CreateAsync(paymentTransaction);
@@ -109,26 +106,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
         }
 
-        //public async Task<MessageResponse> PaymentCallback(PaymentCallbackData callbackData)
-        //{
-        //    if (_pendingTransactions.TryRemove(callbackData.OrderCode, out var transactionInfo))
-        //    {
-        //        var transaction = await _transactionRepository.FindAsync(t => t.TransactionId == callbackData.OrderCode);
-        //        if (transaction != null)
-        //        {
-        //            transaction.Status = callbackData.Status;
-        //            transaction.ListingId = transactionInfo.ListingId;
-        //            transaction.TierId = transactionInfo.TierId;
-        //            transaction.Amount = callbackData.Amount;
-        //            transaction.TransactionDate = callbackData.TransactionDate;
-
-        //            await _transactionRepository.UpdateAsync(transaction);
-        //            await _unitOfWork.SaveChangesWithTransactionAsync();
-        //        }
-        //    }
-
-        //    return new MessageResponse(0, "OK", null);
-        //}
 
         public async Task<MessageResponse> GetOrder(int orderCode)
         {

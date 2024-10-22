@@ -35,7 +35,7 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
         [HttpPost("CreatePayOSLink")]
-        public async Task<IActionResult> CreatePaymentLink(CreatePaymentLinkRequest body, [FromQuery] int listingId, [FromQuery] int tierId)
+        public async Task<IActionResult> CreatePaymentLink(CreatePaymentLinkRequest body)
         {
             var userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrEmpty(userEmail))
@@ -43,16 +43,11 @@ namespace KoiFengShuiSystem.Api.Controllers
                 return Unauthorized("User not authenticated");
             }
 
-            var result = await _transactionService.CreatePaymentLink(body, listingId, tierId, userEmail);
+            var result = await _transactionService.CreatePaymentLink(body, userEmail);
             return Ok(result);
         }
 
-        //[HttpPost("PaymentCallback")]
-        //public async Task<IActionResult> PaymentCallback([FromBody] PaymentCallbackData callbackData)
-        //{
-        //    var result = await _transactionService.PaymentCallback(callbackData);
-        //    return Ok(result);
-        //}
+        
 
         [HttpGet("getPayOSOrder/{orderCode}")]
         public async Task<IActionResult> GetOrder([FromRoute] int orderCode)

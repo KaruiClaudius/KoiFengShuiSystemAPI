@@ -33,6 +33,8 @@ public partial class Account
 
     public virtual Element Element { get; set; }
 
+    public virtual ICollection<Faq> Faqs { get; set; } = new List<Faq>();
+
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
     public virtual ICollection<MarketplaceListing> MarketplaceListings { get; set; } = new List<MarketplaceListing>();
