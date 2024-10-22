@@ -23,7 +23,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             {
                 AccountId = transactionRequest.AccountId,
                 TierId = transactionRequest.TierId,
-                SubscriptionId = transactionRequest.SubscriptionId,
+               
                 Amount = transactionRequest.Amount,
                 TransactionDate = transactionRequest.TransactionDate
             };

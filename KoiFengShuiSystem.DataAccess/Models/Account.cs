@@ -29,6 +29,8 @@ public partial class Account
 
     public DateTime UpdateAt { get; set; }
 
+    public decimal? Wallet { get; set; }
+
     public virtual Element Element { get; set; }
 
     public virtual ICollection<Faq> Faqs { get; set; } = new List<Faq>();

@@ -95,10 +95,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[Subscription]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[TrafficLog]",
          "ObjectType": 0
       },

@@ -28,7 +28,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                 TransactionId = transaction.TransactionId,
                 AccountId = transaction.AccountId,
                 TierId = transaction.TierId,
-                SubscriptionId = transaction.SubscriptionId,
+                
                 Amount = transaction.Amount,
                 TransactionDate = transaction.TransactionDate
             };
