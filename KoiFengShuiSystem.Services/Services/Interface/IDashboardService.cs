@@ -1,5 +1,6 @@
 ﻿using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Shared.Models.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,5 +20,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<List<MarketListingSummary>> ListMarketListingsAsync(int page = 1, int pageSize = 10);
         Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync(int page = 1, int pageSize = 10);
         Task<TotalTransactionRequest> GetTotalTransactionAmountAsync();
+        Task<TransactionCountResponse> GetTotalTransactionCountAsync();
+
     }
 }
