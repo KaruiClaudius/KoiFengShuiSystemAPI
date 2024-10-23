@@ -4,16 +4,14 @@ using Microsoft.Extensions.Logging;
 using Net.payOS.Errors;
 using Net.payOS.Types;
 using Net.payOS;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+
 using KoiFengShuiSystem.DataAccess.Models;
 using System.Text;
+using Microsoft.Extensions.Hosting;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
-    public class TransactionSyncService
+    public class TransactionSyncService : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<TransactionSyncService> _logger;
@@ -27,7 +25,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _payOS = payOS;
         }
 
-        protected async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -43,6 +41,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
             }
         }
+
 
         private async Task SyncTransactions()
         {

@@ -77,6 +77,8 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AdminAccountService>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddHostedService<TransactionSyncService>();
+
 
 builder.Services.AddHttpClient();
 
