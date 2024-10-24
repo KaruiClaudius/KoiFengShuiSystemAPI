@@ -164,19 +164,43 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
-                var Post = await _unitOfWork.MarketplaceListingRepository.GetByIdAsync(id);
-                if (Post == null)
+                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByCategoryByIdAsync(id);
+                if (marketplaceListings != null)
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
+                    {
+                        ListingId = mp.ListingId,
+                        AccountId = mp.AccountId,
+                        TierId = mp.TierId,
+                        Title = mp.Title,
+                        Description = mp.Description,
+                        Price = mp.Price,
+                        Quantity = mp.Quantity,
+                        CategoryId = mp.CategoryId,
+                        CreateAt = DateTime.Now,
+                        ExpiresAt = mp.ExpiresAt,
+                        IsActive = mp.IsActive,
+                        ElementId = mp.ElementId,
+                        AccountName = mp.Account.FullName,
+                        ElementName = mp.Element?.ElementName,
+                        TierName = mp.Tier.TierName,
+                        Status = mp.Status,
+                    }).ToList();
+                    if (marketplaceListingsResponses == null)
+                    {
+                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    }
+                    else
+                    {
+                        return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, marketplaceListingsResponses);
+                    }
                 }
-                else
-                {
-                    return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, Post);
-                }
+                return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+
             }
             catch (Exception e)
             {
-                return new BusinessResult(Const.ERROR_EXCEPTION, e.Message);
+                return new BusinessResult(-4, e.Message.ToString());
             }
         }
 

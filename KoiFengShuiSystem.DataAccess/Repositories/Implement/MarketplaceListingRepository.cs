@@ -39,5 +39,14 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 
             return new GenericRepository<MarketplaceListing>(marketplaces, totalCount);
         }
+        public async Task<IEnumerable<MarketplaceListing>> GetAllByCategoryByIdAsync(int id)
+        {
+            return await _dbSet
+                .Where(p => p.ListingId == id)
+                .Include(p => p.Element) // Include the Element to access ElementName
+                .Include(p => p.Account)
+                .Include(p => p.Tier)
+                .ToListAsync();
+        }
     }
 }
