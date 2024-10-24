@@ -11,11 +11,25 @@ namespace KoiFengShuiSystem.Api.Controllers
     {
         private IAdminPostService _adminPostService;
         private readonly ILogger<AdminPostController> _logger;
+        private readonly IWebHostEnvironment _environment;
 
-        public AdminPostController(IAdminPostService adminPostService, ILogger<AdminPostController> logger)
+        public AdminPostController(IAdminPostService adminPostService, ILogger<AdminPostController> logger, IWebHostEnvironment environment)
         {
             _adminPostService = adminPostService;
             _logger = logger;
+            _environment = environment;
+        }
+
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll()
+        {
+            var postResponse = await _adminPostService.GetAllPostsAsync();
+
+            if (postResponse == null)
+            {
+                return NotFound(postResponse);
+            }
+            return Ok(postResponse);
         }
 
         [HttpGet("Details/{id}")]
@@ -32,6 +46,41 @@ namespace KoiFengShuiSystem.Api.Controllers
         [HttpPost("Create")]
         public async Task<IActionResult> CreateAsync([FromBody] PostRequest postRequest)
         {
+            var postResponse = await _adminPostService.CreatePostAsync(postRequest);
+            if (postResponse == null)
+            {
+                return BadRequest(postResponse);
+            }
+            return Ok(postResponse);
+        }
+
+        [HttpPost("CreateWithImages")]
+        public async Task<IActionResult> CreateWithImages([FromForm] PostRequest postRequest, List<IFormFile> images)
+        {
+            if (images != null && images.Any())
+            {
+                postRequest.Images = new List<PostImageRequest>();
+                foreach (var image in images)
+                {
+                    if (image.Length > 0)
+                    {
+                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
+                        var filePath = Path.Combine(_environment.WebRootPath, "images", fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await image.CopyToAsync(stream);
+                        }
+
+                        postRequest.Images.Add(new PostImageRequest
+                        {
+                            ImageUrl = "/images/" + fileName,
+                            ImageDescription = "Uploaded image"
+                        });
+                    }
+                }
+            }
+
             var postResponse = await _adminPostService.CreatePostAsync(postRequest);
             if (postResponse == null)
             {
@@ -62,7 +111,6 @@ namespace KoiFengShuiSystem.Api.Controllers
             return Ok("Post deleted successfully.");
         }
 
-        // Get posts where role = 1
         [HttpGet("GetAllAdminPosts")]
         public async Task<IActionResult> GetAllAdminPosts()
         {

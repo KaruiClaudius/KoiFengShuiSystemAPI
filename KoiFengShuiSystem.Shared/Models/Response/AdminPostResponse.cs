@@ -19,5 +19,14 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public string Status { get; set; }
         public string ElementName { get; set; }
         public string AccountName { get; set; }
+        public List<PostImageResponse> Images { get; set; }
+    }
+
+    public class PostImageResponse
+    {
+        public int PostImageId { get; set; }
+        public int ImageId { get; set; }
+        public string ImageUrl { get; set; }
+        public string ImageDescription { get; set; }
     }
 }
