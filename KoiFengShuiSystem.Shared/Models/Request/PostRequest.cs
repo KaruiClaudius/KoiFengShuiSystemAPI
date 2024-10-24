@@ -14,12 +14,5 @@ namespace KoiFengShuiSystem.Shared.Models.Request
         public int AccountId { get; set; }
         public int? ElementId { get; set; }
         public string Status { get; set; }
-        public List<PostImageRequest> Images { get; set; }
-    }
-
-    public class PostImageRequest
-    {
-        public string ImageUrl { get; set; }
-        public string ImageDescription { get; set; }
     }
 }

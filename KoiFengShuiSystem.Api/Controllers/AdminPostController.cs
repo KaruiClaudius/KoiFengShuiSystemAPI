@@ -9,15 +9,13 @@ namespace KoiFengShuiSystem.Api.Controllers
     [Route("api/[controller]")]
     public class AdminPostController : Controller
     {
-        private IAdminPostService _adminPostService;
+        private readonly IAdminPostService _adminPostService;
         private readonly ILogger<AdminPostController> _logger;
-        private readonly IWebHostEnvironment _environment;
 
-        public AdminPostController(IAdminPostService adminPostService, ILogger<AdminPostController> logger, IWebHostEnvironment environment)
+        public AdminPostController(IAdminPostService adminPostService, ILogger<AdminPostController> logger)
         {
             _adminPostService = adminPostService;
             _logger = logger;
-            _environment = environment;
         }
 
         [HttpGet("GetAll")]
@@ -25,9 +23,9 @@ namespace KoiFengShuiSystem.Api.Controllers
         {
             var postResponse = await _adminPostService.GetAllPostsAsync();
 
-            if (postResponse == null)
+            if (postResponse == null || !postResponse.Any())
             {
-                return NotFound(postResponse);
+                return NotFound("No posts found.");
             }
             return Ok(postResponse);
         }
@@ -38,7 +36,7 @@ namespace KoiFengShuiSystem.Api.Controllers
             var postResponse = await _adminPostService.GetPostByIdAsync(id);
             if (postResponse == null)
             {
-                return NotFound(postResponse);
+                return NotFound("Post not found.");
             }
             return Ok(postResponse);
         }
@@ -49,44 +47,9 @@ namespace KoiFengShuiSystem.Api.Controllers
             var postResponse = await _adminPostService.CreatePostAsync(postRequest);
             if (postResponse == null)
             {
-                return BadRequest(postResponse);
+                return BadRequest("Failed to create post.");
             }
-            return Ok(postResponse);
-        }
-
-        [HttpPost("CreateWithImages")]
-        public async Task<IActionResult> CreateWithImages([FromForm] PostRequest postRequest, List<IFormFile> images)
-        {
-            if (images != null && images.Any())
-            {
-                postRequest.Images = new List<PostImageRequest>();
-                foreach (var image in images)
-                {
-                    if (image.Length > 0)
-                    {
-                        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(image.FileName);
-                        var filePath = Path.Combine(_environment.WebRootPath, "images", fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await image.CopyToAsync(stream);
-                        }
-
-                        postRequest.Images.Add(new PostImageRequest
-                        {
-                            ImageUrl = "/images/" + fileName,
-                            ImageDescription = "Uploaded image"
-                        });
-                    }
-                }
-            }
-
-            var postResponse = await _adminPostService.CreatePostAsync(postRequest);
-            if (postResponse == null)
-            {
-                return BadRequest(postResponse);
-            }
-            return Ok(postResponse);
+            return CreatedAtAction(nameof(GetById), new { id = postResponse.PostId }, postResponse);
         }
 
         [HttpPut("Update/{id}")]
@@ -95,7 +58,7 @@ namespace KoiFengShuiSystem.Api.Controllers
             var postResponse = await _adminPostService.UpdatePostAsync(id, postRequest);
             if (postResponse == null)
             {
-                return NotFound(postResponse);
+                return NotFound("Post not found.");
             }
             return Ok(postResponse);
         }
@@ -103,10 +66,10 @@ namespace KoiFengShuiSystem.Api.Controllers
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var postResponse = await _adminPostService.DeletePostAsync(id);
-            if (!postResponse)
+            var result = await _adminPostService.DeletePostAsync(id);
+            if (!result)
             {
-                return BadRequest("Error deleting Post.");
+                return NotFound("Post not found.");
             }
             return Ok("Post deleted successfully.");
         }

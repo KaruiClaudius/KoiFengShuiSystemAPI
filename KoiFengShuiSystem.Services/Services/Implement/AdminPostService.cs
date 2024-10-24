@@ -17,14 +17,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<IEnumerable<AdminPostResponse>> GetAllPostsAsync()
         {
-            var posts = await _context.Posts
-                .Include(p => p.Element)
-                .Include(p => p.Account)
-                .Include(p => p.PostImages)
-                    .ThenInclude(pi => pi.Image)
-                .ToListAsync();
-
-            return posts.Select(MapPostToAdminPostResponse);
+            var posts = await _context.Posts.Include(p => p.Element).Include(p => p.Account).ToListAsync();
+            return posts.Select(p => MapToAdminPostResponse(p));
         }
 
         public async Task<AdminPostResponse> GetPostByIdAsync(int id)
@@ -32,11 +26,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             var post = await _context.Posts
                 .Include(p => p.Element)
                 .Include(p => p.Account)
-                .Include(p => p.PostImages)
-                    .ThenInclude(pi => pi.Image)
                 .FirstOrDefaultAsync(p => p.PostId == id);
-
-            return post == null ? null : MapPostToAdminPostResponse(post);
+            return post == null ? null : MapToAdminPostResponse(post);
         }
 
         public async Task<AdminPostResponse> CreatePostAsync(PostRequest postRequest)
@@ -56,25 +47,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
 
-            if (postRequest.Images != null && postRequest.Images.Any())
-            {
-                foreach (var imageRequest in postRequest.Images)
-                {
-                    var image = new Image { ImageUrl = imageRequest.ImageUrl };
-                    _context.Images.Add(image);
-                    await _context.SaveChangesAsync();
-
-                    var postImage = new PostImage
-                    {
-                        PostId = post.PostId,
-                        ImageId = image.ImageId,
-                        ImageDescription = imageRequest.ImageDescription
-                    };
-                    _context.PostImages.Add(postImage);
-                }
-                await _context.SaveChangesAsync();
-            }
-
             return await GetPostByIdAsync(post.PostId);
         }
 
@@ -89,27 +61,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             post.UpdateAt = DateTime.Now;
             post.ElementId = postRequest.ElementId;
             post.Status = postRequest.Status;
-
-            if (postRequest.Images != null)
-            {
-                var existingPostImages = await _context.PostImages.Where(pi => pi.PostId == id).ToListAsync();
-                _context.PostImages.RemoveRange(existingPostImages);
-
-                foreach (var imageRequest in postRequest.Images)
-                {
-                    var image = new Image { ImageUrl = imageRequest.ImageUrl };
-                    _context.Images.Add(image);
-                    await _context.SaveChangesAsync();
-
-                    var postImage = new PostImage
-                    {
-                        PostId = post.PostId,
-                        ImageId = image.ImageId,
-                        ImageDescription = imageRequest.ImageDescription
-                    };
-                    _context.PostImages.Add(postImage);
-                }
-            }
 
             await _context.SaveChangesAsync();
 
@@ -132,15 +83,13 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             var adminPosts = await _context.Posts
                 .Include(p => p.Element)
                 .Include(p => p.Account)
-                .Include(p => p.PostImages)
-                    .ThenInclude(pi => pi.Image)
                 .Where(p => p.Account.RoleId == 1) // Assuming RoleId 1 is for admin
                 .ToListAsync();
 
-            return adminPosts.Select(MapPostToAdminPostResponse);
+            return adminPosts.Select(p => MapToAdminPostResponse(p));
         }
 
-        private AdminPostResponse MapPostToAdminPostResponse(Post post)
+        private AdminPostResponse MapToAdminPostResponse(Post post)
         {
             return new AdminPostResponse
             {
@@ -154,14 +103,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 ElementId = post.ElementId,
                 Status = post.Status,
                 ElementName = post.Element?.ElementName,
-                AccountName = post.Account?.FullName,
-                Images = post.PostImages.Select(pi => new PostImageResponse
-                {
-                    PostImageId = pi.PostImageId,
-                    ImageId = pi.ImageId,
-                    ImageUrl = pi.Image.ImageUrl,
-                    ImageDescription = pi.ImageDescription
-                }).ToList()
+                AccountName = post.Account?.FullName
             };
         }
     }
