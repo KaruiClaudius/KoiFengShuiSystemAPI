@@ -34,22 +34,20 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             var post = new Post
             {
-                Id = postRequest.Id,
+                Id = postRequest.ElementId, 
                 Name = postRequest.Name,
                 Description = postRequest.Description,
-                CreateAt = DateTime.Now,
-                UpdateAt = DateTime.Now,
                 AccountId = postRequest.AccountId,
-                ElementId = postRequest.ElementId,
-                Status = postRequest.Status
+                Status = postRequest.Status,
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now
             };
 
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
 
-            return await GetPostByIdAsync(post.PostId);
+            return MapToAdminPostResponse(post);
         }
-
         public async Task<AdminPostResponse> UpdatePostAsync(int id, PostRequest postRequest)
         {
             var post = await _context.Posts.FindAsync(id);
