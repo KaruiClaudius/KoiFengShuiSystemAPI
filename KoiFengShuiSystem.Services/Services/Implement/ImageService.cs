@@ -6,6 +6,7 @@ using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services
 {

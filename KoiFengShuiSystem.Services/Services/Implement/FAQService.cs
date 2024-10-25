@@ -22,10 +22,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<IEnumerable<FAQResponse>> GetAllFAQsAsync()
         {
-            var faqs = await _context.Faqs.ToListAsync();
+            var faqs = await _context.FAQs.ToListAsync();
             return faqs.Select(f => new FAQResponse
             {
-                FAQId = f.Faqid,
+                FAQId = f.FAQId,
                 Question = f.Question,
                 Answer = f.Answer,
                 CreateAt = f.CreateAt
@@ -34,12 +34,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<FAQResponse> GetFAQByIdAsync(int id)
         {
-            var faq = await _context.Faqs.FindAsync(id);
+            var faq = await _context.FAQs.FindAsync(id);
             if (faq == null) return null;
 
             return new FAQResponse
             {
-                FAQId = faq.Faqid,
+                FAQId = faq.FAQId,
                 Question = faq.Question,
                 Answer = faq.Answer,
                 CreateAt = faq.CreateAt
@@ -48,7 +48,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<FAQResponse> CreateFAQAsync(FAQRequest faqRequest)
         {
-            var faq = new Faq
+            var faq = new FAQ
             {
                 Question = faqRequest.Question,
                 Answer = faqRequest.Answer,
@@ -56,12 +56,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 AccountId = faqRequest.AccountId
             };
 
-            _context.Faqs.Add(faq);
+            _context.FAQs.Add(faq);
             await _context.SaveChangesAsync();
 
             return new FAQResponse
             {
-                FAQId = faq.Faqid,
+                FAQId = faq.FAQId,
                 Question = faq.Question,
                 Answer = faq.Answer,
                 CreateAt = faq.CreateAt
@@ -70,7 +70,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<FAQResponse> UpdateFAQAsync(int id, FAQRequest faqRequest)
         {
-            var faq = await _context.Faqs.FindAsync(id);
+            var faq = await _context.FAQs.FindAsync(id);
             if (faq == null) return null;
 
             faq.Question = faqRequest.Question;
@@ -81,7 +81,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
             return new FAQResponse
             {
-                FAQId = faq.Faqid,
+                FAQId = faq.FAQId,
                 Question = faq.Question,
                 Answer = faq.Answer,
                 CreateAt = faq.CreateAt
@@ -90,10 +90,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<bool> DeleteFAQAsync(int id)
         {
-            var faq = await _context.Faqs.FindAsync(id);
+            var faq = await _context.FAQs.FindAsync(id);
             if (faq == null) return false;
 
-            _context.Faqs.Remove(faq);
+            _context.FAQs.Remove(faq);
             await _context.SaveChangesAsync();
 
             return true;
