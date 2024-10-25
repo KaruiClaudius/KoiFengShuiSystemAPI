@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using KoiFengShuiSystem.DataAccess;
@@ -47,44 +47,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
             return post == null ? null : MapToAdminPostResponse(post);
         }
 
-
-
-        public async Task<AdminPostResponse> CreateAdminPostAsync(AdminPostRequest adminPostRequest, List<IFormFile> images)
-        {
-            var post = new Post
-            {
-                Id = adminPostRequest.Id,
-                Name = adminPostRequest.Name,
-                Description = adminPostRequest.Description,
-                AccountId = adminPostRequest.AccountId,
-                ElementId = adminPostRequest.ElementId,
-                Status = adminPostRequest.Status,
-                CreateAt = DateTime.Now,
-                UpdateAt = DateTime.Now
-            };
-
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
-
-            foreach (var image in images)
-            {
-                var imageRequest = new ImageRequest { ImageUrl = await _imageService.SaveImageAsync(image) };
-                var imageResponse = await _imageService.CreateImageAsync(imageRequest);
-
-                var postImage = new PostImage
-                {
-                    PostId = post.PostId,
-                    ImageId = imageResponse.ImageId,
-                    ImageDescription = "Default description"
-                };
-                _context.PostImages.Add(postImage);
-            }
-
-            await _context.SaveChangesAsync();
-
-            return await GetPostDetailAsync(post.PostId);
-        }
-
         public async Task<AdminPostResponse> UpdateAdminPostAsync(int id, AdminPostRequest adminPostRequest, List<IFormFile> images)
         {
             var post = await _context.Posts.FindAsync(id);
@@ -101,13 +63,15 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
 
             foreach (var image in images)
             {
-                var imageRequest = new ImageRequest { ImageUrl = await _imageService.SaveImageAsync(image) };
-                var imageResponse = await _imageService.CreateImageAsync(imageRequest);
+                var imageUrl = await _imageService.SaveImageAsync(image);
+                var newImage = new Image { ImageUrl = imageUrl };
+                _context.Images.Add(newImage);
+                await _context.SaveChangesAsync();
 
                 var postImage = new PostImage
                 {
                     PostId = post.PostId,
-                    ImageId = imageResponse.ImageId,
+                    ImageId = newImage.ImageId,
                     ImageDescription = "Default description"
                 };
                 _context.PostImages.Add(postImage);
@@ -115,55 +79,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
 
             await _context.SaveChangesAsync();
 
-            return await GetPostDetailAsync(post.PostId);
-        }
-
-        public async Task<bool> DeleteAdminPostAsync(int id)
-        {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null)
-            {
-                return false;
-            }
-
-            _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
-
-            return true;
-        }
-
-        public async Task<bool> DeletePostWithAllRelatedAsync(int postId)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                var post = await _context.Posts
-                    .Include(p => p.PostImages)
-                    .ThenInclude(pi => pi.Image)
-                    .FirstOrDefaultAsync(p => p.PostId == postId);
-
-                if (post == null)
-                {
-                    return false;
-                }
-
-                var imageIds = post.PostImages.Select(pi => pi.ImageId).ToList();
-
-                _context.PostImages.RemoveRange(post.PostImages);
-                _context.Posts.Remove(post);
-                var images = await _context.Images.Where(i => imageIds.Contains(i.ImageId)).ToListAsync();
-                _context.Images.RemoveRange(images);
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return true;
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
+            return await GetAdminPostByIdAsync(post.PostId);
         }
 
         public async Task<AdminPostResponse> CreatePostWithImagesAsync(AdminPostRequest adminPostRequest, List<IFormFile> images)
@@ -171,6 +87,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                var postCategoryExists = await _context.PostCategories.AnyAsync(pc => pc.Id == adminPostRequest.Id);
+                if (!postCategoryExists)
+                {
+                    throw new ArgumentException("The provided Id does not exist in the PostCategory table.");
+                }
+
                 var post = new Post
                 {
                     Id = adminPostRequest.Id,
@@ -208,9 +130,44 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
 
                 await transaction.CommitAsync();
 
-                return await GetPostDetailAsync(post.PostId);
+                return await GetAdminPostByIdAsync(post.PostId);
             }
             catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<bool> DeletePostWithAllRelatedAsync(int postId)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var post = await _context.Posts
+                    .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
+                    .FirstOrDefaultAsync(p => p.PostId == postId);
+
+                if (post == null)
+                {
+                    return false;
+                }
+
+                var imageIds = post.PostImages.Select(pi => pi.ImageId).ToList();
+
+                _context.PostImages.RemoveRange(post.PostImages);
+                _context.Posts.Remove(post);
+
+                var images = await _context.Images.Where(i => imageIds.Contains(i.ImageId)).ToListAsync();
+                _context.Images.RemoveRange(images);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
                 throw;
@@ -232,7 +189,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                 Status = post.Status,
                 ElementName = post.Element?.ElementName,
                 AccountName = post.Account?.FullName,
-                
+                ImageUrls = post.PostImages.Select(pi => pi.Image.ImageUrl).ToList()
             };
         }
     }
