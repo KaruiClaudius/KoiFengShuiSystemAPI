@@ -19,6 +19,8 @@ public partial class MarketplaceListing
 
     public decimal Price { get; set; }
 
+    public string Color { get; set; }
+
     public int Quantity { get; set; }
 
     public int CategoryId { get; set; }
