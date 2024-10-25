@@ -1,11 +1,15 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using CloudinaryDotNet.Actions;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.BusinessLogic.ViewModel;
 using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
+using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Identity.Client;
+using MimeKit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,26 +22,63 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
     {
         private readonly UnitOfWorkRepository _unitOfWork;
         private readonly GenericRepository<Account> _accountRepository;
-        public MarketplaceListingService()
+        private readonly ICloudService _cloudService;
+
+        public MarketplaceListingService(ICloudService cloudService)
         {
             _unitOfWork = new UnitOfWorkRepository();
             _accountRepository = new GenericRepository<Account>();
+            _cloudService = cloudService;
         }
 
-        public async Task<IBusinessResult> CreateMarketplaceListing(MarketplaceListing marketplaceListing)
+        public async Task<IBusinessResult> CreateMarketplaceListing(MarketplaceListingRequest marketplaceListing, List<IFormFile> imgFiles, int userId)
         {
             try
             {
-                var entityInDb = await _unitOfWork.MarketplaceListingRepository.GetByIdAsync(marketplaceListing.ListingId);
+                //var entityInDb = await _unitOfWork.MarketplaceListingRepository.GetByIdAsync((int)marketplaceListing.ListingId);
 
-                // If Post already exists, return an error indicating duplicate Post
-                if (entityInDb != null)
+                //// If Post already exists, return an error indicating duplicate Post
+                //if (entityInDb != null)
+                //{
+                //    return new BusinessResult(Const.WARNING_NO_DATA_CODE, "Post already exists. Cannot create a new Post with the same ID.");
+                //}
+                var newMarketPlaceListing = new MarketplaceListing
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, "Post already exists. Cannot create a new Post with the same ID.");
+                    AccountId = userId,
+                    TierId = marketplaceListing.TierId,
+                    Title = marketplaceListing.Title,
+                    Description = marketplaceListing.Description,
+                    Price = marketplaceListing.Price,
+                    Quantity = marketplaceListing.Quantity,
+                    CategoryId = marketplaceListing.CategoryId,
+                    CreateAt = DateTime.Now,
+                    ExpiresAt =(DateTime) marketplaceListing.ExpiresAt,
+                    //ListingImages = mp.ListingImages,
+                    Color = marketplaceListing.Color,
+                    IsActive = marketplaceListing.IsActive,
+                    ElementId = marketplaceListing.ElementId,
+                    Status = "Approved",//Change to Pending or Approved when have ApporveMKPL
+                };
+                // Upload images using CloudService
+                List<ImageUploadResult> uploadResults = await _cloudService.UploadImagesAsync(imgFiles);
+                // Handle adding new HomeImages with the uploaded URLs
+                if (uploadResults.Any())
+                {
+                    foreach (var uploadResult in uploadResults)
+                    {
+                        var homeImageEntity = new ListingImage
+                        {
+                            Image = new Image
+                            {
+                                ImageUrl = uploadResult.SecureUrl.ToString()
+                            },
+                            ImageDescription = null // Optionally add descriptions here
+                        };
+                        newMarketPlaceListing.ListingImages.Add(homeImageEntity);
+                    }
                 }
-
                 // If Post doesn't exist, create a new one
-                await _unitOfWork.MarketplaceListingRepository.CreateAsync(marketplaceListing);
+                await _unitOfWork.MarketplaceListingRepository.CreateAsync(newMarketPlaceListing);
                 return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG);
             }
             catch (Exception ex)
