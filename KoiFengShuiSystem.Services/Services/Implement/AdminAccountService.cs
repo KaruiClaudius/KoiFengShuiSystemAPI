@@ -43,7 +43,7 @@ public class AdminAccountService
             };
 
             await _accountService.CreateAsync(newAdmin);
-            await _accountService.UpdateUserPassword(newAdmin, adminPassword);
+            await _accountService.UpdateUserPasswordAsync(newAdmin, adminPassword);
 
             Console.WriteLine($"Admin account created with email: {adminEmail}");
         }

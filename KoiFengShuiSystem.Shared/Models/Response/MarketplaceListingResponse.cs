@@ -32,13 +32,15 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public bool IsActive { get; set; }
 
         public string Status { get; set; }
+        public string Color { get; set; }  
 
         public int? ElementId { get; set; }
-        public string ElementName { get; set; } // Added ElementName here
+        public string? ElementName { get; set; } // Added ElementName here
         public string AccountName { get; set; } // Added Account Name
+        public string AccountPhoneNumber { get; set; } // Added Account PhoneNumber
         public string TierName { get; set; } // Added Account Name
 
-        public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
+        //public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
 
         public virtual SubcriptionTier Tier { get; set; }
     }

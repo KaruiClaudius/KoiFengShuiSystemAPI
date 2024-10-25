@@ -1,8 +1,21 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using Azure;
+using KoiFengShuiSystem.Api.Authorization;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.DataAccess.Base;
+using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.DataAccess.Repositories.Interface;
+using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Net.payOS;
+using Net.payOS.Types;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using static KoiFengShuiSystem.Shared.Models.Response.TransactionResponseDto;
 
@@ -13,49 +26,62 @@ namespace KoiFengShuiSystem.Api.Controllers
     public class TransactionController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public TransactionController(ITransactionService transactionService)
+        public TransactionController(ITransactionService transactionService, IHttpContextAccessor httpContextAccessor)
         {
             _transactionService = transactionService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        [HttpPost("Create")]
-        public async Task<IActionResult> ProcessTransaction([FromBody] TransactionRequestDto transactionRequest)
+        [HttpPost("CreatePayOSLink")]
+        public async Task<IActionResult> CreatePaymentLink(CreatePaymentLinkRequest body)
         {
-            var transaction = await _transactionService.ProcessTransactionAsync(transactionRequest);
-            var response = new
+            var userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(userEmail))
             {
-                TransactionId = transaction.TransactionId,
-                AccountId = transaction.AccountId,
-                TierId = transaction.TierId,
-                
-                Amount = transaction.Amount,
-                TransactionDate = transaction.TransactionDate
-            };
+                return Unauthorized("User not authenticated");
+            }
 
-            return Ok(response);
+            var result = await _transactionService.CreatePaymentLink(body, userEmail);
+            return Ok(result);
         }
 
+        
 
-        [HttpGet("{accountId}")]
-        public async Task<IActionResult> GetTransactionsByAccountId(int accountId)
+        [HttpGet("getPayOSOrder/{orderCode}")]
+        public async Task<IActionResult> GetOrder([FromRoute] int orderCode)
         {
-            var transactions = await _transactionService.GetByAccountIdAsync(accountId);
-            return Ok(transactions);
+            var result = await _transactionService.GetOrder(orderCode);
+            return Ok(result);
         }
 
-        [HttpDelete("{transactionId}")]
-        public async Task<IActionResult> DeleteTransaction(int transactionId)
+        [HttpPut("cancelOrder/{orderCode}")]
+        public async Task<IActionResult> CancelOrder([FromRoute] int orderCode, string reason)
         {
-            await _transactionService.DeleteTransactionAsync(transactionId);
-            return NoContent(); // Trả về 204 No Content
+            var result = await _transactionService.CancelOrder(orderCode, reason);
+            return Ok(result);
         }
 
-        [HttpGet("total/{accountId}")]
-        public async Task<IActionResult> GetTotalAmountByAccountId(int accountId)
+        [HttpPost("confirm-webhook")]
+        public async Task<IActionResult> ConfirmWebhook(ConfirmWebhook body)
         {
-            var totalAmount = await _transactionService.GetTotalAmountByAccountIdAsync(accountId);
-            return Ok(totalAmount);
+            var result = await _transactionService.ConfirmWebhook(body);
+            return Ok(result);
         }
+
+        [HttpPost("CheckOrder")]
+        public async Task<IActionResult> CheckOrder([FromBody] CheckOrderRequest request)
+        {
+            var userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return Unauthorized("User not authenticated");
+            }
+
+            var result = await _transactionService.CheckOrder(request, userEmail);
+            return Ok(result);
+        }
+
     }
 }

@@ -1,6 +1,7 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -129,6 +130,22 @@ namespace KoiFengShuiSystem.API.Controllers
         {
             var total = await _dashboardService.GetTotalTransactionAmountAsync();
             return Ok(total);
+        }
+
+        [HttpGet("transactions/count")]
+        [ProducesResponseType(typeof(TransactionCountResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<TransactionCountResponse>> GetTotalTransactionCount()
+        {
+            try
+            {
+                var response = await _dashboardService.GetTotalTransactionCountAsync();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "An error occurred while processing your request." });
+            }
         }
     }
 }

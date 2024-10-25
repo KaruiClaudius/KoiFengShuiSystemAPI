@@ -1,4 +1,4 @@
-﻿using KoiFengShuiSystem.DataAccess.Models;
+﻿    using KoiFengShuiSystem.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
 using System;
@@ -161,6 +161,10 @@ namespace KoiFengShuiSystem.DataAccess.Base
                 query = query.Include(includeProperty);
             }
             return await query.FirstOrDefaultAsync(predicate);
+        }
+        public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression)
+        {
+            return _dbSet.Where(expression);
         }
         #region Pagination
 

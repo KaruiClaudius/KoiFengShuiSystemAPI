@@ -1,37 +1,56 @@
 ﻿using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.Api.Authorization
 {
     public class TrafficLoggingMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<TrafficLoggingMiddleware> _logger;
 
-        public TrafficLoggingMiddleware(RequestDelegate next)
+        public TrafficLoggingMiddleware(RequestDelegate next, ILogger<TrafficLoggingMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context, KoiFengShuiContext dbContext)
         {
-            var isRegistered = context.User.Identity.IsAuthenticated;
-            var userId = isRegistered ? context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value : null;
-
-            var log = new TrafficLog
+            try
             {
-                Timestamp = DateTime.UtcNow,
-                IpAddress = context.Connection.RemoteIpAddress?.ToString(),
-                UserAgent = context.Request.Headers["User-Agent"].ToString(),
-                RequestPath = context.Request.Path,
-                RequestMethod = context.Request.Method,
-                IsRegistered = context.User.Identity.IsAuthenticated,
-                AccountId = context.User.Identity.IsAuthenticated ?
-                int.Parse(context.User.FindFirst(ClaimTypes.NameIdentifier).Value) : (int?)null
-            };
+                var isRegistered = context.User?.Identity?.IsAuthenticated ?? false;
+                int? accountId = null;
 
-            dbContext.TrafficLogs.Add(log);
-            await dbContext.SaveChangesAsync();
+                if (isRegistered)
+                {
+                    var userIdClaim = context.User?.FindFirst(ClaimTypes.NameIdentifier);
+                    if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int parsedId))
+                    {
+                        accountId = parsedId;
+                    }
+                }
+
+                var log = new TrafficLog
+                {
+                    Timestamp = DateTime.UtcNow,
+                    IpAddress = context.Connection?.RemoteIpAddress?.ToString(),
+                    UserAgent = context.Request.Headers["User-Agent"].ToString(),
+                    RequestPath = context.Request.Path.ToString(),
+                    RequestMethod = context.Request.Method,
+                    IsRegistered = isRegistered,
+                    AccountId = accountId
+                };
+
+                dbContext.TrafficLogs.Add(log);
+                await dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in TrafficLoggingMiddleware");
+                // Don't throw the exception, just log it and continue
+            }
 
             await _next(context);
         }

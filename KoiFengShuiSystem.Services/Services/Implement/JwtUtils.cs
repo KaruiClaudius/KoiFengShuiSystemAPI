@@ -6,7 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using KoiFengShuiSystem.Shared.Helpers;
 
-namespace KoiFengShuiSystem.Api.Authorization
+namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public interface IJwtUtils
     {

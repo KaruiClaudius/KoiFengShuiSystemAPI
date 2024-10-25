@@ -9,11 +9,12 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
-    public class UnitOfWorkRepository
+    public class UnitOfWorkRepository : IUnitOfWorkRepository
     {
         private readonly KoiFengShuiContext _unitOfWorkContext;
         private PostRepository _postRepository;
         private MarketplaceListingRepository _marketplaceListingsRepository;
+        private ImageRepository _imageRepository;
         public UnitOfWorkRepository()
         {
             _unitOfWorkContext ??= new KoiFengShuiContext(new DbContextOptions<KoiFengShuiContext>());
@@ -31,6 +32,14 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
             get
             {
                 return _marketplaceListingsRepository ??= new MarketplaceListingRepository();
+            }
+        }
+
+        public ImageRepository ImageRepository
+        {
+            get
+            {
+                return _imageRepository ??= new ImageRepository();
             }
         }
 

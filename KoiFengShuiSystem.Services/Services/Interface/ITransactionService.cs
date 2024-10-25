@@ -1,16 +1,21 @@
-﻿using KoiFengShuiSystem.DataAccess.Models;
+﻿using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Shared.Models.Response;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using static KoiFengShuiSystem.Shared.Models.Response.TransactionResponseDto;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
     public interface ITransactionService
     {
-        Task<Transaction> ProcessTransactionAsync(TransactionRequestDto transactionRequest);
-        Task<List<Transaction>> GetByAccountIdAsync(int accountId);
-        Task DeleteTransactionAsync(int transactionId);
-        Task<decimal> GetTotalAmountByAccountIdAsync(int accountId);
+        Task<MessageResponse> CreatePaymentLink(CreatePaymentLinkRequest body, string userEmail);
+        //Task<MessageResponse> PaymentCallback(PaymentCallbackData callbackData);
+        Task<MessageResponse> GetOrder(int orderCode);
+        Task<MessageResponse> CancelOrder(int orderCode, string reason);
+        Task<MessageResponse> ConfirmWebhook(ConfirmWebhook body);
+        Task<MessageResponse> CheckOrder(CheckOrderRequest request, string userEmail);
     }
 }

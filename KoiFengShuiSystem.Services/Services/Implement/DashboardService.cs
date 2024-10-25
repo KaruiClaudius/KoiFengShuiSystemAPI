@@ -2,6 +2,7 @@
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -144,7 +145,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         public async Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync(int page = 1, int pageSize = 10)
         {
             var query = _transactionRepository.GetAllQuery()
-                .Where(t => t.Status == "Active")
                 .OrderByDescending(t => t.TransactionDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize);
@@ -190,9 +190,26 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             };
         }
 
+        public async Task<TransactionCountResponse> GetTotalTransactionCountAsync()
+        {
+            try
+            {
+                var count = await _transactionRepository.GetAllQuery().CountAsync();
+                _logger.LogInformation($"Total transaction count: {count}");
 
+                return new TransactionCountResponse
+                {
+                    TotalCount = count,
+                    Message = $"The total number of transactions is {count}."
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting total transaction count");
+                throw;
+            }
+        }
     }
-
 
 }
 

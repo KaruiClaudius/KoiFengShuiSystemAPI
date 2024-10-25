@@ -27,14 +27,14 @@ namespace KoiFengShuiSystem.Api.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var users = _accountService.GetAll();
+            var users = _accountService.GetAllAsync();
             return Ok(users);
         }
         [Authorize]
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
         {
-            var account = _accountService.GetById(id);
+            var account = _accountService.GetByIdAsync(id);
             return account == null ? NotFound() : Ok(account);
         }
 
@@ -46,7 +46,7 @@ namespace KoiFengShuiSystem.Api.Controllers
         {
             try
             {
-                _accountService.Update(id, model);
+                _accountService.UpdateAsync(id, model);
                 return Ok(new { message = "Account updated successfully" });
             }
             catch (ApplicationException ex)
@@ -61,7 +61,7 @@ namespace KoiFengShuiSystem.Api.Controllers
         {
             try
             {
-                _accountService.Delete(id);
+                _accountService.DeleteAsync(id);
                 return Ok(new { message = "Account deleted successfully" });
             }
             catch (ApplicationException ex)
