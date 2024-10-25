@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.Shared.Models.Request
 {
-    public class PostRequest
+    public class AdminPostRequest
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -14,5 +15,6 @@ namespace KoiFengShuiSystem.Shared.Models.Request
         public int AccountId { get; set; }
         public int ElementId { get; set; }
         public string Status { get; set; }
+        public List<IFormFile> Images { get; set; }
     }
 }

@@ -1,44 +1,64 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using KoiFengShuiSystem.DataAccess;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
-using Microsoft.EntityFrameworkCore;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 
-namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
+namespace KoiFengShuiSystem.BusinessLogic.Services
 {
     public class AdminPostService : IAdminPostService
     {
         private readonly KoiFengShuiContext _context;
+        private readonly IImageService _imageService;
 
-        public AdminPostService(KoiFengShuiContext context)
+        public AdminPostService(KoiFengShuiContext context, IImageService imageService)
         {
             _context = context;
+            _imageService = imageService;
         }
 
-        public async Task<IEnumerable<AdminPostResponse>> GetAllPostsAsync()
+        public async Task<List<AdminPostResponse>> GetAllAdminPostsAsync()
         {
-            var posts = await _context.Posts.Include(p => p.Element).Include(p => p.Account).ToListAsync();
-            return posts.Select(p => MapToAdminPostResponse(p));
+            var posts = await _context.Posts
+                .Include(p => p.Element)
+                .Include(p => p.Account)
+                .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
+                .ToListAsync();
+
+            return posts.Select(MapToAdminPostResponse).ToList();
         }
 
-        public async Task<AdminPostResponse> GetPostByIdAsync(int id)
+        public async Task<AdminPostResponse> GetAdminPostByIdAsync(int id)
         {
             var post = await _context.Posts
                 .Include(p => p.Element)
                 .Include(p => p.Account)
+                .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
                 .FirstOrDefaultAsync(p => p.PostId == id);
+
             return post == null ? null : MapToAdminPostResponse(post);
         }
 
-        public async Task<AdminPostResponse> CreatePostAsync(PostRequest postRequest)
+
+
+        public async Task<AdminPostResponse> CreateAdminPostAsync(AdminPostRequest adminPostRequest, List<IFormFile> images)
         {
             var post = new Post
             {
-                Id = postRequest.ElementId, 
-                Name = postRequest.Name,
-                Description = postRequest.Description,
-                AccountId = postRequest.AccountId,
-                Status = postRequest.Status,
+                Id = adminPostRequest.Id,
+                Name = adminPostRequest.Name,
+                Description = adminPostRequest.Description,
+                AccountId = adminPostRequest.AccountId,
+                ElementId = adminPostRequest.ElementId,
+                Status = adminPostRequest.Status,
                 CreateAt = DateTime.Now,
                 UpdateAt = DateTime.Now
             };
@@ -46,29 +66,65 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _context.Posts.Add(post);
             await _context.SaveChangesAsync();
 
-            return MapToAdminPostResponse(post);
-        }
-        public async Task<AdminPostResponse> UpdatePostAsync(int id, PostRequest postRequest)
-        {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null) return null;
+            foreach (var image in images)
+            {
+                var imageRequest = new ImageRequest { ImageUrl = await _imageService.SaveImageAsync(image) };
+                var imageResponse = await _imageService.CreateImageAsync(imageRequest);
 
-            post.Id = postRequest.Id;
-            post.Name = postRequest.Name;
-            post.Description = postRequest.Description;
-            post.UpdateAt = DateTime.Now;
-            post.ElementId = postRequest.ElementId;
-            post.Status = postRequest.Status;
+                var postImage = new PostImage
+                {
+                    PostId = post.PostId,
+                    ImageId = imageResponse.ImageId,
+                    ImageDescription = "Default description"
+                };
+                _context.PostImages.Add(postImage);
+            }
 
             await _context.SaveChangesAsync();
 
-            return await GetPostByIdAsync(id);
+            return await GetPostDetailAsync(post.PostId);
         }
 
-        public async Task<bool> DeletePostAsync(int id)
+        public async Task<AdminPostResponse> UpdateAdminPostAsync(int id, AdminPostRequest adminPostRequest, List<IFormFile> images)
         {
             var post = await _context.Posts.FindAsync(id);
-            if (post == null) return false;
+            if (post == null)
+            {
+                return null;
+            }
+
+            post.Name = adminPostRequest.Name;
+            post.Description = adminPostRequest.Description;
+            post.ElementId = adminPostRequest.ElementId;
+            post.Status = adminPostRequest.Status;
+            post.UpdateAt = DateTime.Now;
+
+            foreach (var image in images)
+            {
+                var imageRequest = new ImageRequest { ImageUrl = await _imageService.SaveImageAsync(image) };
+                var imageResponse = await _imageService.CreateImageAsync(imageRequest);
+
+                var postImage = new PostImage
+                {
+                    PostId = post.PostId,
+                    ImageId = imageResponse.ImageId,
+                    ImageDescription = "Default description"
+                };
+                _context.PostImages.Add(postImage);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return await GetPostDetailAsync(post.PostId);
+        }
+
+        public async Task<bool> DeleteAdminPostAsync(int id)
+        {
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
+            {
+                return false;
+            }
 
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
@@ -76,15 +132,89 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return true;
         }
 
-        public async Task<IEnumerable<AdminPostResponse>> GetAllAdminPostsAsync()
+        public async Task<bool> DeletePostWithAllRelatedAsync(int postId)
         {
-            var adminPosts = await _context.Posts
-                .Include(p => p.Element)
-                .Include(p => p.Account)
-                .Where(p => p.Account.RoleId == 1) // Assuming RoleId 1 is for admin
-                .ToListAsync();
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var post = await _context.Posts
+                    .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
+                    .FirstOrDefaultAsync(p => p.PostId == postId);
 
-            return adminPosts.Select(p => MapToAdminPostResponse(p));
+                if (post == null)
+                {
+                    return false;
+                }
+
+                var imageIds = post.PostImages.Select(pi => pi.ImageId).ToList();
+
+                _context.PostImages.RemoveRange(post.PostImages);
+                _context.Posts.Remove(post);
+                var images = await _context.Images.Where(i => imageIds.Contains(i.ImageId)).ToListAsync();
+                _context.Images.RemoveRange(images);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<AdminPostResponse> CreatePostWithImagesAsync(AdminPostRequest adminPostRequest, List<IFormFile> images)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var post = new Post
+                {
+                    Id = adminPostRequest.Id,
+                    Name = adminPostRequest.Name,
+                    Description = adminPostRequest.Description,
+                    CreateAt = DateTime.UtcNow,
+                    UpdateAt = DateTime.UtcNow,
+                    AccountId = adminPostRequest.AccountId,
+                    ElementId = adminPostRequest.ElementId,
+                    Status = adminPostRequest.Status
+                };
+
+                _context.Posts.Add(post);
+                await _context.SaveChangesAsync();
+
+                if (images != null && images.Any())
+                {
+                    foreach (var image in images)
+                    {
+                        var imageUrl = await _imageService.SaveImageAsync(image);
+                        var newImage = new Image { ImageUrl = imageUrl };
+                        _context.Images.Add(newImage);
+                        await _context.SaveChangesAsync();
+
+                        var postImage = new PostImage
+                        {
+                            PostId = post.PostId,
+                            ImageId = newImage.ImageId,
+                            ImageDescription = "Default description"
+                        };
+                        _context.PostImages.Add(postImage);
+                    }
+                    await _context.SaveChangesAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                return await GetPostDetailAsync(post.PostId);
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         private AdminPostResponse MapToAdminPostResponse(Post post)
@@ -101,7 +231,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 ElementId = post.ElementId,
                 Status = post.Status,
                 ElementName = post.Element?.ElementName,
-                AccountName = post.Account?.FullName
+                AccountName = post.Account?.FullName,
+                
             };
         }
     }
