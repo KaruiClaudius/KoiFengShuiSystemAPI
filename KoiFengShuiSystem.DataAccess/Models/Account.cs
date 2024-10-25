@@ -29,7 +29,11 @@ public partial class Account
 
     public DateTime UpdateAt { get; set; }
 
+    public decimal? Wallet { get; set; }
+
     public virtual Element Element { get; set; }
+
+    public virtual ICollection<FAQ> FAQs { get; set; } = new List<FAQ>();
 
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 

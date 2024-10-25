@@ -13,9 +13,7 @@ public partial class Transaction
 
     public int AccountId { get; set; }
 
-    public int TierId { get; set; }
-
-    public int SubscriptionId { get; set; }
+    public int? TierId { get; set; }
 
     public decimal Amount { get; set; }
 
@@ -23,13 +21,11 @@ public partial class Transaction
 
     public string Status { get; set; }
 
-    public int? ListingId { get; set; }
+    public int ListingId { get; set; }
 
     public virtual Account Account { get; set; }
 
     public virtual MarketplaceListing Listing { get; set; }
-
-    public virtual Subscription Subscription { get; set; }
 
     public virtual SubcriptionTier Tier { get; set; }
 }

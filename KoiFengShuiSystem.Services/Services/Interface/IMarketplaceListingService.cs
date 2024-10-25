@@ -13,6 +13,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<IBusinessResult> GetAll();
         Task<IBusinessResult> GetMarketplaceListingById(int id);
         Task<IBusinessResult> GetMarketplaceListingByCategoryId(int categoryId, int pageNumber, int pageSize);
+        Task<IBusinessResult> GetMarketplaceListingByElementId(int elementId, int categoryId, int excludeListingId, int pageNumber, int pageSize);
+        Task<IBusinessResult> GetMarketplaceListingByAccountId(int accountId, int categoryId, int excludeListingId, int pageNumber, int pageSize);
+
         Task<IBusinessResult> CreateMarketplaceListing(MarketplaceListing marketplaceListing);
         // Helper method to compare two payments
         Task<IBusinessResult> DeleteMarketplaceListing(int id);

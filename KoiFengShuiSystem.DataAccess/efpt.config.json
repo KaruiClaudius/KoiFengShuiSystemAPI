@@ -31,6 +31,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "[dbo].[FAQ]",
+         "ObjectType": 0
+      },
+      {
          "Name": "[dbo].[FengShuiDirection]",
          "ObjectType": 0
       },
@@ -88,10 +92,6 @@
       },
       {
          "Name": "[dbo].[SubcriptionTiers]",
-         "ObjectType": 0
-      },
-      {
-         "Name": "[dbo].[Subscription]",
          "ObjectType": 0
       },
       {

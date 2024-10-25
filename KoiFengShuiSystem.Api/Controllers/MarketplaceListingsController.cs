@@ -40,6 +40,33 @@ namespace KoiFengShuiSystem.Api.Controllers
             }
             return Ok(marketplaceListingResponse);
         }
+
+        //[Authorize]
+        [HttpGet("GetAllByElementId/{elementId}/Category/{categoryId}")]
+        public async Task<IActionResult> GetMarketplaceListingByElement(int elementId, int categoryId, [FromQuery] int excludeListingId, [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+        {
+            var marketplaceListingResponse = await _marketplaceListingService.GetMarketplaceListingByElementId(elementId, categoryId, excludeListingId, page, pageSize);
+            if (marketplaceListingResponse.Data == null)
+            {
+                return NotFound(marketplaceListingResponse);
+            }
+            return Ok(marketplaceListingResponse);
+        }
+
+        //[Authorize]
+        [HttpGet("GetAllByAccount/{accountId}/Category/{categoryId}")]
+        public async Task<IActionResult> GetMarketplaceListingByAccount(int accountId, int categoryId, [FromQuery] int excludeListingId, [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+        {
+            var marketplaceListingResponse = await _marketplaceListingService.GetMarketplaceListingByAccountId(accountId, categoryId, excludeListingId, page, pageSize);
+            if (marketplaceListingResponse.Data == null)
+            {
+                return NotFound(marketplaceListingResponse);
+            }
+            return Ok(marketplaceListingResponse);
+        }
+
         //[Authorize]
         [HttpGet("Details/{id}")]
         public async Task<IActionResult> GetById(int id)

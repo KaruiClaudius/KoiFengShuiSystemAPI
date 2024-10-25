@@ -1,6 +1,7 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.BusinessLogic.ViewModel;
 using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Shared.Models.Response;
@@ -16,10 +17,11 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
     public class MarketplaceListingService : IMarketplaceListingService
     {
         private readonly UnitOfWorkRepository _unitOfWork;
-
+        private readonly GenericRepository<Account> _accountRepository;
         public MarketplaceListingService()
         {
             _unitOfWork = new UnitOfWorkRepository();
+            _accountRepository = new GenericRepository<Account>();
         }
 
         public async Task<IBusinessResult> CreateMarketplaceListing(MarketplaceListing marketplaceListing)
@@ -91,6 +93,52 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CreateAt = DateTime.Now,
                         ExpiresAt = mp.ExpiresAt,
                         //ListingImages = mp.ListingImages,
+                        Color = mp.Color,
+                        IsActive = mp.IsActive,
+                        ElementId = mp.ElementId,
+                        AccountName = mp.Account.FullName,
+                        ElementName = mp.Element?.ElementName,
+                        TierName = mp.Tier.TierName,
+                        Status = mp.Status,
+                    }).ToList();
+                    if (marketplaceListingsResponses == null)
+                    {
+                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    }
+                    else
+                    {
+                        return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, marketplaceListingsResponses);
+                    }
+                }
+                return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+
+            }
+            catch (Exception e)
+            {
+                return new BusinessResult(-4, e.Message.ToString());
+            }
+        }
+
+        public async Task<IBusinessResult> GetMarketplaceListingByAccountId(int accountId, int categoryId, int excludeListingId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByAccountIdAsync(accountId, categoryId, excludeListingId, pageNumber, pageSize);
+                if (marketplaceListings != null)
+                {
+                    var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
+                    {
+                        ListingId = mp.ListingId,
+                        AccountId = mp.AccountId,
+                        TierId = mp.TierId,
+                        Title = mp.Title,
+                        Description = mp.Description,
+                        Price = mp.Price,
+                        Quantity = mp.Quantity,
+                        CategoryId = mp.CategoryId,
+                        CreateAt = DateTime.Now,
+                        ExpiresAt = mp.ExpiresAt,
+                        Color = mp.Color,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
@@ -135,6 +183,52 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CategoryId = mp.CategoryId,
                         CreateAt = DateTime.Now,
                         ExpiresAt = mp.ExpiresAt,
+                        Color = mp.Color,
+                        IsActive = mp.IsActive,
+                        ElementId = mp.ElementId,
+                        AccountName = mp.Account.FullName,
+                        ElementName = mp.Element?.ElementName,
+                        TierName = mp.Tier.TierName,
+                        Status = mp.Status,
+                    }).ToList();
+                    if (marketplaceListingsResponses == null)
+                    {
+                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    }
+                    else
+                    {
+                        return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, marketplaceListingsResponses);
+                    }
+                }
+                return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+
+            }
+            catch (Exception e)
+            {
+                return new BusinessResult(-4, e.Message.ToString());
+            }
+        }
+
+        public async Task<IBusinessResult> GetMarketplaceListingByElementId(int elementId, int categoryId, int excludeListingId, int pageNumber, int pageSize)
+        {
+            try
+            {
+                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByElementIdAsync(elementId,categoryId, excludeListingId, pageNumber, pageSize);
+                if (marketplaceListings != null)
+                {
+                    var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
+                    {
+                        ListingId = mp.ListingId,
+                        AccountId = mp.AccountId,
+                        TierId = mp.TierId,
+                        Title = mp.Title,
+                        Description = mp.Description,
+                        Price = mp.Price,
+                        Quantity = mp.Quantity,
+                        CategoryId = mp.CategoryId,
+                        CreateAt = DateTime.Now,
+                        ExpiresAt = mp.ExpiresAt,
+                        Color = mp.Color,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
@@ -165,6 +259,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByCategoryByIdAsync(id);
+
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
@@ -176,12 +271,14 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Description = mp.Description,
                         Price = mp.Price,
                         Quantity = mp.Quantity,
+                        Color = mp.Color,
                         CategoryId = mp.CategoryId,
                         CreateAt = DateTime.Now,
                         ExpiresAt = mp.ExpiresAt,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
+                        AccountPhoneNumber = mp.Account.Phone,
                         ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
