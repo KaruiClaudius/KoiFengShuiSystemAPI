@@ -5,9 +5,9 @@ using System.Collections.Generic;
 
 namespace KoiFengShuiSystem.DataAccess.Models;
 
-public partial class Faq
+public partial class FAQ
 {
-    public int Faqid { get; set; }
+    public int FAQId { get; set; }
 
     public string Question { get; set; }
 
