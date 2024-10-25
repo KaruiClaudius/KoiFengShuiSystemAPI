@@ -38,7 +38,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                 if (uploadFile.Error == null)
                 {
                     // Save the image URL in the database
-                    var saveResult = await _imageService.SaveImageAsync(uploadFile.SecureUrl.ToString());
+                    var saveResult = await _imageService.SaveImagesAsync(uploadFile.SecureUrl.ToString());
                     if (saveResult)
                     {
                         return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG, new UploadRespose

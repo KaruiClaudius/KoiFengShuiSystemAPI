@@ -16,6 +16,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<ImageResponse> CreateImageAsync(ImageRequest request);
         Task<bool> DeleteImageAsync(int imageId);
         Task<string> SaveImageAsync(IFormFile file); 
-        Task<bool> SaveImageAsync(string imageUrl);
+        Task<bool> SaveImagesAsync(string imageUrl);
     }
 }
