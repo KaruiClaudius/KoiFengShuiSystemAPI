@@ -26,8 +26,6 @@ public partial class KoiFengShuiContext : DbContext
 
     public virtual DbSet<Element> Elements { get; set; }
 
-    public virtual DbSet<Faq> Faqs { get; set; }
-
     public virtual DbSet<FengShuiDirection> FengShuiDirections { get; set; }
 
     public virtual DbSet<FishPond> FishPonds { get; set; }
@@ -68,6 +66,15 @@ public partial class KoiFengShuiContext : DbContext
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
             .AddJsonFile("appsettings.json")
             .Build();
+<<<<<<< HEAD
+=======
+
+        string connectionString = config.GetConnectionString(connectionStringName);
+        return connectionString;
+    }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
         string connectionString = config.GetConnectionString(connectionStringName);
         return connectionString;
@@ -78,7 +85,11 @@ public partial class KoiFengShuiContext : DbContext
     {
         modelBuilder.Entity<Account>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.AccountId).HasName("PK__Account__349DA5A6F4659C83");
+=======
+            entity.HasKey(e => e.AccountId).HasName("PK__Account__349DA5A639BE29EC");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Account");
 
@@ -98,16 +109,20 @@ public partial class KoiFengShuiContext : DbContext
 
             entity.HasOne(d => d.Element).WithMany(p => p.Accounts)
                 .HasForeignKey(d => d.ElementId)
-                .HasConstraintName("FK__Account__Element__3B75D760");
+                .HasConstraintName("FK__Account__Element__286302EC");
 
             entity.HasOne(d => d.Role).WithMany(p => p.Accounts)
                 .HasForeignKey(d => d.RoleId)
-                .HasConstraintName("FK__Account__RoleId__3C69FB99");
+                .HasConstraintName("FK__Account__RoleId__29572725");
         });
 
         modelBuilder.Entity<Country>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.CountryId).HasName("PK__Country__10D1609F2E92FF3C");
+=======
+            entity.HasKey(e => e.CountryId).HasName("PK__Country__10D1609FA5E22183");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Country");
 
@@ -118,7 +133,11 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Direction>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.DirectionId).HasName("PK__Directio__876847C67EB4AA80");
+=======
+            entity.HasKey(e => e.DirectionId).HasName("PK__Directio__876847C61063CC6C");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Direction");
 
@@ -129,7 +148,11 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Element>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.ElementId).HasName("PK__Element__A429721A23A46E27");
+=======
+            entity.HasKey(e => e.ElementId).HasName("PK__Element__A429721AD40A1F5D");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Element");
 
@@ -144,6 +167,7 @@ public partial class KoiFengShuiContext : DbContext
                 .HasMaxLength(50);
         });
 
+<<<<<<< HEAD
         modelBuilder.Entity<Faq>(entity =>
         {
             entity.HasKey(e => e.Faqid).HasName("PK__FAQ__4B89D18231544199");
@@ -166,6 +190,11 @@ public partial class KoiFengShuiContext : DbContext
         modelBuilder.Entity<FengShuiDirection>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__FengShui__3214EC07307C8128");
+=======
+        modelBuilder.Entity<FengShuiDirection>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__FengShui__3214EC073D698D65");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("FengShuiDirection");
 
@@ -176,49 +205,61 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Direction).WithMany(p => p.FengShuiDirections)
                 .HasForeignKey(d => d.DirectionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__FengShuiD__Direc__4E88ABD4");
+                .HasConstraintName("FK__FengShuiD__Direc__3B75D760");
 
             entity.HasOne(d => d.Element).WithMany(p => p.FengShuiDirections)
                 .HasForeignKey(d => d.ElementId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__FengShuiD__Eleme__4F7CD00D");
+                .HasConstraintName("FK__FengShuiD__Eleme__3C69FB99");
         });
 
         modelBuilder.Entity<FishPond>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.PondId).HasName("PK__FishPond__D18BF8341ED6699E");
+=======
+            entity.HasKey(e => e.PondId).HasName("PK__FishPond__D18BF8347E62319B");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.HasOne(d => d.DirectionPlacementNavigation).WithMany(p => p.FishPonds)
                 .HasForeignKey(d => d.DirectionPlacement)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__FishPonds__Direc__534D60F1");
+                .HasConstraintName("FK__FishPonds__Direc__403A8C7D");
 
             entity.HasOne(d => d.Shape).WithMany(p => p.FishPonds)
                 .HasForeignKey(d => d.ShapeId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__FishPonds__Shape__52593CB8");
+                .HasConstraintName("FK__FishPonds__Shape__3F466844");
         });
 
         modelBuilder.Entity<Follow>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.FollowId).HasName("PK__Follow__2CE810AEC4BAD07E");
+=======
+            entity.HasKey(e => e.FollowId).HasName("PK__Follow__2CE810AE5B68CF26");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Follow");
 
             entity.HasOne(d => d.Account).WithMany(p => p.Follows)
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Follow__AccountI__46E78A0C");
+                .HasConstraintName("FK__Follow__AccountI__33D4B598");
 
             entity.HasOne(d => d.Post).WithMany(p => p.Follows)
                 .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Follow__PostId__45F365D3");
+                .HasConstraintName("FK__Follow__PostId__32E0915F");
         });
 
         modelBuilder.Entity<Image>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.ImageId).HasName("PK__Image__7516F70CF8B13744");
+=======
+            entity.HasKey(e => e.ImageId).HasName("PK__Image__7516F70C542AC465");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Image");
 
@@ -229,7 +270,11 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<KoiBreed>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.BreedId).HasName("PK__KoiBreed__D1E9AE9DDBF285E0");
+=======
+            entity.HasKey(e => e.BreedId).HasName("PK__KoiBreed__D1E9AE9DBF7D89C6");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.Property(e => e.BreedName)
                 .IsRequired()
@@ -244,34 +289,50 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Country).WithMany(p => p.KoiBreeds)
                 .HasForeignKey(d => d.CountryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__KoiBreeds__Count__59063A47");
+                .HasConstraintName("FK__KoiBreeds__Count__45F365D3");
 
             entity.HasOne(d => d.Element).WithMany(p => p.KoiBreeds)
                 .HasForeignKey(d => d.ElementId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__KoiBreeds__Eleme__5812160E");
+                .HasConstraintName("FK__KoiBreeds__Eleme__44FF419A");
         });
 
         modelBuilder.Entity<ListingImage>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.ListingImageId).HasName("PK__ListingI__C6DC6D87091B5F1F");
+=======
+            entity.HasKey(e => e.ListingImageId).HasName("PK__ListingI__C6DC6D87179B296A");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("ListingImage");
 
             entity.HasOne(d => d.Image).WithMany(p => p.ListingImages)
                 .HasForeignKey(d => d.ImageId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__ListingIm__Image__75A278F5");
+=======
+                .HasConstraintName("FK__ListingIm__Image__656C112C");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.HasOne(d => d.MarketListing).WithMany(p => p.ListingImages)
                 .HasForeignKey(d => d.MarketListingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__ListingIm__Marke__74AE54BC");
+=======
+                .HasConstraintName("FK__ListingIm__Marke__6477ECF3");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
         });
 
         modelBuilder.Entity<MarketCategory>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__190606231E3C9E8A");
+=======
+            entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__19060623C6D525AE");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("MarketCategory");
 
@@ -282,7 +343,11 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<MarketplaceListing>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.ListingId).HasName("PK__Marketpl__BF3EBED07EC0ED49");
+=======
+            entity.HasKey(e => e.ListingId).HasName("PK__Marketpl__BF3EBED0210ADBED");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.Property(e => e.Color).HasMaxLength(20);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
@@ -297,26 +362,46 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Account).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__Marketpla__Accou__656C112C");
+=======
+                .HasConstraintName("FK__Marketpla__Accou__5441852A");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.HasOne(d => d.Category).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__Marketpla__Categ__6477ECF3");
 
             entity.HasOne(d => d.Element).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.ElementId)
                 .HasConstraintName("FK__Marketpla__Eleme__6754599E");
+=======
+                .HasConstraintName("FK__Marketpla__Categ__534D60F1");
+
+            entity.HasOne(d => d.Element).WithMany(p => p.MarketplaceListings)
+                .HasForeignKey(d => d.ElementId)
+                .HasConstraintName("FK__Marketpla__Eleme__5629CD9C");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.HasOne(d => d.Tier).WithMany(p => p.MarketplaceListings)
                 .HasForeignKey(d => d.TierId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__Marketpla__TierI__66603565");
+=======
+                .HasConstraintName("FK__Marketpla__TierI__5535A963");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
         });
 
         modelBuilder.Entity<Post>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.PostId).HasName("PK__Post__AA126018B6217C00");
+=======
+            entity.HasKey(e => e.PostId).HasName("PK__Post__AA12601837C44FA1");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Post");
 
@@ -335,21 +420,25 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Account).WithMany(p => p.Posts)
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Post__AccountId__4222D4EF");
+                .HasConstraintName("FK__Post__AccountId__2F10007B");
 
             entity.HasOne(d => d.Element).WithMany(p => p.Posts)
                 .HasForeignKey(d => d.ElementId)
-                .HasConstraintName("FK__Post__ElementId__4316F928");
+                .HasConstraintName("FK__Post__ElementId__300424B4");
 
             entity.HasOne(d => d.IdNavigation).WithMany(p => p.Posts)
                 .HasForeignKey(d => d.Id)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Post__Id__412EB0B6");
+                .HasConstraintName("FK__Post__Id__2E1BDC42");
         });
 
         modelBuilder.Entity<PostCategory>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.Id).HasName("PK__PostCate__3214EC07DB00BE59");
+=======
+            entity.HasKey(e => e.Id).HasName("PK__PostCate__3214EC075DC62E72");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("PostCategory");
 
@@ -360,24 +449,40 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<PostImage>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.PostImageId).HasName("PK__PostImag__BCD3CCD0383B1CFE");
+=======
+            entity.HasKey(e => e.PostImageId).HasName("PK__PostImag__BCD3CCD04C02F08E");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("PostImage");
 
             entity.HasOne(d => d.Image).WithMany(p => p.PostImages)
                 .HasForeignKey(d => d.ImageId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__PostImage__Image__71D1E811");
+=======
+                .HasConstraintName("FK__PostImage__Image__619B8048");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.HasOne(d => d.Post).WithMany(p => p.PostImages)
                 .HasForeignKey(d => d.PostId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__PostImage__PostI__70DDC3D8");
+=======
+                .HasConstraintName("FK__PostImage__PostI__60A75C0F");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
         });
 
         modelBuilder.Entity<Recommendation>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.RecommendationId).HasName("PK__Recommen__AA15BEE4E4CCC03A");
+=======
+            entity.HasKey(e => e.RecommendationId).HasName("PK__Recommen__AA15BEE412372212");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Recommendation");
 
@@ -386,22 +491,26 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Account).WithMany(p => p.Recommendations)
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Recommend__Accou__5BE2A6F2");
+                .HasConstraintName("FK__Recommend__Accou__48CFD27E");
 
             entity.HasOne(d => d.Breed).WithMany(p => p.Recommendations)
                 .HasForeignKey(d => d.BreedId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Recommend__Breed__5CD6CB2B");
+                .HasConstraintName("FK__Recommend__Breed__49C3F6B7");
 
             entity.HasOne(d => d.Pond).WithMany(p => p.Recommendations)
                 .HasForeignKey(d => d.PondId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Recommend__PondI__5DCAEF64");
+                .HasConstraintName("FK__Recommend__PondI__4AB81AF0");
         });
 
         modelBuilder.Entity<Role>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1A4565DFD8");
+=======
+            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1A27356CCD");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Role");
 
@@ -412,7 +521,11 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<ShapeCategory>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.ShapeId).HasName("PK__ShapeCat__70FC8381B0F7C354");
+=======
+            entity.HasKey(e => e.ShapeId).HasName("PK__ShapeCat__70FC8381EB565C30");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("ShapeCategory");
 
@@ -426,21 +539,46 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Element).WithMany(p => p.ShapeCategories)
                 .HasForeignKey(d => d.ElementId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__ShapeCate__Eleme__49C3F6B7");
+                .HasConstraintName("FK__ShapeCate__Eleme__36B12243");
         });
 
         modelBuilder.Entity<SubcriptionTier>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.TierId).HasName("PK__Subcript__362F561DDFEF606B");
+=======
+            entity.HasKey(e => e.TierId).HasName("PK__Subcript__362F561D4090D45F");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.Property(e => e.TierName)
                 .IsRequired()
                 .HasMaxLength(255);
         });
 
+<<<<<<< HEAD
         modelBuilder.Entity<TrafficLog>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__TrafficL__3214EC07E1F4E853");
+=======
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.HasKey(e => e.SubscriptionId).HasName("PK__Subscrip__9A2B249D70662CAB");
+
+            entity.ToTable("Subscription");
+
+            entity.Property(e => e.Description)
+                .IsRequired()
+                .HasMaxLength(100);
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.Price).HasColumnType("decimal(10, 2)");
+        });
+
+        modelBuilder.Entity<TrafficLog>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__TrafficL__3214EC0726BB2530");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("TrafficLog");
 
@@ -457,7 +595,11 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Transaction>(entity =>
         {
+<<<<<<< HEAD
             entity.HasKey(e => e.Id).HasName("PK__Transact__3214EC075E172FBF");
+=======
+            entity.HasKey(e => e.Id).HasName("PK__Transact__3214EC079C188161");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.ToTable("Transaction");
 
@@ -470,16 +612,34 @@ public partial class KoiFengShuiContext : DbContext
             entity.HasOne(d => d.Account).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.AccountId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__Transacti__Accou__6B24EA82");
+=======
+                .HasConstraintName("FK__Transacti__Accou__5AEE82B9");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
 
             entity.HasOne(d => d.Listing).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.ListingId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+<<<<<<< HEAD
                 .HasConstraintName("FK__Transacti__Listi__6A30C649");
 
             entity.HasOne(d => d.Tier).WithMany(p => p.Transactions)
                 .HasForeignKey(d => d.TierId)
                 .HasConstraintName("FK__Transacti__TierI__6C190EBB");
+=======
+                .HasConstraintName("FK__Transacti__Listi__59063A47");
+
+            entity.HasOne(d => d.Subscription).WithMany(p => p.Transactions)
+                .HasForeignKey(d => d.SubscriptionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Transacti__Subsc__59FA5E80");
+
+            entity.HasOne(d => d.Tier).WithMany(p => p.Transactions)
+                .HasForeignKey(d => d.TierId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__Transacti__TierI__5BE2A6F2");
+>>>>>>> parent of c53e33b (FAQ_CRUD)
         });
 
         OnModelCreatingPartial(modelBuilder);
