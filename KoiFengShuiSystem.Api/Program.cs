@@ -1,5 +1,4 @@
 
-using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
@@ -73,8 +72,6 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IMarketplaceListingService, MarketplaceListingService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
-//builder.Services.AddScoped<ITransactionService, TransactionService>();
-builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
