@@ -1,3 +1,4 @@
+using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
@@ -76,6 +77,8 @@ builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));

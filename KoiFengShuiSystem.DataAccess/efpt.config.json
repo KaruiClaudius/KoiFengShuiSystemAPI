@@ -31,10 +31,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "[dbo].[FAQ]",
-         "ObjectType": 0
-      },
-      {
          "Name": "[dbo].[FengShuiDirection]",
          "ObjectType": 0
       },
