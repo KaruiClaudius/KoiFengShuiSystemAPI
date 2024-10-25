@@ -1,9 +1,11 @@
+using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Shared.Helpers.Photos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -59,7 +61,7 @@ builder.Services.AddDbContext<KoiFengShuiContext>(options =>
 // AppSettings and MailSettings configuration
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
-
+builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(nameof(CloundSettings)));
 // Service registrations
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -67,6 +69,9 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IMarketplaceListingService, MarketplaceListingService>();
 builder.Services.AddScoped<IJwtUtils, JwtUtils>();
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<ICloudService, CloudService>();
+
 //builder.Services.AddScoped<ITransactionService, TransactionService>();
 //builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
@@ -74,6 +79,7 @@ builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AdminAccountService>();
+builder.Services.AddScoped<CloudService>();
 
 builder.Services.AddHttpClient();
 //builder.Services.AddSingleton<IVnPayService, VnPayService>();
