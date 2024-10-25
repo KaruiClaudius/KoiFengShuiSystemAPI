@@ -13,11 +13,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
     {
         private readonly KoiFengShuiContext _context;
         private readonly string _imageBasePath;
-
+        private readonly UnitOfWorkRepository _unitOfWorkRepository;
         public ImageService(KoiFengShuiContext context, IConfiguration configuration)
         {
             _context = context;
             _imageBasePath = configuration["ImageStorage:BasePath"];
+             _unitOfWorkRepository = new UnitOfWorkRepository();
         }
 
         public async Task<List<ImageResponse>> GetAllImagesAsync()
@@ -85,5 +86,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                 ImageUrl = image.ImageUrl
             };
         }
+        public async Task<bool> SaveImagesAsync(string imageUrl)
+        {
+            var image = new Image { ImageUrl = imageUrl };
+            var result = await _unitOfWorkRepository.ImageRepository.CreateAsync(image);
+            return result > 0;
+        }
     }
 }
+

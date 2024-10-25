@@ -1,4 +1,5 @@
 
+using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
@@ -8,6 +9,7 @@ using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Shared.Helpers.Photos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -63,7 +65,7 @@ builder.Services.AddDbContext<KoiFengShuiContext>(options =>
 // AppSettings and MailSettings configuration
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
-
+builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(nameof(CloundSettings)));
 // Service registrations
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -77,6 +79,11 @@ builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<ICloudService, CloudService>();
+
+//builder.Services.AddScoped<ITransactionService, TransactionService>();
+//builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
@@ -86,8 +93,15 @@ builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddHostedService<TransactionSyncService>();
 
+builder.Services.AddScoped<CloudService>();
 
 builder.Services.AddHttpClient();
+//builder.Services.AddSingleton<IVnPayService, VnPayService>();
+
+// Controller configuration
+builder.Services.AddControllers()
+    .AddJsonOptions(x => x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
+
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();

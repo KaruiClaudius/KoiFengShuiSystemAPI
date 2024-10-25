@@ -33,7 +33,7 @@ public partial class Account
 
     public virtual Element Element { get; set; }
 
-    public virtual ICollection<Faq> Faqs { get; set; } = new List<Faq>();
+    public virtual ICollection<FAQ> FAQs { get; set; } = new List<FAQ>();
 
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
