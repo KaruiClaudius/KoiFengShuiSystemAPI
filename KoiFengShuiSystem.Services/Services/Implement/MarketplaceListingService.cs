@@ -52,7 +52,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                     Quantity = marketplaceListing.Quantity,
                     CategoryId = marketplaceListing.CategoryId,
                     CreateAt = DateTime.Now,
-                    ExpiresAt =(DateTime) marketplaceListing.ExpiresAt,
+                    ExpiresAt = (DateTime)marketplaceListing.ExpiresAt,
                     //ListingImages = mp.ListingImages,
                     Color = marketplaceListing.Color,
                     IsActive = marketplaceListing.IsActive,
@@ -254,7 +254,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
-                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByElementIdAsync(elementId,categoryId, excludeListingId, pageNumber, pageSize);
+                var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByElementIdAsync(elementId, categoryId, excludeListingId, pageNumber, pageSize);
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
