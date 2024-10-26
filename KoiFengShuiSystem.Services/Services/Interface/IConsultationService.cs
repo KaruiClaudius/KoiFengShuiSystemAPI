@@ -9,6 +9,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
     public interface IConsultationService
     {
-        Task<FengShuiResponse> GetFengShuiConsultationAsync(int yearOfBirth);
+        Task<FengShuiResponse> GetFengShuiConsultationAsync(int yearOfBirth, bool isMale);
     }
 }

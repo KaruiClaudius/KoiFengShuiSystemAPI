@@ -74,12 +74,11 @@ public partial class KoiFengShuiContext : DbContext
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseSqlServer(GetConnectionString("DefaultConnection"));
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Account>(entity =>
         {
-            entity.HasKey(e => e.AccountId).HasName("PK__Account__349DA5A617CC3FAD");
+            entity.HasKey(e => e.AccountId).HasName("PK__Account__349DA5A6503B742B");
 
             entity.ToTable("Account");
 
@@ -108,7 +107,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Country>(entity =>
         {
-            entity.HasKey(e => e.CountryId).HasName("PK__Country__10D1609FD4ADF74A");
+            entity.HasKey(e => e.CountryId).HasName("PK__Country__10D1609FF547C33A");
 
             entity.ToTable("Country");
 
@@ -119,7 +118,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Direction>(entity =>
         {
-            entity.HasKey(e => e.DirectionId).HasName("PK__Directio__876847C62A0D879C");
+            entity.HasKey(e => e.DirectionId).HasName("PK__Directio__876847C6C57371D0");
 
             entity.ToTable("Direction");
 
@@ -130,7 +129,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Element>(entity =>
         {
-            entity.HasKey(e => e.ElementId).HasName("PK__Element__A429721A7D0CC836");
+            entity.HasKey(e => e.ElementId).HasName("PK__Element__A429721A69E777FE");
 
             entity.ToTable("Element");
 
@@ -147,7 +146,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<FAQ>(entity =>
         {
-            entity.HasKey(e => e.FAQId).HasName("PK__FAQ__4B89D182A50D47B3");
+            entity.HasKey(e => e.FAQId).HasName("PK__FAQ__4B89D1823C8585F5");
 
             entity.ToTable("FAQ");
 
@@ -165,7 +164,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<FengShuiDirection>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__FengShui__3214EC0716F400A0");
+            entity.HasKey(e => e.Id).HasName("PK__FengShui__3214EC071C506AF3");
 
             entity.ToTable("FengShuiDirection");
 
@@ -186,7 +185,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<FishPond>(entity =>
         {
-            entity.HasKey(e => e.PondId).HasName("PK__FishPond__D18BF8346793315C");
+            entity.HasKey(e => e.PondId).HasName("PK__FishPond__D18BF8348A34574D");
 
             entity.HasOne(d => d.DirectionPlacementNavigation).WithMany(p => p.FishPonds)
                 .HasForeignKey(d => d.DirectionPlacement)
@@ -201,7 +200,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Follow>(entity =>
         {
-            entity.HasKey(e => e.FollowId).HasName("PK__Follow__2CE810AE2B22245A");
+            entity.HasKey(e => e.FollowId).HasName("PK__Follow__2CE810AE5F96B090");
 
             entity.ToTable("Follow");
 
@@ -218,7 +217,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Image>(entity =>
         {
-            entity.HasKey(e => e.ImageId).HasName("PK__Image__7516F70C6FDA40F6");
+            entity.HasKey(e => e.ImageId).HasName("PK__Image__7516F70CFB0D7EFA");
 
             entity.ToTable("Image");
 
@@ -229,7 +228,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<KoiBreed>(entity =>
         {
-            entity.HasKey(e => e.BreedId).HasName("PK__KoiBreed__D1E9AE9DF1503733");
+            entity.HasKey(e => e.BreedId).HasName("PK__KoiBreed__D1E9AE9D4341B95B");
 
             entity.Property(e => e.BreedName)
                 .IsRequired()
@@ -254,7 +253,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<ListingImage>(entity =>
         {
-            entity.HasKey(e => e.ListingImageId).HasName("PK__ListingI__C6DC6D8701F8F829");
+            entity.HasKey(e => e.ListingImageId).HasName("PK__ListingI__C6DC6D877FB6583C");
 
             entity.ToTable("ListingImage");
 
@@ -271,7 +270,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<MarketCategory>(entity =>
         {
-            entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__19060623C0D3AD94");
+            entity.HasKey(e => e.Categoryid).HasName("PK__MarketCa__1906062397B339F7");
 
             entity.ToTable("MarketCategory");
 
@@ -282,7 +281,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<MarketplaceListing>(entity =>
         {
-            entity.HasKey(e => e.ListingId).HasName("PK__Marketpl__BF3EBED0148C5DC4");
+            entity.HasKey(e => e.ListingId).HasName("PK__Marketpl__BF3EBED0FE9C1CE6");
 
             entity.Property(e => e.Color).HasMaxLength(20);
             entity.Property(e => e.CreateAt).HasColumnType("datetime");
@@ -316,7 +315,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Post>(entity =>
         {
-            entity.HasKey(e => e.PostId).HasName("PK__Post__AA12601812B69C85");
+            entity.HasKey(e => e.PostId).HasName("PK__Post__AA12601817854641");
 
             entity.ToTable("Post");
 
@@ -349,7 +348,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<PostCategory>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PostCate__3214EC07895A11BA");
+            entity.HasKey(e => e.Id).HasName("PK__PostCate__3214EC077265EA63");
 
             entity.ToTable("PostCategory");
 
@@ -360,7 +359,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<PostImage>(entity =>
         {
-            entity.HasKey(e => e.PostImageId).HasName("PK__PostImag__BCD3CCD026F96A44");
+            entity.HasKey(e => e.PostImageId).HasName("PK__PostImag__BCD3CCD0ABA1B4BB");
 
             entity.ToTable("PostImage");
 
@@ -377,7 +376,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Recommendation>(entity =>
         {
-            entity.HasKey(e => e.RecommendationId).HasName("PK__Recommen__AA15BEE451DD247D");
+            entity.HasKey(e => e.RecommendationId).HasName("PK__Recommen__AA15BEE4B5880232");
 
             entity.ToTable("Recommendation");
 
@@ -401,7 +400,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1A169BD450");
+            entity.HasKey(e => e.RoleId).HasName("PK__Role__8AFACE1A7007475F");
 
             entity.ToTable("Role");
 
@@ -412,7 +411,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<ShapeCategory>(entity =>
         {
-            entity.HasKey(e => e.ShapeId).HasName("PK__ShapeCat__70FC8381AF19F6D6");
+            entity.HasKey(e => e.ShapeId).HasName("PK__ShapeCat__70FC8381AE76A79E");
 
             entity.ToTable("ShapeCategory");
 
@@ -425,13 +424,12 @@ public partial class KoiFengShuiContext : DbContext
 
             entity.HasOne(d => d.Element).WithMany(p => p.ShapeCategories)
                 .HasForeignKey(d => d.ElementId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__ShapeCate__Eleme__36B12243");
         });
 
         modelBuilder.Entity<SubcriptionTier>(entity =>
         {
-            entity.HasKey(e => e.TierId).HasName("PK__Subcript__362F561D6A0A8385");
+            entity.HasKey(e => e.TierId).HasName("PK__Subcript__362F561DCB9E11BE");
 
             entity.Property(e => e.TierName)
                 .IsRequired()
@@ -440,7 +438,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<TrafficLog>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__TrafficL__3214EC074475BD3E");
+            entity.HasKey(e => e.Id).HasName("PK__TrafficL__3214EC0775646485");
 
             entity.ToTable("TrafficLog");
 
@@ -457,7 +455,7 @@ public partial class KoiFengShuiContext : DbContext
 
         modelBuilder.Entity<Transaction>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Transact__3214EC07BBFC76F6");
+            entity.HasKey(e => e.Id).HasName("PK__Transact__3214EC076052DF0F");
 
             entity.ToTable("Transaction");
 

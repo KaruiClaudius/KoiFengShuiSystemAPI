@@ -13,7 +13,7 @@ public partial class ShapeCategory
 
     public string Description { get; set; }
 
-    public int ElementId { get; set; }
+    public int? ElementId { get; set; }
 
     public virtual Element Element { get; set; }
 

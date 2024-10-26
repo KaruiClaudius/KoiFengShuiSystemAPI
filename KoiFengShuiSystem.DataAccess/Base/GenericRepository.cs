@@ -1,8 +1,9 @@
-﻿    using KoiFengShuiSystem.DataAccess.Models;
+﻿using KoiFengShuiSystem.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -65,11 +66,36 @@ namespace KoiFengShuiSystem.DataAccess.Base
 
         public async Task<List<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            try
+            {
+                return await _dbSet.AsNoTracking().ToListAsync();
+            }
+            catch (SqlNullValueException)
+            {
+                // Log error here if needed
+                return new List<T>();
+            }
         }
         public async Task<T> FindAsync(Expression<Func<T, bool>> predicate)
         {
-            return await _dbSet.FirstOrDefaultAsync(predicate);
+            try
+            {
+                return await _dbSet
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(predicate);
+            }
+            catch (SqlNullValueException ex)
+            {
+                // Log error
+                Console.WriteLine($"SqlNullValueException in FindAsync: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                Console.WriteLine($"Exception in FindAsync: {ex.Message}");
+                throw;
+            }
         }
 
         public void Create(T entity)
@@ -145,26 +171,71 @@ namespace KoiFengShuiSystem.DataAccess.Base
 
         public async Task<List<T>> GetAllWithIncludeAsync(params Expression<Func<T, object>>[] includeProperties)
         {
-            IQueryable<T> query = _context.Set<T>();
-            foreach (var includeProperty in includeProperties)
+            try
             {
-                query = query.Include(includeProperty);
+                IQueryable<T> query = _context.Set<T>().AsNoTracking();
+
+                foreach (var includeProperty in includeProperties)
+                {
+                    query = query.Include(includeProperty);
+                }
+
+                return await query.ToListAsync();
             }
-            return await query.ToListAsync();
+            catch (SqlNullValueException ex)
+            {
+                // Log error
+                Console.WriteLine($"SqlNullValueException in GetAllWithIncludeAsync: {ex.Message}");
+                return new List<T>();
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                Console.WriteLine($"Exception in GetAllWithIncludeAsync: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<T> FindWithIncludeAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties)
         {
-            IQueryable<T> query = _dbSet;
-            foreach (var includeProperty in includeProperties)
+            try
             {
-                query = query.Include(includeProperty);
+                IQueryable<T> query = _dbSet.AsNoTracking();
+
+                foreach (var includeProperty in includeProperties)
+                {
+                    query = query.Include(includeProperty);
+                }
+
+                return await query.FirstOrDefaultAsync(predicate);
             }
-            return await query.FirstOrDefaultAsync(predicate);
+            catch (SqlNullValueException ex)
+            {
+                // Log error
+                Console.WriteLine($"SqlNullValueException in FindWithIncludeAsync: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                Console.WriteLine($"Exception in FindWithIncludeAsync: {ex.Message}");
+                throw;
+            }
         }
         public IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression)
         {
-            return _dbSet.Where(expression);
+            try
+            {
+                return _dbSet
+                    .AsNoTracking()
+                    .Where(expression);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                Console.WriteLine($"Exception in FindByCondition: {ex.Message}");
+                throw;
+            }
         }
         #region Pagination
 
@@ -182,9 +253,29 @@ namespace KoiFengShuiSystem.DataAccess.Base
 
         public static async Task<GenericRepository<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize)
         {
-            var count = await source.CountAsync();
-            var paginatedItems = await source.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
-            return new GenericRepository<T>(paginatedItems, count);
+            try
+            {
+                var count = await source.CountAsync();
+                var paginatedItems = await source
+                    .AsNoTracking()
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return new GenericRepository<T>(paginatedItems, count);
+            }
+            catch (SqlNullValueException ex)
+            {
+                // Log error
+                Console.WriteLine($"SqlNullValueException in CreateAsync: {ex.Message}");
+                return new GenericRepository<T>(new List<T>(), 0);
+            }
+            catch (Exception ex)
+            {
+                // Log error
+                Console.WriteLine($"Exception in CreateAsync: {ex.Message}");
+                throw;
+            }
         }
         #endregion
     }

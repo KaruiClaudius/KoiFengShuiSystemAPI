@@ -9,6 +9,7 @@ namespace KoiFengShuiSystem.Shared.Models.Request
     public class CompatibilityRequest
     {
         public int DateOfBirth { get; set; }
+        public bool IsMale { get; set; }
         public string Direction { get; set; }
         public List<string> FishColors { get; set; }
         public int FishQuantity { get; set; }

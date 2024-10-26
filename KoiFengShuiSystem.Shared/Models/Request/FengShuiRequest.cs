@@ -9,6 +9,7 @@ namespace KoiFengShuiSystem.Shared.Models.Request
     public class FengShuiRequest
     {
         public int YearOfBirth { get; set; }
+        public bool IsMale { get; set; }
 
     }
 }

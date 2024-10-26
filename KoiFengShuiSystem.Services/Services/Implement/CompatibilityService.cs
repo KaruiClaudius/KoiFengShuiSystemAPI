@@ -39,7 +39,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<CompatibilityResponse> AssessCompatibility(CompatibilityRequest request)
         {
-            var userElement = await GetElementFromDateOfBirth(request.DateOfBirth);
+            var userElement = await GetElementFromDateOfBirth(request.DateOfBirth, request.IsMale);
 
             var directionScore = await GetDirectionCompatibilityScore(request.Direction, userElement.ElementId);
             var shapeScore = await GetShapeCompatibilityScore(request.PondShape, userElement.ElementId);
@@ -64,62 +64,88 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             };
         }
 
-        private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth)
+        private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth, bool isMale)
         {
-            string elementName = CalculateElement(yearOfBirth);
-            return await _elementRepository.FindAsync(e => e.ElementName == elementName);
+            var cungPhiResult = CalculateCungPhi(yearOfBirth, isMale);
+            return await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
         }
 
-        private string CalculateElement(int yearOfBirth)
+        private class CungPhiResult
+        {
+            public string Cung { get; set; }
+            public string Menh { get; set; }
+            public string Description { get; set; }
+        }
+
+        private readonly Dictionary<int, CungPhiResult> _cungPhiMap = new Dictionary<int, CungPhiResult>
+    {
+        { 1, new CungPhiResult { Cung = "Khảm", Menh = "Thủy", Description = "Khảm - Hướng Bắc, thuộc hành Thủy, tượng trưng cho sự thông tuệ và khôn ngoan." } },
+        { 2, new CungPhiResult { Cung = "Khôn", Menh = "Thổ", Description = "Khôn - Hướng Tây Nam, thuộc hành Thổ, tượng trưng cho sự ổn định và nuôi dưỡng." } },
+        { 3, new CungPhiResult { Cung = "Chấn", Menh = "Mộc", Description = "Chấn - Hướng Đông, thuộc hành Mộc, tượng trưng cho sự phát triển và sinh sôi." } },
+        { 4, new CungPhiResult { Cung = "Tốn", Menh = "Mộc", Description = "Tốn - Hướng Đông Nam, thuộc hành Mộc, tượng trưng cho sự mềm mại và uyển chuyển." } },
+        { 5, new CungPhiResult { Cung = "Trung cung", Menh = "Thổ", Description = "Trung cung - Trung tâm, thuộc hành Thổ, tượng trưng cho sự cân bằng và hài hòa." } },
+        { 6, new CungPhiResult { Cung = "Càn", Menh = "Kim", Description = "Càn - Hướng Tây Bắc, thuộc hành Kim, tượng trưng cho sự mạnh mẽ và quyết đoán." } },
+        { 7, new CungPhiResult { Cung = "Đoài", Menh = "Kim", Description = "Đoài - Hướng Tây, thuộc hành Kim, tượng trưng cho sự vui vẻ và hạnh phúc." } },
+        { 8, new CungPhiResult { Cung = "Cấn", Menh = "Thổ", Description = "Cấn - Hướng Đông Bắc, thuộc hành Thổ, tượng trưng cho sự kiên định và bền vững." } },
+        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hỏa", Description = "Ly - Hướng Nam, thuộc hành Hỏa, tượng trưng cho sự sáng suốt và thông minh." } }
+    };
+
+        private CungPhiResult CalculateCungPhi(int yearOfBirth, bool isMale)
         {
             if (yearOfBirth <= 0)
             {
                 throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
             }
 
-            // Lấy 2 số cuối cùng của năm sinh
+            // Lấy 2 số cuối của năm sinh
             int lastTwoDigits = yearOfBirth % 100;
 
-            // Quy đổi Thiên Can
-            int stem = yearOfBirth % 10;
-            int stemValue = stem switch
+            // Cộng 2 số cuối
+            int a = (lastTwoDigits / 10) + (lastTwoDigits % 10);
+            if (a > 9)
             {
-                0 or 1 => 4, // Canh, Tân
-                2 or 3 => 5, // Nhâm, Quý
-                4 or 5 => 1, // Giáp, Ất
-                6 or 7 => 2, // Bính, Đinh
-                8 or 9 => 3, // Mậu, Kỷ
-                _ => throw new ArgumentException($"Invalid stem calculation for year: {yearOfBirth}")
-            };
-
-            // Quy đổi Địa Chi (dựa trên 2 số cuối của năm sinh chia cho 12)
-            int branch = lastTwoDigits % 12;
-            int branchValue = branch switch
-            {
-                4 or 5 or 10 or 11 => 0, // Tý, Sửu, Ngọ, Mùi
-                0 or 1 or 6 or 7 => 1, // Dần, Mão, Thân, Dậu
-                2 or 3 or 8 or 9 => 2, // Thìn, Tỵ, Tuất, Hợi
-                _ => throw new ArgumentException($"Invalid branch calculation for year: {yearOfBirth}")
-            };
-
-            // Tính ngũ hành dựa trên giá trị Can và Chi
-            int elementIndex = stemValue + branchValue;
-            if (elementIndex > 5)
-            {
-                elementIndex -= 5;
+                a = (a / 10) + (a % 10);
             }
 
-            string element = elementIndex switch
+            int resultNumber;
+            if (yearOfBirth < 2000)
             {
-                1 => "Kim",
-                2 => "Thuỷ",
-                3 => "Hoả",
-                4 => "Thổ",
-                5 => "Mộc",
-                _ => throw new ArgumentException($"Invalid element calculation for year: {yearOfBirth}")
-            };
+                // Trước năm 2000
+                if (isMale)
+                {
+                    resultNumber = 10 - a;
+                }
+                else
+                {
+                    resultNumber = 5 + a;
+                    if (resultNumber > 9)
+                    {
+                        resultNumber = (resultNumber / 10) + (resultNumber % 10);
+                    }
+                }
+            }
+            else
+            {
+                // Từ năm 2000 trở đi
+                if (isMale)
+                {
+                    resultNumber = 9 - a;
+                    if (resultNumber == 0)
+                    {
+                        resultNumber = 9; // Cung Ly
+                    }
+                }
+                else
+                {
+                    resultNumber = 6 + a;
+                    if (resultNumber > 9)
+                    {
+                        resultNumber = (resultNumber / 10) + (resultNumber % 10);
+                    }
+                }
+            }
 
-            return element;
+            return _cungPhiMap[resultNumber];
         }
 
 
@@ -300,9 +326,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
 
             if (quantityScore < 25.0)
-                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} hoặc chữ số có hàng đơn vị là {await GetRecommendedQuantity(elementId)} để cân bằng Phong thủy tốt hơn.");
+                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành ({await GetRecommendedQuantity(elementId)}) hoặc chữ số có hàng đơn vị là ({await GetRecommendedQuantity(elementId)}) để cân bằng Phong thủy tốt hơn.");
             else if (quantityScore < 50.0)
-                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành {await GetRecommendedQuantity(elementId)} hoặc chữ số có hàng đơn vị là {await GetRecommendedQuantity(elementId)} để cải thiện sự hài hòa.");
+                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành ({await GetRecommendedQuantity(elementId)}) hoặc chữ số có hàng đơn vị là ({await GetRecommendedQuantity(elementId)}) để cải thiện sự hài hòa.");
 
             return recommendations;
         }

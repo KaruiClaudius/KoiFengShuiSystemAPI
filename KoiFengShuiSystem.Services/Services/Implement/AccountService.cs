@@ -1,4 +1,5 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using CloudinaryDotNet;
+using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;
@@ -12,12 +13,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
     public class AccountService : IAccountService
     {
         private readonly IJwtUtils _jwtUtils;
-        private readonly GenericRepository<Account> _accountRepository;
+        private readonly GenericRepository<DataAccess.Models.Account> _accountRepository;
         private readonly EmailService _emailService;
         private readonly ILogger<AccountService> _logger;
         private readonly GenericRepository<Element> _elementRepository;
 
-        public AccountService(IJwtUtils jwtUtils, GenericRepository<Account> accountRepository,
+        public AccountService(IJwtUtils jwtUtils, GenericRepository<DataAccess.Models.Account> accountRepository,
                EmailService emailService, ILogger<AccountService> logger, GenericRepository<Element> elementRepository)
         {
             _jwtUtils = jwtUtils;
@@ -44,7 +45,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Calculate and update element
             if (account.Dob.HasValue)
             {
-                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year);
+                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year, account.Gender);
                 account.ElementId = element.ElementId;
                 _accountRepository.PrepareUpdate(account);
                 await _accountRepository.SaveAsync();
@@ -56,28 +57,28 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return new AuthenticationResult { Response = response };
         }
 
-        public async Task<IEnumerable<Account>> GetAllAsync()
+        public async Task<IEnumerable<DataAccess.Models.Account>> GetAllAsync()
         {
             return await _accountRepository.GetAllAsync();
         }
 
-        public async Task<Account?> GetByIdAsync(int id)
+        public async Task<DataAccess.Models.Account?> GetByIdAsync(int id)
         {
             return await _accountRepository.GetByIdAsync(id);
         }
 
-        public async Task<Account> RegisterAsync(RegisterRequest model)
+        public async Task<DataAccess.Models.Account> RegisterAsync(RegisterRequest model)
         {
             // Validate
             if (await _accountRepository.FindAsync(x => x.Email == model.Email) != null)
                 throw new ApplicationException("Email '" + model.Email + "' is already taken");
 
             // Map model to new account object
-            var account = new Account
+            var account = new DataAccess.Models.Account
             {
                 FullName = model.FullName,
                 Email = model.Email,
-                Password = model.Password, // Note: In a real application, you should hash this password
+                Password = model.Password,
                 Dob = model.Dob.Date,
                 Phone = model.Phone,
                 CreateAt = DateTime.Now,
@@ -89,7 +90,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Calculate and set element
             if (account.Dob.HasValue)
             {
-                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year);
+                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year, account.Gender);
                 account.ElementId = element.ElementId;
             }
 
@@ -123,16 +124,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 account.Gender = model.Gender;
             account.UpdateAt = DateTime.Now;
 
-            // Calculate and update element
-            if (account.Dob.HasValue)
-            {
-                var element = await GetElementFromDateOfBirth(account.Dob.Value.Year);
-                account.ElementId = element.ElementId;
-            }
+            // Always calculate and update element
+            var element = await GetElementFromDateOfBirth(
+                model.Dob?.Year ?? account.Dob?.Year ?? DateTime.Now.Year,
+                model.Gender ?? account.Gender
+            );
+            account.ElementId = element.ElementId;
 
             _accountRepository.PrepareUpdate(account);
             await _accountRepository.SaveAsync();
         }
+
 
         public async Task DeleteAsync(int id)
         {
@@ -144,7 +146,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             await _accountRepository.SaveAsync();
         }
 
-        public async Task<Account> GetAccountByEmailAsync(string email)
+        public async Task<DataAccess.Models.Account> GetAccountByEmailAsync(string email)
         {
             return await _accountRepository.FindAsync(x => x.Email == email);
         }
@@ -190,7 +192,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return await _emailService.SendEmailAsync(mailData);
         }
 
-        public async Task UpdateUserPasswordAsync(Account account, string newPassword)
+        public async Task UpdateUserPasswordAsync(DataAccess.Models.Account account, string newPassword)
         {
             if (account == null)
             {
@@ -223,7 +225,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
         }
 
-        public async Task<Account> CreateAsync(Account account)
+        public async Task<DataAccess.Models.Account> CreateAsync(DataAccess.Models.Account account)
         {
             _accountRepository.PrepareCreate(account);
             await _accountRepository.SaveAsync();
@@ -254,55 +256,98 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             };
         }
 
-        private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth)
+        private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth, string gender)
         {
-            string elementName = CalculateElement(yearOfBirth);
-            return await _elementRepository.FindAsync(e => e.ElementName == elementName);
+            string elementName = CalculateElement(yearOfBirth, gender);
+            var element = await _elementRepository.FindAsync(e => e.ElementName == elementName);
+
+            if (element == null)
+            {
+                _logger.LogError($"Element not found for elementName: {elementName}");
+                throw new ApplicationException($"Element '{elementName}' not found in the database.");
+            }
+
+            return element;
         }
 
-        private string CalculateElement(int yearOfBirth)
+        private class CungPhiResult
+        {
+            public string Cung { get; set; }
+            public string Menh { get; set; }
+        }
+
+        private readonly Dictionary<int, CungPhiResult> _cungPhiMap = new Dictionary<int, CungPhiResult>
+    {
+        { 1, new CungPhiResult { Cung = "Khảm", Menh = "Thủy" } },
+        { 2, new CungPhiResult { Cung = "Khôn", Menh = "Thổ" } },
+        { 3, new CungPhiResult { Cung = "Chấn", Menh = "Mộc" } },
+        { 4, new CungPhiResult { Cung = "Tốn", Menh = "Mộc" } },
+        { 5, new CungPhiResult { Cung = "Trung cung", Menh = "Thổ" } },
+        { 6, new CungPhiResult { Cung = "Càn", Menh = "Kim" } },
+        { 7, new CungPhiResult { Cung = "Đoài", Menh = "Kim" } },
+        { 8, new CungPhiResult { Cung = "Cấn", Menh = "Thổ" } },
+        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hoả" } }
+    };
+
+        private string CalculateElement(int yearOfBirth, string gender)
         {
             if (yearOfBirth <= 0)
             {
                 throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
             }
 
-            int stem = yearOfBirth % 10;
-            int stemValue = stem switch
-            {
-                0 or 1 => 4, // Canh, Tân
-                2 or 3 => 5, // Nhâm, Quý
-                4 or 5 => 1, // Giáp, Ất
-                6 or 7 => 2, // Bính, Đinh
-                8 or 9 => 3, // Mậu, Kỷ
-                _ => throw new ArgumentException($"Invalid stem calculation for year: {yearOfBirth}")
-            };
+            // Lấy 2 số cuối của năm sinh
+            int lastTwoDigits = yearOfBirth % 100;
 
-            int branch = yearOfBirth % 12;
-            int branchValue = branch switch
+            // Cộng 2 số cuối
+            int a = (lastTwoDigits / 10) + (lastTwoDigits % 10);
+            if (a > 9)
             {
-                4 or 5 or 10 or 11 => 0, // Tý, Sửu, Ngọ, Mùi
-                0 or 1 or 6 or 7 => 1, // Dần, Mão, Thân, Dậu
-                2 or 3 or 8 or 9 => 2, // Thìn, Tỵ, Tuất, Hợi
-                _ => throw new ArgumentException($"Invalid branch calculation for year: {yearOfBirth}")
-            };
-
-            int elementIndex = stemValue + branchValue;
-            if (elementIndex > 5)
-            {
-                elementIndex -= 5;
+                a = (a / 10) + (a % 10);
             }
 
-            return elementIndex switch
-            {
-                1 => "Kim",
-                2 => "Thuỷ",
-                3 => "Hoả",
-                4 => "Thổ",
-                5 => "Mộc",
-                _ => throw new ArgumentException($"Invalid element calculation for year: {yearOfBirth}")
-            };
+            int resultNumber;
+            bool isMale = gender?.ToLower() == "male" || gender?.ToLower() == "nam";
 
+            if (yearOfBirth < 2000)
+            {
+                // Trước năm 2000
+                if (isMale)
+                {
+                    resultNumber = 10 - a;
+                }
+                else
+                {
+                    resultNumber = 5 + a;
+                    if (resultNumber > 9)
+                    {
+                        resultNumber = (resultNumber / 10) + (resultNumber % 10);
+                    }
+                }
+            }
+            else
+            {
+                // Từ năm 2000 trở đi
+                if (isMale)
+                {
+                    resultNumber = 9 - a;
+                    if (resultNumber == 0)
+                    {
+                        resultNumber = 9; // Cung Ly
+                    }
+                }
+                else
+                {
+                    resultNumber = 6 + a;
+                    if (resultNumber > 9)
+                    {
+                        resultNumber = (resultNumber / 10) + (resultNumber % 10);
+                    }
+                }
+            }
+
+            var cungPhiResult = _cungPhiMap[resultNumber];
+            return cungPhiResult.Menh;
         }
 
         public async Task<bool> ChangePasswordAsync(int accountId, string currentPassword, string newPassword)
