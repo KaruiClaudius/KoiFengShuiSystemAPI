@@ -346,6 +346,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 }
             }
 
+            // Special cases for Nam Khôn and Nữ Cấn
+            if (resultNumber == 5)
+            {
+                resultNumber = isMale ? 2 : 8; // Return Khôn (2) for males, Cấn (8) for females
+            }
+
             var cungPhiResult = _cungPhiMap[resultNumber];
             return cungPhiResult.Menh;
         }

@@ -145,6 +145,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 }
             }
 
+            // Special cases for Trung Cung
+            if (resultNumber == 5)
+            {
+                resultNumber = isMale ? 2 : 8; // Return Khôn (2) for males, Cấn (8) for females
+            }
+
             return _cungPhiMap[resultNumber];
         }
 

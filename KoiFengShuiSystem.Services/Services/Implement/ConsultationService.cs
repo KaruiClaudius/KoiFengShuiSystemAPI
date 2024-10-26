@@ -109,7 +109,7 @@ public class ConsultationService : IConsultationService
     }
 
 
-private class CungPhiResult
+    private class CungPhiResult
     {
         public string Cung { get; set; }
         public string Menh { get; set; }
@@ -181,6 +181,12 @@ private class CungPhiResult
                     resultNumber = (resultNumber / 10) + (resultNumber % 10);
                 }
             }
+        }
+
+        // Special cases for Trung Cung
+        if (resultNumber == 5)
+        {
+            resultNumber = isMale ? 2 : 8; // Return Khôn (2) for males, Cấn (8) for females
         }
 
         return _cungPhiMap[resultNumber];
