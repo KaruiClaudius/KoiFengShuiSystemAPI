@@ -173,7 +173,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             {
                 TransactionId = t.TransactionId,
                 AccountFullName = accounts.FirstOrDefault(a => a.AccountId == t.AccountId)?.FullName,
-                TierName = types.FirstOrDefault(a => a.TierId == t.TierId)?.TierName,
+                TransactionDate = t.TransactionDate,
                 Status = t.Status,
                 Amount = t.Amount
             });
@@ -182,6 +182,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         public async Task<TotalTransactionRequest> GetTotalTransactionAmountAsync()
         {
             var totalAmount = await _transactionRepository.GetAllQuery()
+                .Where(t => t.Status == "PAID")
                 .SumAsync(t => t.Amount);
 
             return new TotalTransactionRequest
@@ -194,7 +195,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
-                var count = await _transactionRepository.GetAllQuery().CountAsync();
+                var count = await _transactionRepository.GetAllQuery().Where(t => t.Status == "PAID").CountAsync();
                 _logger.LogInformation($"Total transaction count: {count}");
 
                 return new TransactionCountResponse

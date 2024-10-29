@@ -152,6 +152,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
+                // Use AsNoTracking for the initial query if you're going to update later
                 var user = await _accountRepository.FindAsync(u => u.Email == userEmail);
                 if (user == null)
                 {
@@ -162,7 +163,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
                 if (paymentLinkInformation.status == "PAID")
                 {
-                    // Find the existing payment transaction
                     var paymentTransaction = await _transactionRepository
                         .FindByCondition(pt => pt.TransactionId == request.OrderCode)
                         .FirstOrDefaultAsync();
@@ -172,12 +172,19 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         return new MessageResponse(-1, "Transaction not found", null);
                     }
 
-                    // Update transaction status and date
+                    // Update transaction
                     paymentTransaction.Status = "PAID";
                     paymentTransaction.TransactionDate = DateTime.UtcNow;
                     _transactionRepository.Update(paymentTransaction);
-                    user.Wallet = (user.Wallet ?? 0) + paymentLinkInformation.amountPaid;
-                    _accountRepository.Update(user);
+
+                    // Update user's wallet
+                    var currentUser = await _accountRepository.GetByIdAsync(user.AccountId);
+                    if (currentUser != null)
+                    {
+                        currentUser.Wallet = (currentUser.Wallet ?? 0) + paymentLinkInformation.amountPaid;
+                        _accountRepository.Update(currentUser);
+                    }
+
                     await _unitOfWork.SaveChangesWithTransactionAsync();
 
                     var updatedUserInfo = new
@@ -186,13 +193,16 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         user.FullName,
                         user.Email,
                         user.Phone,
-                        user.Wallet
+                        currentUser?.Wallet
                     };
-                    return new MessageResponse(0, "Transaction Complete", new { paymentInfo = paymentLinkInformation, userInfo = updatedUserInfo });
+
+                    return new MessageResponse(0, "Transaction Complete",
+                        new { paymentInfo = paymentLinkInformation, userInfo = updatedUserInfo });
                 }
                 else
                 {
-                    return new MessageResponse(0, "Payment not completed yet", new { paymentInfo = paymentLinkInformation });
+                    return new MessageResponse(0, "Payment not completed yet",
+                        new { paymentInfo = paymentLinkInformation });
                 }
             }
             catch (Exception exception)
