@@ -77,7 +77,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                     AccountId = user.AccountId,
                     Amount = body.price,
                     Status = "PENDING",
-                    TransactionDate = DateTime.UtcNow,
+                    TransactionDate = DateTime.Now,
 
                 };
 
@@ -174,7 +174,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
                     // Update transaction
                     paymentTransaction.Status = "PAID";
-                    paymentTransaction.TransactionDate = DateTime.UtcNow;
+                    paymentTransaction.TransactionDate = DateTime.Now;
                     _transactionRepository.Update(paymentTransaction);
 
                     // Update user's wallet
