@@ -14,6 +14,7 @@ namespace KoiFengShuiSystem.Shared.Models.Request
         public string Description { get; set; }
         public int AccountId { get; set; }
         public string Status { get; set; }
+        public int ElementId { get; set; }
         public List<IFormFile> Images { get; set; }
     }
 }

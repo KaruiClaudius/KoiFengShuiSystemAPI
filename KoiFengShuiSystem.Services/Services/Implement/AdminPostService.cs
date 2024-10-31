@@ -114,7 +114,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                     CreateAt = DateTime.UtcNow,
                     UpdateAt = DateTime.UtcNow,
                     AccountId = adminPostRequest.AccountId,
-                    Status = adminPostRequest.Status
+                    Status = adminPostRequest.Status,
+                   ElementId = adminPostRequest.ElementId
                 };
 
                 _context.Posts.Add(post);
@@ -191,8 +192,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                 Description = post.Description,
                 CreateAt = post.CreateAt,
                 UpdateAt = post.UpdateAt,
-                AccountId = post.AccountId,            
-                Status = post.Status,               
+                AccountId = post.AccountId,
+                Status = post.Status,
+                ElementId = post.ElementId,
                 AccountName = post.Account?.FullName,
                 ImageUrls = post.PostImages.Select(pi => pi.Image.ImageUrl).ToList()
             };
