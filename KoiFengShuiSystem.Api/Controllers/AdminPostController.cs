@@ -16,12 +16,14 @@ namespace KoiFengShuiSystem.Api.Controllers
     {
         private readonly IAdminPostService _adminPostService;
         private readonly ILogger<AdminPostController> _logger;
-
+        private readonly ICloudService _cloudService;
         public AdminPostController(
             IAdminPostService adminPostService,
+            ICloudService cloudService,
             ILogger<AdminPostController> logger)
         {
             _adminPostService = adminPostService;
+            _cloudService = cloudService;
             _logger = logger;
         }
 
@@ -58,13 +60,25 @@ namespace KoiFengShuiSystem.Api.Controllers
                 return StatusCode(500, "An error occurred while processing your request.");
             }
         }
-
         [HttpPut("UpdatePost/{id}")]
         public async Task<ActionResult<AdminPostResponse>> UpdateAdminPost(int id, [FromForm] AdminPostRequest request)
         {
             try
             {
-                var post = await _adminPostService.UpdateAdminPostAsync(id, request, request.Images);
+                var imageUrls = new List<string>();
+                if (request.Images != null && request.Images.Any())
+                {
+                    foreach (var image in request.Images)
+                    {
+                        var uploadResult = await _cloudService.UploadImageAsync(image);
+                        if (uploadResult.Error != null)
+                        {
+                            throw new Exception("Error uploading image: " + uploadResult.Error.Message);
+                        }
+                        imageUrls.Add(uploadResult.SecureUrl.ToString());
+                    }
+                }         
+                var post = await _adminPostService.UpdateAdminPostAsync(id, request, imageUrls);
                 if (post == null)
                 {
                     return NotFound();
@@ -83,18 +97,21 @@ namespace KoiFengShuiSystem.Api.Controllers
         {
             try
             {
-                var post = await _adminPostService.CreatePostWithImagesAsync(request, request.Images);
+                var imageUrls = new List<string>();
+                if (request.Images != null && request.Images.Any())
+                {
+                    foreach (var image in request.Images)
+                    {
+                        var uploadResult = await _cloudService.UploadImageAsync(image);
+                        if (uploadResult.Error != null)
+                        {
+                            throw new Exception("Error uploading image: " + uploadResult.Error.Message);
+                        }
+                        imageUrls.Add(uploadResult.SecureUrl.ToString());
+                    }
+                }          
+                var post = await _adminPostService.CreatePostWithImagesAsync(request, imageUrls);
                 return CreatedAtAction(nameof(GetAdminPostById), new { id = post.PostId }, post);
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogError(ex, "Invalid data provided for creating admin post");
-                return BadRequest(ex.Message);
-            }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Error occurred while saving admin post to database");
-                return StatusCode(500, "An error occurred while saving the post. Please check if the provided data is valid.");
             }
             catch (Exception ex)
             {
