@@ -76,6 +76,27 @@ namespace KoiFengShuiSystem.DataAccess.Base
                 return new List<T>();
             }
         }
+        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
+        {
+            try
+            {
+                return await _dbSet
+                    .AsNoTracking()
+                    .Where(predicate)
+                    .ToListAsync();
+            }
+            catch (SqlNullValueException ex)
+            {
+                Console.WriteLine($"SqlNullValueException in GetAllAsync: {ex.Message}");
+                return new List<T>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetAllAsync: {ex.Message}");
+                throw;
+            }
+        }
+
         public async Task<T> FindAsync(Expression<Func<T, bool>> predicate)
         {
             try

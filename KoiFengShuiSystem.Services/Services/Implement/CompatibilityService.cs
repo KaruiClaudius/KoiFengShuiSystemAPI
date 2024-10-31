@@ -343,29 +343,25 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
+                // Get all feng shui directions compatible with the element
+                var compatibleDirections = await _fengShuiDirectionRepository
+                    .GetAllAsync(f => f.ElementId == elementId);
+
+                if (!compatibleDirections.Any())
+                {
+                    return "Unknown";
+                }
+
+                // Join with directions to get direction names
                 var directions = await _directionRepository.GetAllAsync();
+                var optimalDirection = directions
+                    .Join(compatibleDirections,
+                        d => d.DirectionId,
+                        f => f.DirectionId,
+                        (d, f) => d.DirectionName)
+                    .FirstOrDefault();
 
-                Console.WriteLine($"Directions count: {directions.Count()}");
-
-                if (!directions.Any())
-                {
-                    Console.WriteLine("No directions found. Returning Unknown.");
-                    return "Unknown";
-                }
-
-                // Sort directions by some criteria (e.g., alphabetical order, popularity, etc.)
-                var sortedDirections = directions.OrderBy(d => d.DirectionName).ToList();
-
-                // Select the first direction as the optimal one
-                var optimalDirection = sortedDirections.FirstOrDefault();
-
-                if (optimalDirection == null)
-                {
-                    Console.WriteLine("Failed to select an optimal direction.");
-                    return "Unknown";
-                }
-
-                return optimalDirection.DirectionName;
+                return optimalDirection ?? "Unknown";
             }
             catch (Exception ex)
             {
