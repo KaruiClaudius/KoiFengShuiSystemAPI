@@ -63,10 +63,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
             post.Description = adminPostRequest.Description;
             post.Status = adminPostRequest.Status;
             post.UpdateAt = DateTime.Now;
-
+           
             var existingImageUrls = post.PostImages.Select(pi => pi.Image.ImageUrl).ToList();
-            var newImageUrls = imageUrls.Except(existingImageUrls).ToList();
+            var imagesToRemove = post.PostImages.Where(pi => !imageUrls.Contains(pi.Image.ImageUrl)).ToList();
 
+            foreach (var postImage in imagesToRemove)
+            {
+                _context.PostImages.Remove(postImage);
+                _context.Images.Remove(postImage.Image);
+            }
+
+            var newImageUrls = imageUrls.Except(existingImageUrls).ToList();
             foreach (var imageUrl in newImageUrls)
             {
                 var newImage = new Image { ImageUrl = imageUrl };
