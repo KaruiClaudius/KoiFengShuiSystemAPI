@@ -8,13 +8,6 @@ using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Identity.Client;
-using MimeKit;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
@@ -57,7 +50,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                     Color = marketplaceListing.Color,
                     IsActive = marketplaceListing.IsActive,
                     ElementId = marketplaceListing.ElementId,
-                    Status = "Approved",//Change to Pending or Approved when have ApporveMKPL
+                    Status = marketplaceListing.Status,//Change to Pending or Approved when have ApporveMKPL
+
                 };
                 // Upload images using CloudService
                 List<ImageUploadResult> uploadResults = await _cloudService.UploadImagesAsync(imgFiles);
@@ -186,6 +180,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
+                        ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
+                        {
+                            ListingImageId = li.ListingImageId,
+                            ListingId = li.MarketListingId,
+                            Image = new ImageResponse
+                            {
+                                ImageId = li.Image.ImageId,
+                                ImageUrl = li.Image.ImageUrl
+                            },
+                            ImageDescription = li.ImageDescription
+                        }).ToList() ?? new List<ListingImageResponse>()
                     }).ToList();
                     if (marketplaceListingsResponses == null)
                     {
@@ -231,24 +236,46 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
+                        ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
+                        {
+                            ListingImageId = li.ListingImageId,
+                            ListingId = li.MarketListingId,
+                            Image = new ImageResponse
+                            {
+                                ImageId = li.Image.ImageId,
+                                ImageUrl = li.Image.ImageUrl
+                            },
+                            ImageDescription = li.ImageDescription
+                        }).ToList() ?? new List<ListingImageResponse>()
                     }).ToList();
-                    if (marketplaceListingsResponses == null)
+
+                    //var listingImages = marketplaceListings.Select(li => new ListingImageResponse
+                    //{
+                    //    ListingImageId = li.ListingImageId,
+                    //    ListingId = li.MarketListingId,
+                    //    Image = new ImageResponse
+                    //    {
+                    //        ImageId = li.Image.ImageId,
+                    //        ImageUrl = li.Image.ImageUrl
+                    //    },
+                    //    ImageDescription = li.ImageDescription,
+                    //})
+
+                    if (!marketplaceListingsResponses.Any())
                     {
                         return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
                     }
-                    else
-                    {
-                        return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, marketplaceListingsResponses);
-                    }
+
+                    return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, marketplaceListingsResponses);
                 }
                 return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
-
             }
             catch (Exception e)
             {
-                return new BusinessResult(-4, e.Message.ToString());
+                return new BusinessResult(-4, e.Message);
             }
         }
+
 
         public async Task<IBusinessResult> GetMarketplaceListingByElementId(int elementId, int categoryId, int excludeListingId, int pageNumber, int pageSize)
         {
@@ -276,6 +303,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
+                        ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
+                        {
+                            ListingImageId = li.ListingImageId,
+                            ListingId = li.MarketListingId,
+                            Image = new ImageResponse
+                            {
+                                ImageId = li.Image.ImageId,
+                                ImageUrl = li.Image.ImageUrl
+                            },
+                            ImageDescription = li.ImageDescription
+                        }).ToList() ?? new List<ListingImageResponse>()
                     }).ToList();
                     if (marketplaceListingsResponses == null)
                     {
@@ -323,6 +361,17 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         ElementName = mp.Element?.ElementName,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
+                        ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
+                        {
+                            ListingImageId = li.ListingImageId,
+                            ListingId = li.MarketListingId,
+                            Image = new ImageResponse
+                            {
+                                ImageId = li.Image.ImageId,
+                                ImageUrl = li.Image.ImageUrl
+                            },
+                            ImageDescription = li.ImageDescription
+                        }).ToList() ?? new List<ListingImageResponse>()
                     }).ToList();
                     if (marketplaceListingsResponses == null)
                     {

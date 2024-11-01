@@ -40,7 +40,7 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public string AccountPhoneNumber { get; set; } // Added Account PhoneNumber
         public string TierName { get; set; } // Added Account Name
 
-        //public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
+        public ICollection<ListingImageResponse> ListingImages { get; set; } = new List<ListingImageResponse>();
 
         public virtual SubcriptionTier Tier { get; set; }
     }

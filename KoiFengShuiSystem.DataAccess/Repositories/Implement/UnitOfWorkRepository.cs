@@ -15,6 +15,9 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         private PostRepository _postRepository;
         private MarketplaceListingRepository _marketplaceListingsRepository;
         private ImageRepository _imageRepository;
+        private ElementRepository _elementRepository;
+        private MarketCategoryRepository _marketCategoryRepository;
+        private SubcriptionTiersRepository _subcriptionTiersRepository;
         public UnitOfWorkRepository()
         {
             _unitOfWorkContext ??= new KoiFengShuiContext(new DbContextOptions<KoiFengShuiContext>());
@@ -42,7 +45,29 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 return _imageRepository ??= new ImageRepository();
             }
         }
+        public ElementRepository ElementRepository
+        {
+            get
+            {
+                return _elementRepository ??= new ElementRepository();
+            }
+        }
 
+        public MarketCategoryRepository MarketCategoryRepository
+        {
+            get
+            {
+                return _marketCategoryRepository ??= new MarketCategoryRepository();
+            }
+        }
+
+        public SubcriptionTiersRepository SubcriptionTiersRepository
+        {
+            get
+            {
+                return _subcriptionTiersRepository ??= new SubcriptionTiersRepository();
+            }
+        }
         ////TO-DO CODE HERE/////////////////
 
         #region Set transaction isolation levels
