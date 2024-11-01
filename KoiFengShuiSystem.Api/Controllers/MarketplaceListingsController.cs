@@ -1,5 +1,4 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
@@ -101,24 +100,32 @@ namespace KoiFengShuiSystem.Api.Controllers
         //[Authorize=]
         public async Task<IActionResult> CreateAsync([FromForm] MarketplaceListingRequest marketplaceListing, [FromForm] List<IFormFile> images)
         {
-            // Assuming you have user authentication and can get the user ID from claims
-            var userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
-            // or ClaimTypes.Email or whatever you use
-            if (string.IsNullOrEmpty(userEmail))
+            try
             {
-                return Unauthorized("User not authenticated."); // Return 401 Unauthorized if user not found
+
+                // Assuming you have user authentication and can get the user ID from claims
+                var userEmail = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.Email);
+                // or ClaimTypes.Email or whatever you use
+                if (string.IsNullOrEmpty(userEmail))
+                {
+                    return Unauthorized("User not authenticated."); // Return 401 Unauthorized if user not found
+                }
+                var user = await _accountRepository.FindAsync(u => u.Email == userEmail);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+                var marketplaceListingResponse = await _marketplaceListingService.CreateMarketplaceListing(marketplaceListing, images, user.AccountId);
+                if (marketplaceListingResponse.Data != null)
+                {
+                    return BadRequest(marketplaceListingResponse);
+                }
+                return Ok(marketplaceListingResponse);
             }
-            var user = await _accountRepository.FindAsync(u => u.Email == userEmail);
-            if (user == null)
+            catch (Exception ex)
             {
-                return NotFound("User not found");
+                return StatusCode(500, $"Internal server error: {ex.Message}");
             }
-            var marketplaceListingResponse = await _marketplaceListingService.CreateMarketplaceListing(marketplaceListing, images, user.AccountId);
-            if (marketplaceListingResponse.Data != null)
-            {
-                return BadRequest(marketplaceListingResponse);
-            }
-            return Ok(marketplaceListingResponse);
         }
     }
 }
