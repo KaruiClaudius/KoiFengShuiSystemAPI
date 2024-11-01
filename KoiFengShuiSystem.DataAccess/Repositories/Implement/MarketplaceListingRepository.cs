@@ -19,6 +19,8 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
+                 .Include(p => p.ListingImages)
+                .ThenInclude(p => p.Image)
                 .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
                 .ThenByDescending(p => p.CreateAt)
                 .ToListAsync();
@@ -31,6 +33,8 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
+                .Include(p => p.ListingImages)
+                .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
@@ -47,6 +51,8 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
+                 .Include(p => p.ListingImages)
+                .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
@@ -63,6 +69,8 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
+                 .Include(p => p.ListingImages)
+                .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
@@ -79,6 +87,8 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
+                 .Include(p => p.ListingImages)
+                .ThenInclude(p => p.Image)
                 .ToListAsync();
         }
     }
