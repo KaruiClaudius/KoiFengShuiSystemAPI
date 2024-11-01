@@ -10,8 +10,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
     {
         Task<List<AdminPostResponse>> GetAllAdminPostsAsync();
         Task<AdminPostResponse> GetAdminPostByIdAsync(int id);
-        Task<AdminPostResponse> UpdateAdminPostAsync(int id, AdminPostRequest adminPostRequest, List<IFormFile> images);
-        Task<AdminPostResponse> CreatePostWithImagesAsync(AdminPostRequest adminPostRequest, List<IFormFile> images);
+        Task<AdminPostResponse> UpdateAdminPostAsync(int id, AdminPostRequest adminPostRequest, List<string> imageUrls);
+        Task<AdminPostResponse> CreatePostWithImagesAsync(AdminPostRequest adminPostRequest, List<string> imageUrls);
         Task<bool> DeletePostWithAllRelatedAsync(int postId);
     }
 }
