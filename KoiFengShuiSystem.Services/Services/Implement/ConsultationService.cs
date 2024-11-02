@@ -48,9 +48,15 @@ public class ConsultationService : IConsultationService
 
             var matchingBreeds = koiBreeds.Where(k => k.ElementId == element.ElementId).ToList();
             var matchingDirections = fengShuiDirections
-                .Where(f => f.ElementId == element.ElementId && f.Direction != null)
-                .Select(f => f.Direction)
-                .ToList();
+                 .Where(f => f.ElementId == element.ElementId && f.Direction != null)
+                 .Select(f => new DirectionRecommendation
+                 {
+                     DirectionName = f.Direction.DirectionName ?? "Unknown",
+                     Description = f.Description ?? "Không có mô tả",
+                     IsRecommended = true
+
+                 })
+                 .ToList();
 
             return new FengShuiResponse
             {
@@ -60,7 +66,7 @@ public class ConsultationService : IConsultationService
                 FishBreeds = matchingBreeds.Select(b => b.BreedName ?? "Unknown").ToList(),
                 FishColors = matchingBreeds.Select(b => b.Color ?? "Unknown").Distinct().ToList(),
                 SuggestedPonds = CreatePondRecommendations(recommendedShapes, notRecommendedShapes),
-                SuggestedDirections = matchingDirections.Select(d => d.DirectionName ?? "Unknown").ToList()
+                SuggestedDirections = matchingDirections
             };
         }
         catch (Exception ex)

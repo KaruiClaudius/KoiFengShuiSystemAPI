@@ -13,6 +13,13 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public bool IsRecommended { get; set; }
 
     }
+    public class DirectionRecommendation
+    {
+        public string DirectionName { get; set; }
+        public string Description { get; set; }
+        public bool IsRecommended { get; set; }
+
+    }
 
     // Update FengShuiResponse to use the new class
     public class FengShuiResponse
@@ -23,6 +30,6 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public List<string>? FishBreeds { get; set; }
         public List<string>? FishColors { get; set; }
         public List<PondShapeRecommendation>? SuggestedPonds { get; set; }
-        public List<string>? SuggestedDirections { get; set; }
+        public List<DirectionRecommendation>? SuggestedDirections { get; set; } // Updated type
     }
 }
