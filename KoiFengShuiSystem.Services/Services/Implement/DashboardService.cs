@@ -142,17 +142,35 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<TransactionDashboardRequest>> GetNewestTransactionsAsync(int page = 1, int pageSize = 10)
+        public async Task<(IEnumerable<TransactionDashboardRequest> Transactions, int TotalCount)>
+        GetTransactionsByDateRangeAsync(TransactionDateRangeRequest request)
         {
-            var query = _transactionRepository.GetAllQuery()
+            var query = _transactionRepository.GetAllQuery();
+
+            // Apply date range filter if dates are provided
+            if (request.StartDate.HasValue)
+            {
+                query = query.Where(t => t.TransactionDate.Date >= request.StartDate.Value.Date);
+            }
+
+            if (request.EndDate.HasValue)
+            {
+                query = query.Where(t => t.TransactionDate.Date <= request.EndDate.Value.Date);
+            }
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply ordering and pagination
+            var transactions = await query
                 .OrderByDescending(t => t.TransactionDate)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize);
+                .Skip((request.Page - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToListAsync();
 
-            var transactions = await query.ToListAsync();
+            var mappedTransactions = await MapToDTO(transactions);
 
-            var result = await MapToDTO(transactions);
-            return result;
+            return (mappedTransactions, totalCount);
         }
 
         private async Task<IEnumerable<TransactionDashboardRequest>> MapToDTO(IEnumerable<Transaction> transactions)
@@ -176,6 +194,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 TransactionDate = t.TransactionDate,
                 Status = t.Status,
                 Amount = t.Amount
+
             });
         }
 
