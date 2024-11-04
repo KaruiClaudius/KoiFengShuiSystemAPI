@@ -41,6 +41,11 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             var userElement = await GetElementFromDateOfBirth(request.DateOfBirth, request.IsMale);
 
+            if (userElement == null)
+            {
+                throw new ArgumentException($"Could not find element for date of birth {request.DateOfBirth} and gender {request.IsMale}");
+            }
+
             var directionScore = await GetDirectionCompatibilityScore(request.Direction, userElement.ElementId);
             var shapeScore = await GetShapeCompatibilityScore(request.PondShape, userElement.ElementId);
             var colorScores = await GetColorCompatibilityScores(request.FishColors, userElement.ElementId);
@@ -66,8 +71,26 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         private async Task<Element> GetElementFromDateOfBirth(int yearOfBirth, bool isMale)
         {
-            var cungPhiResult = CalculateCungPhi(yearOfBirth, isMale);
-            return await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
+            try
+            {
+                var cungPhiResult = CalculateCungPhi(yearOfBirth, isMale);
+                if (cungPhiResult == null)
+                {
+                    throw new ArgumentException($"Could not calculate Cung Phi for year {yearOfBirth}");
+                }
+
+                var element = await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
+                if (element == null)
+                {
+                    throw new ArgumentException($"Could not find element with name {cungPhiResult.Menh}");
+                }
+
+                return element;
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"Error getting element from date of birth: {ex.Message}");
+            }
         }
 
         private class CungPhiResult
@@ -87,7 +110,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         { 6, new CungPhiResult { Cung = "Càn", Menh = "Kim", Description = "Càn - Hướng Tây Bắc, thuộc hành Kim, tượng trưng cho sự mạnh mẽ và quyết đoán." } },
         { 7, new CungPhiResult { Cung = "Đoài", Menh = "Kim", Description = "Đoài - Hướng Tây, thuộc hành Kim, tượng trưng cho sự vui vẻ và hạnh phúc." } },
         { 8, new CungPhiResult { Cung = "Cấn", Menh = "Thổ", Description = "Cấn - Hướng Đông Bắc, thuộc hành Thổ, tượng trưng cho sự kiên định và bền vững." } },
-        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hỏa", Description = "Ly - Hướng Nam, thuộc hành Hỏa, tượng trưng cho sự sáng suốt và thông minh." } }
+        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hoả", Description = "Ly - Hướng Nam, thuộc hành Hỏa, tượng trưng cho sự sáng suốt và thông minh." } }
     };
 
         private CungPhiResult CalculateCungPhi(int yearOfBirth, bool isMale)
@@ -185,13 +208,12 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
                 // Get recommended colors
                 var recommendedColors = breeds
-                    .Where(b => b.ElementId == elementId)
-                    .SelectMany(b => CleanColorName(b.Color).Split(' '))
-                    .GroupBy(c => c)
-                    .OrderByDescending(g => g.Count())
-                    .Take(3)
-                    .Select(g => g.Key)
-                    .ToList();
+    .Where(b => b.ElementId == elementId)
+    .SelectMany(b => CleanColorName(b.Color).Split(' '))
+    .GroupBy(c => c)
+    .OrderByDescending(g => g.Count())
+    .Select(g => g.Key)
+    .ToList();
 
                 // Get element colors for semi-compatible check
                 var elementColors = breeds
@@ -206,23 +228,40 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 int fullyCompatibleCount = 0;
 
                 // First pass: Count fully compatible colors and calculate preliminary scores
+                Console.WriteLine("Recommended Colors:");
+                foreach (var color in recommendedColors)
+                {
+                    Console.WriteLine($"- {color}");
+                }
+
+                Console.WriteLine("Element Colors:");
+                foreach (var color in elementColors)
+                {
+                    Console.WriteLine($"- {color}");
+                }
+
                 foreach (var color in colors)
                 {
                     var cleanedColor = CleanColorName(color);
+                    Console.WriteLine($"Original Color: {color}, Cleaned Color: {cleanedColor}");
                     double colorScore;
 
                     if (recommendedColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                     {
                         colorScore = exactIndividualScore;
                         fullyCompatibleCount++;
+                        Console.WriteLine($"{cleanedColor} is fully compatible.");
                     }
                     else if (elementColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                     {
                         colorScore = exactIndividualScore / 2;
+                        Console.WriteLine($"{cleanedColor} is semi-compatible.");
+
                     }
                     else
                     {
                         colorScore = 0;
+                        Console.WriteLine($"{cleanedColor} is not compatible.");
                     }
 
                     // Store the exact score
@@ -269,8 +308,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             // Remove diacritics
             color = RemoveDiacritics(color);
 
-            // Remove semicolons, extra whitespace, and the word "và"
-            color = Regex.Replace(color, @"[;]|\s*va\s*|\s+", " ", RegexOptions.IgnoreCase).Trim();
+            // Remove semicolons, commas, extra whitespace, and the word "va"
+            color = Regex.Replace(color, @"[;,\s]|\s*va\s*", " ", RegexOptions.IgnoreCase).Trim();
 
             // Convert to lowercase
             return color.ToLowerInvariant();
@@ -423,17 +462,42 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         private async Task<List<string>> GetRecommendedColors(int elementId, int count)
         {
-            var breeds = await _koiBreedRepository.GetAllAsync();
+            try
+            {
+                var breeds = await _koiBreedRepository.GetAllAsync();
 
-            var recommendedColors = breeds
-                .Where(b => b.ElementId == elementId)
-                .GroupBy(b => b.Color)
-                .OrderByDescending(g => g.Count())
-                .Take(count)
-                .Select(g => g.Key)
-                .ToList();
+                // First, normalize all breed colors
+                var normalizedBreeds = breeds
+                    .Where(b => b.ElementId == elementId)
+                    .Select(b => new
+                    {
+                        OriginalColor = b.Color,
+                        NormalizedColors = CleanColorName(b.Color)
+                            .Split(' ')
+                            .Where(c => !string.IsNullOrWhiteSpace(c))
+                            .Distinct()
+                            .ToList()
+                    })
+                    .ToList();
 
-            return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
+                // Get current most common color combinations
+                var recommendedColors = normalizedBreeds
+                    .GroupBy(b => b.OriginalColor)
+                    .OrderByDescending(g => g.Count())
+                    .Take(count)
+                    .Select(g => g.Key)
+                    .Where(color => !string.IsNullOrWhiteSpace(color))
+                    .Distinct()
+                    .ToList();
+
+                // Filter out recommendations that are too similar to current colors
+                return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetRecommendedColors: {ex.Message}");
+                return new List<string> { "Unknown" };
+            }
         }
 
 
