@@ -1,12 +1,6 @@
 ﻿using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
@@ -21,7 +15,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
-                .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
+                 .OrderByDescending(p => p.Tier.TierId.Equals(2)) // 2. Tin Nổi Bật
                 .ThenByDescending(p => p.CreateAt)
                 .ToListAsync();
 
@@ -30,18 +24,16 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.CategoryId == categoryId)
-                .Include(p => p.Element) // Include the Element to access ElementName
+                .Include(p => p.Element)
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
                 .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
+                .OrderByDescending(p => p.Tier.TierId.Equals(2))
                 .ThenByDescending(p => p.CreateAt)
+                .Take(pageSize)
                 .ToListAsync();
             var totalCount = await _dbSet.CountAsync(p => p.CategoryId == categoryId);
-
             return new GenericRepository<MarketplaceListing>(marketplaces, totalCount);
         }
         public async Task<GenericRepository<MarketplaceListing>> GetAllByElementIdAsync(int elementId, int categoryId, int excludeListingId, int pageNumber, int pageSize)
@@ -54,9 +46,9 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                  .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
+                .OrderByDescending(p => p.Tier.TierId.Equals(2)) // 2. Tin Nổi Bật
                 .ThenByDescending(p => p.CreateAt)
+                .Take(pageSize)
                 .ToListAsync();
             var totalCount = await _dbSet.CountAsync(p => p.CategoryId == categoryId);
 
@@ -69,12 +61,12 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
                 .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
-                 .Include(p => p.ListingImages)
+                .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .OrderByDescending(p => p.Tier.TierName == "Preminum") // Premium listings first
+                .OrderByDescending(p => p.Tier.TierId.Equals(2)) // Premium listings first
                 .ThenByDescending(p => p.CreateAt)
+                .Take(pageSize)
                 .ToListAsync();
             var totalCount = await _dbSet.CountAsync(p => p.CategoryId == categoryId);
 

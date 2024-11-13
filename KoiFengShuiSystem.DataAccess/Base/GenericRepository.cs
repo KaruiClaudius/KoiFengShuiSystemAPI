@@ -138,6 +138,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
             _context.SaveChanges();
         }
 
+        public T UpdateWallet(T entity)
+        {
+            var entityEntry = _context.Set<T>().Update(entity);
+            return entityEntry.Entity;
+        }
+
         public async Task<int> UpdateAsync(T entity)
         {
             var tracker = _context.Attach(entity);
