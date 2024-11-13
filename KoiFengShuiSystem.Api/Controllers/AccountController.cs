@@ -118,6 +118,41 @@ namespace KoiFengShuiSystem.Api.Controllers
                 return StatusCode(500, new { message = "An unexpected error occurred while changing the password" });
             }
         }
+
+        [HttpPost("UpdateWalletAfterPosted")]
+        //[Authorize(Roles ="Admin")]
+        public async Task<IActionResult> UpdateUserWalletAfterPosted(int accountId, decimal amount)
+        {
+            try
+            {
+                if (accountId <= 0)
+                {
+                    return BadRequest("Invalid user ID");
+                }
+
+                var existingUser = await _accountService.GetByIdAsync(accountId);
+
+                if (existingUser == null)
+                {
+                    return NotFound("User not found");
+                }  
+
+                var updatedUser = await _accountService.UpdateUserWalletAfterPosted(existingUser, amount);
+
+                if (updatedUser)
+                {
+                    return Ok("Update Wallet Success");
+                }
+                else
+                {
+                    return BadRequest("Failed to update wallet");
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal server error: " + ex.Message);
+            }
+        }
     }
 
 

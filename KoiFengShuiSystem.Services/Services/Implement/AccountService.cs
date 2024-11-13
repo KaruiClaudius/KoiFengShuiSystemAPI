@@ -379,5 +379,28 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 throw;
             }
         }
+
+        public async Task<bool> UpdateUserWalletAfterPosted(DataAccess.Models.Account existedAccount, decimal amount)
+        {
+            if (existedAccount == null)
+            {
+                throw new ArgumentNullException(nameof(existedAccount), "Account object is null");
+            }
+            try
+            {
+
+                // Hash the new password before storing it
+                existedAccount.Wallet -= amount;
+                _accountRepository.PrepareUpdate(existedAccount);
+                await _accountRepository.SaveAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating wallet: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

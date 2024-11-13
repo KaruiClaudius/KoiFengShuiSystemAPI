@@ -24,6 +24,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<AccountResponse> GetAccountResponseByEmailAsync(string email);
         Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword);
         Task<bool> ChangePasswordAsync(int accountId, string currentPassword, string newPassword);
+        Task<bool> UpdateUserWalletAfterPosted(Account account, decimal amount);
 
     }
 }
