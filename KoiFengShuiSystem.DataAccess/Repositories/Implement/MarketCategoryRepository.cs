@@ -11,7 +11,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
     public class MarketCategoryRepository : GenericRepository<MarketCategory>
     {
-        public MarketCategoryRepository() { }
-        public MarketCategoryRepository(KoiFengShuiContext context) => _context = context;
+        public MarketCategoryRepository(KoiFengShuiContext context) : base(context) { }
     }
 }

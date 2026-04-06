@@ -17,10 +17,10 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly GenericRepository<Account> _accountRepository;
         private readonly ICloudService _cloudService;
 
-        public MarketplaceListingService(ICloudService cloudService)
+        public MarketplaceListingService(UnitOfWorkRepository unitOfWork, GenericRepository<Account> accountRepository, ICloudService cloudService)
         {
-            _unitOfWork = new UnitOfWorkRepository();
-            _accountRepository = new GenericRepository<Account>();
+            _unitOfWork = unitOfWork;
+            _accountRepository = accountRepository;
             _cloudService = cloudService;
         }
 

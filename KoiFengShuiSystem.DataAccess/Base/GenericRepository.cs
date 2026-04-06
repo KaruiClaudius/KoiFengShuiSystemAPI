@@ -13,9 +13,9 @@ namespace KoiFengShuiSystem.DataAccess.Base
 
         #region Separating asign entity and save operators
 
-        public GenericRepository()
+        public GenericRepository(KoiFengShuiContext context)
         {
-            _context ??= new KoiFengShuiContext(new DbContextOptions<KoiFengShuiContext>());
+            _context = context;
             _dbSet = _context.Set<T>();
         }
 

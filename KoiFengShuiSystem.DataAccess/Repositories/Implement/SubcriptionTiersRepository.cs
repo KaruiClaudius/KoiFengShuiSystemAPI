@@ -10,7 +10,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
     public class SubcriptionTiersRepository : GenericRepository<SubcriptionTier>
     {
-        public SubcriptionTiersRepository() { }
-        public SubcriptionTiersRepository(KoiFengShuiContext context) => _context = context;
+        public SubcriptionTiersRepository(KoiFengShuiContext context) : base(context) { }
     }
 }

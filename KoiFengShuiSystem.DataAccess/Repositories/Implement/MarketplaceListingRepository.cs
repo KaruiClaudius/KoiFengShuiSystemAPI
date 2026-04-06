@@ -6,7 +6,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
     public class MarketplaceListingRepository : GenericRepository<MarketplaceListing>
     {
-        public MarketplaceListingRepository() { }
+        public MarketplaceListingRepository(KoiFengShuiContext context) : base(context) { }
         public async Task<IEnumerable<MarketplaceListing>> GetAllWithElementAsync()
         {
             return await _dbSet

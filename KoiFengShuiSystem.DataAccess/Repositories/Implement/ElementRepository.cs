@@ -11,7 +11,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
     public class ElementRepository : GenericRepository<Element>
     {
-        public ElementRepository() { }
-        public ElementRepository(KoiFengShuiContext context) => _context = context;
+        public ElementRepository(KoiFengShuiContext context) : base(context) { }
     }
 }

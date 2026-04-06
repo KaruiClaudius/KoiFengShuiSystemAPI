@@ -10,9 +10,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
     {
         private readonly UnitOfWorkRepository _unitOfWork;
 
-        public PostService()
+        public PostService(UnitOfWorkRepository unitOfWork)
         {
-            _unitOfWork = new UnitOfWorkRepository();
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IBusinessResult> GetAll()

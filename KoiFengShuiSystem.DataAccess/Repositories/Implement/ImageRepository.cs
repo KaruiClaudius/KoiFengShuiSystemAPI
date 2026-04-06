@@ -10,6 +10,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
     public class ImageRepository : GenericRepository<Image>
     {
-        public ImageRepository() { }
+        public ImageRepository(KoiFengShuiContext context) : base(context) { }
     }
 }

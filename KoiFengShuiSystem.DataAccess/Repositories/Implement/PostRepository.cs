@@ -5,7 +5,7 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {
     public class PostRepository : GenericRepository<Post>
     {
-        public PostRepository() { }
+        public PostRepository(KoiFengShuiContext context) : base(context) { }
         public async Task<IEnumerable<Post>> GetAllWithElementAsync()
         {
             return await _dbSet

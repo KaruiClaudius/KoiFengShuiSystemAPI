@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using KoiFengShuiSystem.DataAccess;
+﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.DataAccess.Repositories.Implement;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services
 {
@@ -15,11 +15,11 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
         private readonly KoiFengShuiContext _context;
         private readonly string _imageBasePath;
         private readonly UnitOfWorkRepository _unitOfWorkRepository;
-        public ImageService(KoiFengShuiContext context, IConfiguration configuration)
+        public ImageService(KoiFengShuiContext context, IConfiguration configuration, UnitOfWorkRepository unitOfWorkRepository)
         {
             _context = context;
             _imageBasePath = configuration["ImageStorage:BasePath"];
-             _unitOfWorkRepository = new UnitOfWorkRepository();
+            _unitOfWorkRepository = unitOfWorkRepository;
         }
 
         public async Task<List<ImageResponse>> GetAllImagesAsync()
