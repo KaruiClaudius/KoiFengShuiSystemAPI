@@ -1,11 +1,10 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.Common.FengShui;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
@@ -18,6 +17,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly GenericRepository<Direction> _directionRepository;
         private readonly GenericRepository<Recommendation> _recommendationRepository;
         private readonly GenericRepository<FishPond> _fishPondRepository;
+        private readonly ILogger<CompatibilityService> _logger;
 
         public CompatibilityService(
              GenericRepository<Element> elementRepository,
@@ -26,7 +26,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
              GenericRepository<KoiBreed> koiBreedRepository,
              GenericRepository<Direction> directionRepository,
              GenericRepository<Recommendation> recommendationRepository,
-             GenericRepository<FishPond> fishPondRepository)
+             GenericRepository<FishPond> fishPondRepository,
+             ILogger<CompatibilityService> logger)
         {
             _elementRepository = elementRepository;
             _fengShuiDirectionRepository = fengShuiDirectionRepository;
@@ -35,6 +36,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             _directionRepository = directionRepository;
             _recommendationRepository = recommendationRepository;
             _fishPondRepository = fishPondRepository;
+            _logger = logger;
         }
 
         public async Task<CompatibilityResponse> AssessCompatibility(CompatibilityRequest request)
@@ -73,11 +75,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
-                var cungPhiResult = CalculateCungPhi(yearOfBirth, isMale);
-                if (cungPhiResult == null)
-                {
-                    throw new ArgumentException($"Could not calculate Cung Phi for year {yearOfBirth}");
-                }
+                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale);
 
                 var element = await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
                 if (element == null)
@@ -89,92 +87,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting element from date of birth: {YearOfBirth}, {IsMale}", yearOfBirth, isMale);
                 throw new ArgumentException($"Error getting element from date of birth: {ex.Message}");
             }
-        }
-
-        private class CungPhiResult
-        {
-            public string Cung { get; set; }
-            public string Menh { get; set; }
-            public string Description { get; set; }
-        }
-
-        private readonly Dictionary<int, CungPhiResult> _cungPhiMap = new Dictionary<int, CungPhiResult>
-    {
-        { 1, new CungPhiResult { Cung = "Khảm", Menh = "Thủy", Description = "Khảm - Hướng Bắc, thuộc hành Thủy, tượng trưng cho sự thông tuệ và khôn ngoan." } },
-        { 2, new CungPhiResult { Cung = "Khôn", Menh = "Thổ", Description = "Khôn - Hướng Tây Nam, thuộc hành Thổ, tượng trưng cho sự ổn định và nuôi dưỡng." } },
-        { 3, new CungPhiResult { Cung = "Chấn", Menh = "Mộc", Description = "Chấn - Hướng Đông, thuộc hành Mộc, tượng trưng cho sự phát triển và sinh sôi." } },
-        { 4, new CungPhiResult { Cung = "Tốn", Menh = "Mộc", Description = "Tốn - Hướng Đông Nam, thuộc hành Mộc, tượng trưng cho sự mềm mại và uyển chuyển." } },
-        { 5, new CungPhiResult { Cung = "Trung cung", Menh = "Thổ", Description = "Trung cung - Trung tâm, thuộc hành Thổ, tượng trưng cho sự cân bằng và hài hòa." } },
-        { 6, new CungPhiResult { Cung = "Càn", Menh = "Kim", Description = "Càn - Hướng Tây Bắc, thuộc hành Kim, tượng trưng cho sự mạnh mẽ và quyết đoán." } },
-        { 7, new CungPhiResult { Cung = "Đoài", Menh = "Kim", Description = "Đoài - Hướng Tây, thuộc hành Kim, tượng trưng cho sự vui vẻ và hạnh phúc." } },
-        { 8, new CungPhiResult { Cung = "Cấn", Menh = "Thổ", Description = "Cấn - Hướng Đông Bắc, thuộc hành Thổ, tượng trưng cho sự kiên định và bền vững." } },
-        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hoả", Description = "Ly - Hướng Nam, thuộc hành Hỏa, tượng trưng cho sự sáng suốt và thông minh." } }
-    };
-
-        private CungPhiResult CalculateCungPhi(int yearOfBirth, bool isMale)
-        {
-            if (yearOfBirth <= 0)
-            {
-                throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
-            }
-
-            // Lấy 2 số cuối của năm sinh
-            int lastTwoDigits = yearOfBirth % 100;
-
-            // Cộng 2 số cuối
-            int a = (lastTwoDigits / 10) + (lastTwoDigits % 10);
-            if (a > 9)
-            {
-                a = (a / 10) + (a % 10);
-            }
-
-            int resultNumber;
-            if (yearOfBirth < 2000)
-            {
-                // Trước năm 2000
-                if (isMale)
-                {
-                    resultNumber = 10 - a;
-                }
-                else
-                {
-                    resultNumber = 5 + a;
-                    if (resultNumber > 9)
-                    {
-                        resultNumber = (resultNumber / 10) + (resultNumber % 10);
-                    }
-                }
-            }
-            else
-            {
-                // Từ năm 2000 trở đi
-                if (isMale)
-                {
-                    resultNumber = 9 - a;
-                    if (resultNumber == 0)
-                    {
-                        resultNumber = 9; // Cung Ly
-                    }
-                }
-                else
-                {
-                    resultNumber = 6 + a;
-                    if (resultNumber > 9)
-                    {
-                        resultNumber = (resultNumber / 10) + (resultNumber % 10);
-                    }
-                }
-            }
-
-            // Special cases for Trung Cung
-            if (resultNumber == 5)
-            {
-                resultNumber = isMale ? 2 : 8; // Return Khôn (2) for males, Cấn (8) for females
-            }
-
-            return _cungPhiMap[resultNumber];
         }
 
 
@@ -228,43 +143,33 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 int fullyCompatibleCount = 0;
 
                 // First pass: Count fully compatible colors and calculate preliminary scores
-                Console.WriteLine("Recommended Colors:");
-                foreach (var color in recommendedColors)
-                {
-                    Console.WriteLine($"- {color}");
-                }
-
-                Console.WriteLine("Element Colors:");
-                foreach (var color in elementColors)
-                {
-                    Console.WriteLine($"- {color}");
-                }
+                _logger.LogDebug("Recommended Colors: {Colors}", string.Join(", ", recommendedColors));
+                _logger.LogDebug("Element Colors: {Colors}", string.Join(", ", elementColors));
 
                 foreach (var color in colors)
                 {
-                    var cleanedColor = CleanColorName(color);
-                    Console.WriteLine($"Original Color: {color}, Cleaned Color: {cleanedColor}");
+                    var cleanedColor = CungPhiCalculator.CleanColorName(color);
+                    _logger.LogDebug("Original Color: {Original}, Cleaned Color: {Cleaned}", color, cleanedColor);
                     double colorScore;
 
                     if (recommendedColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                     {
                         colorScore = exactIndividualScore;
                         fullyCompatibleCount++;
-                        Console.WriteLine($"{cleanedColor} is fully compatible.");
+                        _logger.LogDebug("{Color} is fully compatible.", cleanedColor);
                     }
                     else if (elementColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                     {
                         colorScore = exactIndividualScore / 2;
-                        Console.WriteLine($"{cleanedColor} is semi-compatible.");
+                        _logger.LogDebug("{Color} is semi-compatible.", cleanedColor);
 
                     }
                     else
                     {
                         colorScore = 0;
-                        Console.WriteLine($"{cleanedColor} is not compatible.");
+                        _logger.LogDebug("{Color} is not compatible.", cleanedColor);
                     }
 
-                    // Store the exact score
                     colorScores[color] = Math.Round(colorScore, 2);
                     totalScore += colorScore;
                 }
@@ -295,7 +200,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in GetColorCompatibilityScores: {ex.Message}");
+                _logger.LogError(ex, "Error in GetColorCompatibilityScores");
                 return new Dictionary<string, double>
         {
             { "TotalScore", 0.0 }
@@ -303,34 +208,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
         }
 
-        private string CleanColorName(string color)
-        {
-            // Remove diacritics
-            color = RemoveDiacritics(color);
-
-            // Remove semicolons, commas, extra whitespace, and the word "va"
-            color = Regex.Replace(color, @"[;,\s]|\s*va\s*", " ", RegexOptions.IgnoreCase).Trim();
-
-            // Convert to lowercase
-            return color.ToLowerInvariant();
-        }
-
-        private string RemoveDiacritics(string text)
-        {
-            var normalizedString = text.Normalize(NormalizationForm.FormD);
-            var stringBuilder = new StringBuilder();
-
-            foreach (var c in normalizedString)
-            {
-                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-                {
-                    stringBuilder.Append(c);
-                }
-            }
-
-            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
-        }
+        private string CleanColorName(string color) => CungPhiCalculator.CleanColorName(color);
 
 
         private async Task<double> GetQuantityCompatibilityScore(int quantity, int elementId)
@@ -427,7 +305,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred in GetOptimalDirection: {ex.Message}");
+                _logger.LogError(ex, "An error occurred in GetOptimalDirection");
                 return "Unknown";
             }
         }

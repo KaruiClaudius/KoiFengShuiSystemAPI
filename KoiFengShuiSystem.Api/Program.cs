@@ -1,4 +1,3 @@
-using FluentAssertions.Common;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
@@ -56,6 +55,22 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.MaxDepth = 32;
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
+
+// CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowedOrigins", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// Response caching
+builder.Services.AddResponseCaching();
+builder.Services.AddMemoryCache();
 
 // Database context
 builder.Services.AddDbContext<KoiFengShuiContext>(options =>
@@ -150,10 +165,7 @@ else
     app.UseHsts();
 }
 
-app.UseCors(x => x
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
+app.UseCors("AllowedOrigins");
 
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -161,6 +173,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<TrafficLoggingMiddleware>();
+app.UseResponseCaching();
 
 app.MapControllers();
 

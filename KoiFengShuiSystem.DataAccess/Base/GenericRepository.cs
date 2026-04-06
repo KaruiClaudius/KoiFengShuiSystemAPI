@@ -1,13 +1,8 @@
 ﻿using KoiFengShuiSystem.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
-using System;
-using System.Collections.Generic;
 using System.Data.SqlTypes;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KoiFengShuiSystem.DataAccess.Base
 {
@@ -87,12 +82,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             catch (SqlNullValueException ex)
             {
-                Console.WriteLine($"SqlNullValueException in GetAllAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SqlNullValueException in GetAllAsync: {ex.Message}");
                 return new List<T>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in GetAllAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in GetAllAsync: {ex.Message}");
                 throw;
             }
         }
@@ -107,14 +102,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             catch (SqlNullValueException ex)
             {
-                // Log error
-                Console.WriteLine($"SqlNullValueException in FindAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SqlNullValueException in FindAsync: {ex.Message}");
                 return null;
             }
             catch (Exception ex)
             {
-                // Log error
-                Console.WriteLine($"Exception in FindAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in FindAsync: {ex.Message}");
                 throw;
             }
         }
@@ -211,14 +204,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             catch (SqlNullValueException ex)
             {
-                // Log error
-                Console.WriteLine($"SqlNullValueException in GetAllWithIncludeAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SqlNullValueException in GetAllWithIncludeAsync: {ex.Message}");
                 return new List<T>();
             }
             catch (Exception ex)
             {
-                // Log error
-                Console.WriteLine($"Exception in GetAllWithIncludeAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in GetAllWithIncludeAsync: {ex.Message}");
                 throw;
             }
         }
@@ -238,14 +229,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             catch (SqlNullValueException ex)
             {
-                // Log error
-                Console.WriteLine($"SqlNullValueException in FindWithIncludeAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SqlNullValueException in FindWithIncludeAsync: {ex.Message}");
                 return null;
             }
             catch (Exception ex)
             {
-                // Log error
-                Console.WriteLine($"Exception in FindWithIncludeAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in FindWithIncludeAsync: {ex.Message}");
                 throw;
             }
         }
@@ -259,8 +248,7 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             catch (Exception ex)
             {
-                // Log error
-                Console.WriteLine($"Exception in FindByCondition: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in FindByCondition: {ex.Message}");
                 throw;
             }
         }
@@ -293,14 +281,12 @@ namespace KoiFengShuiSystem.DataAccess.Base
             }
             catch (SqlNullValueException ex)
             {
-                // Log error
-                Console.WriteLine($"SqlNullValueException in CreateAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"SqlNullValueException in CreateAsync: {ex.Message}");
                 return new GenericRepository<T>(new List<T>(), 0);
             }
             catch (Exception ex)
             {
-                // Log error
-                Console.WriteLine($"Exception in CreateAsync: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Exception in CreateAsync: {ex.Message}");
                 throw;
             }
         }

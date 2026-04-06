@@ -77,13 +77,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception ex)
             {
-                // Log the exception with more details
-                Console.WriteLine($"Error sending email: {ex.Message}");
-                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
+                _logger.LogError(ex, "Error sending email to {EmailToId}. Subject: {Subject}", mailData.EmailToId, mailData.EmailSubject);
                 return false;
             }
         }

@@ -1,48 +1,50 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.Common.FengShui;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.Extensions.Logging;
 
-public class ConsultationService : IConsultationService
+namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
-    private readonly GenericRepository<Element> _elementRepository;
-    private readonly GenericRepository<KoiBreed> _koiBreedRepository;
-    private readonly GenericRepository<ShapeCategory> _shapeCategoryRepository;
-    private readonly GenericRepository<FengShuiDirection> _fengShuiDirectionRepository;
-
-    public ConsultationService(
-        GenericRepository<Element> elementRepository,
-        GenericRepository<KoiBreed> koiBreedRepository,
-        GenericRepository<ShapeCategory> shapeCategoryRepository,
-        GenericRepository<FengShuiDirection> fengShuiDirectionRepository)
+    public class ConsultationService : IConsultationService
     {
-        _elementRepository = elementRepository;
-        _koiBreedRepository = koiBreedRepository;
-        _shapeCategoryRepository = shapeCategoryRepository;
-        _fengShuiDirectionRepository = fengShuiDirectionRepository;
-    }
+        private readonly GenericRepository<Element> _elementRepository;
+        private readonly GenericRepository<KoiBreed> _koiBreedRepository;
+        private readonly GenericRepository<ShapeCategory> _shapeCategoryRepository;
+        private readonly GenericRepository<FengShuiDirection> _fengShuiDirectionRepository;
+        private readonly ILogger<ConsultationService> _logger;
 
-    public async Task<FengShuiResponse> GetFengShuiConsultationAsync(int yearOfBirth, bool isMale)
-    {
+        public ConsultationService(
+            GenericRepository<Element> elementRepository,
+            GenericRepository<KoiBreed> koiBreedRepository,
+            GenericRepository<ShapeCategory> shapeCategoryRepository,
+            GenericRepository<FengShuiDirection> fengShuiDirectionRepository,
+            ILogger<ConsultationService> logger)
+        {
+            _elementRepository = elementRepository;
+            _koiBreedRepository = koiBreedRepository;
+            _shapeCategoryRepository = shapeCategoryRepository;
+            _fengShuiDirectionRepository = fengShuiDirectionRepository;
+            _logger = logger;
+        }
+
+        public async Task<FengShuiResponse> GetFengShuiConsultationAsync(int yearOfBirth, bool isMale)
+        {
         try
         {
-            // Tính cung phi
-            var cungPhiResult = CalculateCungPhi(yearOfBirth, isMale);
+            var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale);
 
-            // Lấy element tương ứng với mệnh
             var element = await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
             if (element == null)
             {
                 throw new ArgumentException($"Element '{cungPhiResult.Menh}' not found.");
             }
 
-            // Lấy tất cả shapes và phân loại
             var allShapes = await _shapeCategoryRepository.GetAllAsync();
 
-            // Phân loại shapes thành recommended và not recommended
             var (recommendedShapes, notRecommendedShapes) = ClassifyShapes(allShapes, element.ElementId);
 
-            // Lấy các thông tin khác
             var koiBreeds = await _koiBreedRepository.GetAllAsync();
             var fengShuiDirections = await _fengShuiDirectionRepository.GetAllWithIncludeAsync(f => f.Direction);
 
@@ -71,7 +73,7 @@ public class ConsultationService : IConsultationService
         }
         catch (Exception ex)
         {
-            // Log error here
+            _logger.LogError(ex, "Error processing feng shui consultation for year {Year}, isMale {IsMale}", yearOfBirth, isMale);
             throw new ApplicationException("Error processing feng shui consultation", ex);
         }
     }
@@ -95,7 +97,6 @@ public class ConsultationService : IConsultationService
     {
         var recommendations = new List<PondShapeRecommendation>();
 
-        // Add recommended shapes
         recommendations.AddRange(recommendedShapes.Select(s => new PondShapeRecommendation
         {
             ShapeName = s.ShapeName,
@@ -103,7 +104,6 @@ public class ConsultationService : IConsultationService
             IsRecommended = true
         }));
 
-        // Add not recommended shapes with warning
         recommendations.AddRange(notRecommendedShapes.Select(s => new PondShapeRecommendation
         {
             ShapeName = s.ShapeName,
@@ -113,88 +113,5 @@ public class ConsultationService : IConsultationService
 
         return recommendations;
     }
-
-
-    private class CungPhiResult
-    {
-        public string Cung { get; set; }
-        public string Menh { get; set; }
-    }
-
-    private readonly Dictionary<int, CungPhiResult> _cungPhiMap = new Dictionary<int, CungPhiResult>
-    {
-        { 1, new CungPhiResult { Cung = "Khảm", Menh = "Thủy" } },
-        { 2, new CungPhiResult { Cung = "Khôn", Menh = "Thổ" } },
-        { 3, new CungPhiResult { Cung = "Chấn", Menh = "Mộc" } },
-        { 4, new CungPhiResult { Cung = "Tốn", Menh = "Mộc" } },
-        { 5, new CungPhiResult { Cung = "Trung cung", Menh = "Thổ" } },
-        { 6, new CungPhiResult { Cung = "Càn", Menh = "Kim" } },
-        { 7, new CungPhiResult { Cung = "Đoài", Menh = "Kim" } },
-        { 8, new CungPhiResult { Cung = "Cấn", Menh = "Thổ" } },
-        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hoả" } }
-    };
-
-    private CungPhiResult CalculateCungPhi(int yearOfBirth, bool isMale)
-    {
-        if (yearOfBirth <= 0)
-        {
-            throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
-        }
-
-        // Lấy 2 số cuối của năm sinh
-        int lastTwoDigits = yearOfBirth % 100;
-
-        // Cộng 2 số cuối
-        int a = (lastTwoDigits / 10) + (lastTwoDigits % 10);
-        if (a > 9)
-        {
-            a = (a / 10) + (a % 10);
-        }
-
-        int resultNumber;
-        if (yearOfBirth < 2000)
-        {
-            // Trước năm 2000
-            if (isMale)
-            {
-                resultNumber = 10 - a;
-            }
-            else
-            {
-                resultNumber = 5 + a;
-                if (resultNumber > 9)
-                {
-                    resultNumber = (resultNumber / 10) + (resultNumber % 10);
-                }
-            }
-        }
-        else
-        {
-            // Từ năm 2000 trở đi
-            if (isMale)
-            {
-                resultNumber = 9 - a;
-                if (resultNumber == 0)
-                {
-                    resultNumber = 9; // Cung Ly
-                }
-            }
-            else
-            {
-                resultNumber = 6 + a;
-                if (resultNumber > 9)
-                {
-                    resultNumber = (resultNumber / 10) + (resultNumber % 10);
-                }
-            }
-        }
-
-        // Special cases for Trung Cung
-        if (resultNumber == 5)
-        {
-            resultNumber = isMale ? 2 : 8; // Return Khôn (2) for males, Cấn (8) for females
-        }
-
-        return _cungPhiMap[resultNumber];
-    }
+}
 }

@@ -7,14 +7,8 @@ using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Net.payOS.Types;
 using Net.payOS;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Azure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
@@ -25,19 +19,22 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly GenericRepository<DataAccess.Models.Transaction> _transactionRepository;
         private readonly PayOS _payOS;
         private readonly IUnitOfWorkRepository _unitOfWork;
+        private readonly ILogger<TransactionService> _logger;
 
         public TransactionService(
             GenericRepository<Account> accountRepository,
             GenericRepository<MarketplaceListing> marketplaceListingRepository,
             GenericRepository<DataAccess.Models.Transaction> transactionRepository,
             PayOS payOS,
-            IUnitOfWorkRepository unitOfWork)
+            IUnitOfWorkRepository unitOfWork,
+            ILogger<TransactionService> logger)
         {
             _accountRepository = accountRepository;
             _transactionRepository = transactionRepository;
             _payOS = payOS;
             _marketplaceListingRepository = marketplaceListingRepository;
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<MessageResponse> CreatePaymentLink(CreatePaymentLinkRequest body, string userEmail)
@@ -101,7 +98,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception exception)
             {
-                Console.WriteLine(exception);
+                _logger.LogError(exception, "Error creating payment link");
                 return new MessageResponse(-1, "fail", null);
             }
         }
@@ -116,7 +113,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception exception)
             {
-                Console.WriteLine(exception);
+                _logger.LogError(exception, "Error getting order {OrderCode}", orderCode);
                 return new MessageResponse(-1, "fail", null);
             }
         }
@@ -130,7 +127,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception exception)
             {
-                Console.WriteLine(exception);
+                _logger.LogError(exception, "Error cancelling order {OrderCode}", orderCode);
                 return new MessageResponse(-1, "fail", null);
             }
         }
@@ -144,7 +141,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception exception)
             {
-                Console.WriteLine(exception);
+                _logger.LogError(exception, "Error confirming webhook");
                 return new MessageResponse(-1, "fail", null);
             }
         }
