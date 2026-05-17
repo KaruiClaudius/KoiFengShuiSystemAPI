@@ -1,4 +1,4 @@
-﻿using KoiFengShuiSystem.BusinessLogic.ViewModel;
+﻿using KoiFengShuiSystem.Shared.Kernel.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;

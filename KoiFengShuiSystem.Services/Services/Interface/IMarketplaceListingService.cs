@@ -1,4 +1,4 @@
-﻿using KoiFengShuiSystem.BusinessLogic.ViewModel;
+﻿using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Models.Request;
 using Microsoft.AspNetCore.Http;

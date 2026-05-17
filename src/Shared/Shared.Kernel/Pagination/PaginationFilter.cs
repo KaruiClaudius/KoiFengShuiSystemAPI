@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KoiFengShuiSystem.Shared.Helpers
+namespace KoiFengShuiSystem.Shared.Kernel.Pagination
 {
     public class PaginationFilter
     {

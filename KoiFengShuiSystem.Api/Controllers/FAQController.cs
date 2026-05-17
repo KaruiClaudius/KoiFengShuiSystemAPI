@@ -2,7 +2,7 @@
 using Azure.Core;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;

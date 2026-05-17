@@ -1,7 +1,7 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.Shared.Helpers.Photos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;

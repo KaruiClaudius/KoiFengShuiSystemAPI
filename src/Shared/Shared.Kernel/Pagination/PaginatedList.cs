@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace KoiFengShuiSystem.Shared.Helpers
+namespace KoiFengShuiSystem.Shared.Kernel.Pagination
 {
     public class PaginatedList<T> : List<T>
     {
@@ -21,6 +21,9 @@ namespace KoiFengShuiSystem.Shared.Helpers
             TotalCount = totalCount;
         }
 
+        /// <remarks>
+        /// Temporary EF Core dependency retained for behavior compatibility; move EF-specific pagination to infrastructure or query handlers later.
+        /// </remarks>
         public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageNumber, int pageSize)
         {
             var count = await source.CountAsync();

@@ -1,5 +1,5 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.Shared.Kernel.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KoiFengShuiSystem.Api.Controllers

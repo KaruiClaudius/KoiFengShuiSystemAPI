@@ -1,6 +1,6 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;

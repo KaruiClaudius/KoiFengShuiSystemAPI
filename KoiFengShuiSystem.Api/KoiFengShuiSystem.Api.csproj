@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
 		<ProjectReference Include="..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
+		<ProjectReference Include="..\src\Shared\Shared.Kernel\Shared.Kernel.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -1,6 +1,6 @@
 ﻿using CloudinaryDotNet.Actions;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.BusinessLogic.ViewModel;
+using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;

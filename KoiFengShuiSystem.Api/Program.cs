@@ -1,4 +1,5 @@
 using KoiFengShuiSystem.Api.Authorization;
+using KoiFengShuiSystem.Api.Extensions;
 using KoiFengShuiSystem.BusinessLogic.Services;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
@@ -100,7 +101,6 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<AdminAccountService>();
 builder.Services.AddScoped<UnitOfWorkRepository>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
-builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IElementService, ElementService>();
 builder.Services.AddScoped<IMarketCategoryService, MarketCategoryService>();
 builder.Services.AddScoped<ISubcriptionTiersService, SubcriptionTiersService>();
@@ -109,13 +109,10 @@ builder.Services.AddHostedService<TransactionSyncService>();
 
 builder.Services.AddScoped<CloudService>();
 
+builder.Services.AddModuleInstallersFromAssemblies(builder.Configuration, typeof(Program).Assembly);
+
 builder.Services.AddHttpClient();
 //builder.Services.AddSingleton<IVnPayService, VnPayService>();
-
-// Controller configuration
-builder.Services.AddControllers()
-    .AddJsonOptions(x => x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull);
-
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();

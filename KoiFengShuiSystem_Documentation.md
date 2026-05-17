@@ -723,6 +723,7 @@ docker-compose up -d
 ```
 
 `docker-compose.yml` includes:
+
 - `db` service (`mcr.microsoft.com/mssql/server`)
 - `api` service (build from Dockerfile)
 - Environment variables set in `docker-compose.override.yml`
@@ -744,9 +745,11 @@ docker-compose up -d
 - **Integration Tests:** ASP.NET Core `WebApplicationFactory` with per-module test fixtures against an in-memory or SQL Server test database.
 - **Module isolation tests:** Each module's application layer is tested independently by mocking the `Shared.Kernel` contracts, ensuring no hidden cross-module dependencies.
 - **Run tests:**
+
   ```bash
   dotnet test
   ```
+
 - **Test coverage:** Aim for >80% on core logic. Currently sparse; expanding is a priority.
 
 ---
