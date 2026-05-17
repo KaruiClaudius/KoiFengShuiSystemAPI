@@ -101,13 +101,5 @@ namespace UnitTests.FengShui
             Assert.Equal("", result);
         }
 
-        [Theory]
-        [InlineData("Kim", "Khác", false)]
-        [InlineData("Thủy", "Thủy", true)]
-        [InlineData("Mộc", "mộc", true)]
-        public void ElementComparison_IsCaseInsensitive(string element1, string element2, bool expected)
-        {
-            Assert.Equal(expected, element1.Equals(element2, StringComparison.OrdinalIgnoreCase));
-        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1;
 using System.Data.SqlTypes;

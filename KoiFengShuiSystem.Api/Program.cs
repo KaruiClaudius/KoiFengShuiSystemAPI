@@ -8,9 +8,10 @@ using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Shared.Infrastructure;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Helpers.Photos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Net.payOS;
@@ -74,8 +75,7 @@ builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
 
 // Database context
-builder.Services.AddDbContext<KoiFengShuiContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSharedInfrastructure(builder.Configuration);
 
 // AppSettings and MailSettings configuration
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));

@@ -6,6 +6,7 @@ using Net.payOS.Types;
 using Net.payOS;
 
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using System.Text;
 using Microsoft.Extensions.Hosting;
 

@@ -1,3 +1,4 @@
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +18,8 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<KoiFengShu
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         var optionsBuilder = new DbContextOptionsBuilder<KoiFengShuiContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseSqlServer(connectionString,
+            b => b.MigrationsAssembly("KoiFengShuiSystem.DataAccess"));
 
         return new KoiFengShuiContext(optionsBuilder.Options);
     }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using KoiFengShuiSystem.DataAccess;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;

@@ -152,13 +152,14 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                     _logger.LogDebug("Original Color: {Original}, Cleaned Color: {Cleaned}", color, cleanedColor);
                     double colorScore;
 
-                    if (recommendedColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
+                    var colorWords = cleanedColor.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                    if (colorWords.Any(w => recommendedColors.Contains(w, StringComparer.OrdinalIgnoreCase)))
                     {
                         colorScore = exactIndividualScore;
                         fullyCompatibleCount++;
                         _logger.LogDebug("{Color} is fully compatible.", cleanedColor);
                     }
-                    else if (elementColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
+                    else if (colorWords.Any(w => elementColors.Contains(w, StringComparer.OrdinalIgnoreCase)))
                     {
                         colorScore = exactIndividualScore / 2;
                         _logger.LogDebug("{Color} is semi-compatible.", cleanedColor);

@@ -29,4 +29,10 @@
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0-rc.1.24431.7" />
 	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\src\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\src\Shared\Shared.Kernel\Shared.Kernel.csproj" />
+	</ItemGroup>
 </Project>

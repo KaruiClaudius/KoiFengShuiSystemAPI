@@ -1,5 +1,6 @@
 ﻿using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace KoiFengShuiSystem.DataAccess.Repositories.Implement

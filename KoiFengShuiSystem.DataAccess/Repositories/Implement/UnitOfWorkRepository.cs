@@ -1,5 +1,6 @@
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 
 namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
 {

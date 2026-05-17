@@ -1,23 +1,26 @@
 # Current Dependency Inventory
 
-Generated for Task 0.2 of the architecture refactor plan. This inventory reflects the current layered solution before module extraction.
+Generated for Task 0.2 of the architecture refactor plan. This inventory has been updated through Phase 3 and reflects the current solution state after EF Core infrastructure refactoring.
 
 ## Solution Caveat
 
-`KoiFengShuiSystem.Tests/KoiFengShuiSystem.Tests.csproj` exists and references production projects, but `KoiFengShuiSystem.sln` currently includes only `Api`, `BusinessLogic`, `DataAccess`, `Shared`, and `Common`. Builds of the solution do not build the test project until it is added to the solution.
+The old `KoiFengShuiSystem.Tests` project has been removed from the repository. Two new test projects are now included in the solution: `tests/UnitTests/UnitTests.csproj` and `tests/IntegrationTests/IntegrationTests.csproj`. The solution builds and tests all projects.
 
 ## Project References
 
 | Project | Project References |
-|---|---|
-| `KoiFengShuiSystem.Api` | `KoiFengShuiSystem.Services/KoiFengShuiSystem.BusinessLogic.csproj`; `KoiFengShuiSystem.Shared/KoiFengShuiSystem.Shared.csproj` |
+|---|---|---|
+| `KoiFengShuiSystem.Api` | `KoiFengShuiSystem.Services/KoiFengShuiSystem.BusinessLogic.csproj`; `KoiFengShuiSystem.Shared/KoiFengShuiSystem.Shared.csproj`; `src/Shared/Shared.Infrastructure/Shared.Infrastructure.csproj` |
 | `KoiFengShuiSystem.Services` (`KoiFengShuiSystem.BusinessLogic.csproj`) | `KoiFengShuiSystem.Common/KoiFengShuiSystem.Common.csproj`; `KoiFengShuiSystem.DataAccess/KoiFengShuiSystem.DataAccess.csproj`; `KoiFengShuiSystem.Shared/KoiFengShuiSystem.Shared.csproj` |
-| `KoiFengShuiSystem.DataAccess` | None |
+| `KoiFengShuiSystem.DataAccess` | `src/Shared/Shared.Infrastructure/Shared.Infrastructure.csproj` |
 | `KoiFengShuiSystem.Shared` | `KoiFengShuiSystem.DataAccess/KoiFengShuiSystem.DataAccess.csproj` |
 | `KoiFengShuiSystem.Common` | `KoiFengShuiSystem.DataAccess/KoiFengShuiSystem.DataAccess.csproj` |
-| `KoiFengShuiSystem.Tests` | `KoiFengShuiSystem.Common/KoiFengShuiSystem.Common.csproj`; `KoiFengShuiSystem.Services/KoiFengShuiSystem.BusinessLogic.csproj`; `KoiFengShuiSystem.Shared/KoiFengShuiSystem.Shared.csproj` |
+| `src/Shared/Shared.Infrastructure` | `src/Shared/Shared.Kernel/Shared.Kernel.csproj` |
+| `src/Shared/Shared.Kernel` | None |
+| `tests/UnitTests` | `KoiFengShuiSystem.Common/KoiFengShuiSystem.Common.csproj`; `KoiFengShuiSystem.Services/KoiFengShuiSystem.BusinessLogic.csproj`; `KoiFengShuiSystem.Shared/KoiFengShuiSystem.Shared.csproj`; `KoiFengShuiSystem.DataAccess/KoiFengShuiSystem.DataAccess.csproj`; `src/Shared/Shared.Kernel/Shared.Kernel.csproj` |
+| `tests/IntegrationTests` | `KoiFengShuiSystem.Api/KoiFengShuiSystem.Api.csproj` |
 
-Temporary exception: `Shared.Kernel` currently references EF Core only to preserve `PaginatedList<T>.CreateAsync(IQueryable<T>)` behavior; revisit when EF-specific pagination moves to infrastructure or query handlers.
+Note: `Shared.Kernel` previously referenced EF Core for `PaginatedList`, but `PaginatedList` was moved to `Shared.Infrastructure/Persistence/` in Phase 3. `Shared.Kernel` now has zero infrastructure dependencies.
 
 The project references above under-report source-level couplings. `KoiFengShuiSystem.Api` compiles through transitive references and directly imports types from projects it does not reference in its `.csproj`, including `KoiFengShuiSystem.Common` and `KoiFengShuiSystem.DataAccess`. It also imports concrete service implementation types through `Program.cs` and selected controllers. These couplings should be treated as real dependencies during module extraction, even when the `.csproj` only lists `Services` and `Shared`.
 
@@ -84,6 +87,8 @@ Additional concrete services without matching public service interfaces:
 
 ## EF Entities
 
+As of Phase 3, all entity models reside in `src/Shared/Shared.Kernel/Models/` (namespace preserved as `KoiFengShuiSystem.DataAccess.Models`) and the shared `DbContext` lives in `src/Shared/Shared.Infrastructure/Persistence/KoiFengShuiContext.cs`. Relationship configurations are extracted to `src/Shared/Shared.Infrastructure/Persistence/Configurations/`.
+
 Entities exposed by `KoiFengShuiContext`:
 
 | Entity | Primary module ownership | Navigation summary |
@@ -128,7 +133,7 @@ Navigation-heavy aggregate relationships to protect during refactor:
 |---|---|---|---|
 | `KoiFengShuiSystem.Api` | `KoiFengShuiSystem.Services`, `KoiFengShuiSystem.Shared` | Direct `.csproj` references for host controllers, startup wiring, service interfaces, and DTOs. | Phase 1 introduces host/shared foundations; later phases move controllers by module. |
 | `KoiFengShuiSystem.Api` source files | `KoiFengShuiSystem.Common`, `KoiFengShuiSystem.DataAccess`, concrete service implementation types | API source uses transitive dependencies directly: `UploadImageController` uses `Const`, `MarketplaceListingsController` injects `GenericRepository<Account>`, `AuthController` uses `SecurityUtil`, and `Program.cs` registers concrete implementations. | Phase 1/2 make host composition explicit; phases 3+ remove controller-level data access and implementation utility couplings. |
-| `KoiFengShuiSystem.Services` | `KoiFengShuiSystem.DataAccess` | Services directly use EF entities, repositories, and `KoiFengShuiContext`. | Phase 3+ module extraction and infrastructure ownership. |
+| `KoiFengShuiSystem.Services` | `KoiFengShuiSystem.DataAccess` | Services directly use EF entities, repositories, and `KoiFengShuiContext`. Services still reference entities through the old `DataAccess` project even though entities now live in `Shared.Kernel`. | Phase 3 moved context and entities to shared projects; module extraction in later phases will move service persistence to module-owned infrastructure. |
 | `KoiFengShuiSystem.Services` | `KoiFengShuiSystem.Shared` | Service contracts and mappings use current request/response DTOs. | Phase 2 contract protection, then move DTOs near modules. |
 | `KoiFengShuiSystem.Services` | `KoiFengShuiSystem.Common` | Feng Shui calculations use `CungPhiCalculator`. | Phase 1 shared foundations; Feng Shui module extraction later. |
 | `KoiFengShuiSystem.Shared` | `KoiFengShuiSystem.DataAccess` | DTO layer currently references data models and request helpers include repository-like types. | Phase 1/2 untangle shared kernel from data access before module DTO moves. |
@@ -146,5 +151,7 @@ Navigation-heavy aggregate relationships to protect during refactor:
 | `FAQService`, `AdminPostService`, `AdminPostImageService`, `ImageService` | `KoiFengShuiContext` directly | These services bypass repository abstractions. | Infrastructure cleanup during module extraction. |
 | `IUnitOfWorkRepository` | Save transaction methods only | Interface supports transaction commits but does not expose repository properties. | Phase 3+ decide whether transaction boundary remains shared or becomes module-owned. |
 | Concrete `UnitOfWorkRepository` | Specific repositories and `KoiFengShuiContext` | Concrete repository composition exposes repositories for posts, listings, images, elements, categories, and tiers; several services depend on this concrete type. | Phase 3+ replace concrete dependency with module-owned repositories or EF configurations. |
-| EF entities | `KoiFengShuiContext` | One shared DbContext owns all entities and relationships. | Keep shared DbContext initially; split configurations before any context split. |
-| `KoiFengShuiSystem.Tests` | `Common`, `Services`, `Shared` | Existing tests compile outside the solution and therefore are not covered by solution build/test commands. | Phase 2 test harness and solution inclusion. |
+| `KoiFengShuiContext` | Entity models in `Shared.Kernel/Models/` | Context owns all DbSets and applies configurations from the Infrastructure assembly. | Phase 3 moved context to Shared.Infrastructure; future module extraction will move DbSet ownership. |
+| EF entity models | Originally `DataAccess/Models/`, now `Shared.Kernel/Models/` | Moved to break circular dependency between DataAccess and Shared.Infrastructure. | Phase 5+ moves entities to module-specific `Domain` projects. |
+| Entity configurations | Originally inline in `OnModelCreating`, now in `Shared.Infrastructure/Persistence/Configurations/` | Extracted to individual `IEntityTypeConfiguration<T>` classes during Phase 3. | Phase 5+ moves configs to module infrastructure projects. |
+| `Shared.Kernel` | `Microsoft.Extensions.*` only | Pure kernel with no EF Core dependency. `PaginatedList` moved to `Shared.Infrastructure` in Phase 3. | Keep as pure cross-module contract assembly. |
