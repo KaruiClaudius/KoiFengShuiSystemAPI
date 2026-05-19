@@ -27,7 +27,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
         public async Task<List<AdminPostResponse>> GetAllAdminPostsAsync()
         {
             var posts = await _context.Posts
-                .Include(p => p.Element)
                 .Include(p => p.Account)
                 .Include(p => p.PostImages)
                     .ThenInclude(pi => pi.Image)
@@ -39,7 +38,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
         public async Task<AdminPostResponse> GetAdminPostByIdAsync(int id)
         {
             var post = await _context.Posts
-                .Include(p => p.Element)
                 .Include(p => p.Account)
                 .Include(p => p.PostImages)
                     .ThenInclude(pi => pi.Image)

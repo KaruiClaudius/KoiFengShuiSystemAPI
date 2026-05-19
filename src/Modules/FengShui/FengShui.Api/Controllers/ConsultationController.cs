@@ -1,8 +1,8 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Modules.FengShui.Application.Requests;
+using KoiFengShuiSystem.Modules.FengShui.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace KoiFengShuiSystem.Api.Controllers
+namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

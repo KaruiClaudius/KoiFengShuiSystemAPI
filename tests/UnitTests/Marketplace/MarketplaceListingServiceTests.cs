@@ -2,6 +2,7 @@ using CloudinaryDotNet.Actions;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;

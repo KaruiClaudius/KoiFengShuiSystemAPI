@@ -18,6 +18,7 @@
 		<ProjectReference Include="..\KoiFengShuiSystem.Common\KoiFengShuiSystem.Common.csproj" />
 		<ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
 		<ProjectReference Include="..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
+		<ProjectReference Include="..\src\Modules\FengShui\FengShui.Domain\FengShui.Domain.csproj" />
 		<ProjectReference Include="..\src\Shared\Shared.Kernel\Shared.Kernel.csproj" />
 	</ItemGroup>
 

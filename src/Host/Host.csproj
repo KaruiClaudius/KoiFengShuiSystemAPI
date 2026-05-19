@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>605637f8-7a75-4e61-9cc8-1e4fb8f8b6ea</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj" />
+    <ProjectReference Include="..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
+    <ProjectReference Include="..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
+    <ProjectReference Include="..\..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Kernel\Shared.Kernel.csproj" />
+    <ProjectReference Include="..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\FengShui\FengShui.Application\FengShui.Application.csproj" />
+    <ProjectReference Include="..\Modules\FengShui\FengShui.Infrastructure\FengShui.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\FengShui\FengShui.Api\FengShui.Api.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -22,6 +22,7 @@
     <ProjectReference Include="..\..\KoiFengShuiSystem.Common\KoiFengShuiSystem.Common.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
+    <ProjectReference Include="..\..\src\Modules\FengShui\FengShui.Domain\FengShui.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

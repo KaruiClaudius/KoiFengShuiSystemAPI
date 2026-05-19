@@ -1,4 +1,6 @@
-namespace KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.DataAccess.Models;
+
+namespace KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 
 public class Recommendation
 {

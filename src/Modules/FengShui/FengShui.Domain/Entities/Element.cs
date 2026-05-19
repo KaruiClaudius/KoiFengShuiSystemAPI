@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using KoiFengShuiSystem.DataAccess.Models;
 
-namespace KoiFengShuiSystem.DataAccess.Models;
+namespace KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 
 public class Element
 {

@@ -1,4 +1,5 @@
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -13,7 +14,7 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
             .HasForeignKey(d => d.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(d => d.Element)
+        builder.HasOne<Element>()
             .WithMany(p => p.Posts)
             .HasForeignKey(d => d.ElementId);
 

@@ -2,6 +2,7 @@ using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.Common.FengShui;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.Extensions.Logging;

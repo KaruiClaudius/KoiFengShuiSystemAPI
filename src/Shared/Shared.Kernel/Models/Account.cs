@@ -39,8 +39,6 @@ public class Account
     [Column(TypeName = "decimal(18,0)")]
     public decimal? Wallet { get; set; }
 
-    public virtual Element? Element { get; set; }
-
     public virtual Role? Role { get; set; }
 
     public virtual ICollection<FAQ> FAQs { get; set; } = new List<FAQ>();
@@ -50,8 +48,6 @@ public class Account
     public virtual ICollection<MarketplaceListing> MarketplaceListings { get; set; } = new List<MarketplaceListing>();
 
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
-
-    public virtual ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
 
     public virtual ICollection<TrafficLog> TrafficLogs { get; set; } = new List<TrafficLog>();
 

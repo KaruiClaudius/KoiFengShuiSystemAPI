@@ -5,6 +5,7 @@ using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Http;
@@ -114,6 +115,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllWithElementAsync();
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
@@ -132,7 +135,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
-                        ElementName = mp.Element?.ElementName,
+                        ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                     }).ToList();
@@ -159,6 +162,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByAccountIdAsync(accountId, categoryId, excludeListingId, pageNumber, pageSize);
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
@@ -177,7 +182,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
-                        ElementName = mp.Element?.ElementName,
+                        ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                         ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
@@ -215,6 +220,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByCategoryTypeIdAsync(categoryId, pageNumber, pageSize);
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
@@ -233,7 +240,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
-                        ElementName = mp.Element?.ElementName,
+                        ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                         ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
@@ -282,6 +289,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByElementIdAsync(elementId, categoryId, excludeListingId, pageNumber, pageSize);
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
                 if (marketplaceListings != null)
                 {
                     var marketplaceListingsResponses = marketplaceListings.Select(mp => new MarketplaceListingResponse
@@ -300,7 +309,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
-                        ElementName = mp.Element?.ElementName,
+                        ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                         ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse
@@ -338,6 +347,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var marketplaceListings = await _unitOfWork.MarketplaceListingRepository.GetAllByCategoryByIdAsync(id);
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
 
                 if (marketplaceListings != null)
                 {
@@ -358,7 +369,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         ElementId = mp.ElementId,
                         AccountName = mp.Account.FullName,
                         AccountPhoneNumber = mp.Account.Phone,
-                        ElementName = mp.Element?.ElementName,
+                        ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
                         ListingImages = mp.ListingImages?.Select(li => new ListingImageResponse

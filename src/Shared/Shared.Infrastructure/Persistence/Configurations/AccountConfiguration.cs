@@ -1,4 +1,5 @@
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,7 +9,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
 {
     public void Configure(EntityTypeBuilder<Account> builder)
     {
-        builder.HasOne(d => d.Element)
+        builder.HasOne<Element>()
             .WithMany(p => p.Accounts)
             .HasForeignKey(d => d.ElementId);
 

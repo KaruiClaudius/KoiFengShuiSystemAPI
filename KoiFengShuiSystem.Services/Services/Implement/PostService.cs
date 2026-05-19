@@ -3,6 +3,7 @@ using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Response;
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
@@ -20,6 +21,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var posts = await _unitOfWork.PostRepository.GetAllWithElementAsync();
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
                 if (posts != null)
                 {
                     var postResponses = posts.Select(po => new PostResponse
@@ -33,8 +36,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Follows = po.Follows,
                         Id = po.Id,
                         Name = po.Name,
-                        ElementName = po.Element.ElementName, // Access ElementName
-                        AccountName = po.Account.FullName, // Access ElementName
+                        ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
+                        AccountName = po.Account.FullName,
                         Status = po.Status,
                     }).ToList();
                     if (postResponses == null)
@@ -60,6 +63,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             try
             {
                 var posts = await _unitOfWork.PostRepository.GetAllByPostTypeIdAsync(postTypeId, pageNumber, pageSize);
+                var elements = await _unitOfWork.ElementRepository.GetAllAsync();
+                var elementDict = elements.ToDictionary(e => e.ElementId, e => e.ElementName);
                 if (posts != null)
                 {
                     var postResponses = posts.Select(po => new PostResponse
@@ -73,8 +78,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Follows = po.Follows,
                         Id = po.Id,
                         Name = po.Name,
-                        ElementName = po.Element.ElementName, // Access ElementName
-                        AccountName = po.Account.FullName, // Access ElementName
+                        ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
+                        AccountName = po.Account.FullName,
                         Status = po.Status,
                     }).ToList();
                     if (postResponses == null)

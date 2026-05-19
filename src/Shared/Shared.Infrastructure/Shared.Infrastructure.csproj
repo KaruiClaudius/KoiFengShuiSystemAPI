@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Modules\FengShui\FengShui.Domain\FengShui.Domain.csproj" />
     <ProjectReference Include="..\Shared.Kernel\Shared.Kernel.csproj" />
   </ItemGroup>
 

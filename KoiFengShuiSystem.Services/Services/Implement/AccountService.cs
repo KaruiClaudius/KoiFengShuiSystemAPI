@@ -2,6 +2,7 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
@@ -234,13 +235,19 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         public async Task<AccountResponse> GetAccountResponseByEmailAsync(string email)
         {
-            var account = await _accountRepository.FindWithIncludeAsync(
-                x => x.Email == email,
-                x => x.Element
+            var account = await _accountRepository.FindAsync(
+                x => x.Email == email
             );
             if (account == null)
             {
                 return null;
+            }
+
+            string? elementName = null;
+            if (account.ElementId.HasValue)
+            {
+                var element = await _elementRepository.GetByIdAsync(account.ElementId.Value);
+                elementName = element?.ElementName;
             }
 
             return new AccountResponse
@@ -252,7 +259,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 Phone = account.Phone,
                 Dob = account.Dob ?? DateTime.MinValue,
                 Gender = account.Gender,
-                ElementName = account.Element?.ElementName
+                ElementName = elementName
             };
         }
 

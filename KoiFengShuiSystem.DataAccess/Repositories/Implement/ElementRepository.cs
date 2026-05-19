@@ -1,5 +1,6 @@
 ﻿using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System;

@@ -11,7 +11,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         public async Task<IEnumerable<MarketplaceListing>> GetAllWithElementAsync()
         {
             return await _dbSet
-                .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)
@@ -25,7 +24,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.CategoryId == categoryId)
-                .Include(p => p.Element)
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
                 .Include(p => p.ListingImages)
@@ -41,7 +39,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.ElementId == elementId && p.ListingId != excludeListingId && p.CategoryId == categoryId)
-                .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)
@@ -59,7 +56,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.AccountId == accountId && p.CategoryId == categoryId && p.ListingId != excludeListingId)
-                .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
                 .Include(p => p.ListingImages)
@@ -77,7 +73,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             return await _dbSet
                 .Where(p => p.ListingId == id)
-                .Include(p => p.Element) // Include the Element to access ElementName
                 .Include(p => p.Account)
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)

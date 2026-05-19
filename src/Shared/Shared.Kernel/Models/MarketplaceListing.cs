@@ -44,8 +44,6 @@ public class MarketplaceListing
 
     public virtual MarketCategory Category { get; set; } = null!;
 
-    public virtual Element? Element { get; set; }
-
     public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();
 
     public virtual SubcriptionTier Tier { get; set; } = null!;

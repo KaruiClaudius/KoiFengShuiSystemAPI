@@ -1,4 +1,5 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Models.Request;

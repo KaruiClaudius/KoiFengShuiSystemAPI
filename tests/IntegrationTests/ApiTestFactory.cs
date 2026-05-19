@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace IntegrationTests;
 
-public class ApiTestFactory : WebApplicationFactory<KoiFengShuiSystem.Api.Controllers.AuthController>
+public class ApiTestFactory : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

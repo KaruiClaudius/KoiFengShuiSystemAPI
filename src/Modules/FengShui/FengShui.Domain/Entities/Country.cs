@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace KoiFengShuiSystem.DataAccess.Models;
+namespace KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 
 public class Country
 {

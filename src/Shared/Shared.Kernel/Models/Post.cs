@@ -31,8 +31,6 @@ public class Post
 
     public virtual Account Account { get; set; } = null!;
 
-    public virtual Element? Element { get; set; }
-
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
     public virtual PostCategory IdNavigation { get; set; } = null!;
