@@ -58,7 +58,7 @@
 
 **KoiFengShuiSystem** is an ASP.NET Core Web API that merges **Eastern Feng Shui wisdom** with **Koi fish keeping recommendations**. The system calculates the user's innate Feng Shui element using the Vietnamese/Chinese **Cung Phi** method (birth year + gender) and provides personalised advice on Koi breeds, pond shapes, directions, colours, and quantities. It goes beyond simple element matching to create a holistic digital ecosystem: community posts, a full marketplace with payment integration, and an admin dashboard.
 
-The long-term vision (detailed in the roadmap) is to evolve into a **comprehensive Eastern metaphysics platform** incorporating Ba Zi (Four Pillars), Chinese Zodiac, Flying Stars, home assessment, and AI-powered consultation.
+The long-term vision (detailed in the roadmap) is to evolve into a **comprehensive Eastern metaphysics platform** incorporating Ba Zi (Four Pillars), Chinese Zodiac, Flying Stars, and home assessment.
 
 ---
 
