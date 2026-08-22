@@ -360,6 +360,9 @@ public class AccountService : IAccountService
         var baseUrl = _configuration["AppSettings:FrontendBaseUrl"];
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
+            _logger.LogWarning(
+                "AppSettings:FrontendBaseUrl is not configured; falling back to {DefaultBaseUrl} for password-reset links. Configure it to point at the frontend origin.",
+                DefaultFrontendBaseUrl);
             baseUrl = DefaultFrontendBaseUrl;
         }
 
