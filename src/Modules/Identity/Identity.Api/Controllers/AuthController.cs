@@ -77,20 +77,10 @@ public class AuthController : ControllerBase
 
         try
         {
-            var account = await _accountService.GetAccountByEmailAsync(request.Email);
-            if (account == null)
-            {
-                return Ok("If a user with this email exists, a password reset email has been sent.");
-            }
-
-            var newPassword = SecurityUtil.GenerateRandomPassword();
-
-            await _accountService.UpdateUserPasswordAsync(account, newPassword);
-
-            var emailSent = await _accountService.SendPasswordResetEmailAsync(request.Email, account.FullName, newPassword);
+            var emailSent = await _accountService.ForgotPasswordAsync(request.Email);
             if (!emailSent)
             {
-                throw new ApplicationException("Failed to send the email.");
+                return StatusCode(500, "An unexpected error occurred");
             }
 
             return Ok("If a user with this email exists, a password reset email has been sent.");
@@ -98,6 +88,32 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in ForgotPassword");
+            return StatusCode(500, "An unexpected error occurred");
+        }
+    }
+
+    [AllowAnonymous]
+    [HttpPost("ResetPassword")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var success = await _accountService.ResetPasswordAsync(request);
+            if (!success)
+            {
+                return BadRequest(new { message = "Invalid or expired reset token." });
+            }
+
+            return Ok(new { message = "Password has been reset successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in ResetPassword");
             return StatusCode(500, "An unexpected error occurred");
         }
     }

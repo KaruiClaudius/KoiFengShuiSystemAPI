@@ -14,6 +14,7 @@ using IdentityAccountService = KoiFengShuiSystem.Modules.Identity.Application.Se
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -120,12 +121,23 @@ namespace UnitTests.Identity
             KoiFengShuiContext? context = null,
             IJwtTokenService? jwtTokenService = null,
             IIdentityEmailSender? identityEmailSender = null,
-            IIdentityElementLookup? elementLookup = null)
+            IIdentityElementLookup? elementLookup = null,
+            IPasswordHasher? passwordHasher = null,
+            IPasswordResetTokenProvider? passwordResetTokenProvider = null,
+            IConfiguration? configuration = null)
         {
             var ctx = context ?? CreateContext();
             var jwt = jwtTokenService ?? Mock.Of<IJwtTokenService>(j => j.GenerateJwtToken(It.IsAny<AccountEntity>()) == "test-token");
-            var email = identityEmailSender ?? new LegacyIdentityEmailSender(CreateEmailService());
+            var email = identityEmailSender ?? Mock.Of<IIdentityEmailSender>();
             var lookup = elementLookup ?? new EfIdentityElementLookup(ctx);
+            var hasher = passwordHasher ?? new BcryptPasswordHasher();
+            var tokenProvider = passwordResetTokenProvider ?? new SecurePasswordResetTokenProvider();
+            var config = configuration ?? new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["AppSettings:FrontendBaseUrl"] = "http://localhost:3000"
+                })
+                .Build();
             var logger = Mock.Of<ILogger<IdentityAccountService>>();
 
             return new IdentityAccountService(
@@ -134,8 +146,19 @@ namespace UnitTests.Identity
                 jwt,
                 email,
                 logger,
-                lookup);
+                lookup,
+                hasher,
+                tokenProvider,
+                config);
         }
+
+        private static IConfiguration CreateConfiguration(string baseUrl)
+            => new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["AppSettings:FrontendBaseUrl"] = baseUrl
+                })
+                .Build();
 
         // --- Constructor ---
 
@@ -146,6 +169,9 @@ namespace UnitTests.Identity
         [InlineData(3)]
         [InlineData(4)]
         [InlineData(5)]
+        [InlineData(6)]
+        [InlineData(7)]
+        [InlineData(8)]
         public void Constructor_NullDependency_ThrowsArgumentNullException(int nullDependencyIndex)
         {
             var ctx = CreateContext();
@@ -153,9 +179,12 @@ namespace UnitTests.Identity
             IIdentityReadStore readStore = new EfIdentityReadStore(ctx);
             IIdentityWriteStore writeStore = new EfIdentityWriteStore(ctx);
             IJwtTokenService jwtTokenService = CreateJwtTokenService();
-            IIdentityEmailSender identityEmailSender = new LegacyIdentityEmailSender(CreateEmailService());
+            IIdentityEmailSender identityEmailSender = Mock.Of<IIdentityEmailSender>();
             ILogger<IdentityAccountService> logger = Mock.Of<ILogger<IdentityAccountService>>();
             IIdentityElementLookup elementLookup = new EfIdentityElementLookup(ctx);
+            IPasswordHasher passwordHasher = new BcryptPasswordHasher();
+            IPasswordResetTokenProvider tokenProvider = new SecurePasswordResetTokenProvider();
+            IConfiguration configuration = CreateConfiguration("http://localhost:3000");
 
             var ex = Assert.Throws<ArgumentNullException>(() => new IdentityAccountService(
                 nullDependencyIndex == 0 ? null! : readStore,
@@ -163,7 +192,10 @@ namespace UnitTests.Identity
                 nullDependencyIndex == 2 ? null! : jwtTokenService,
                 nullDependencyIndex == 3 ? null! : identityEmailSender,
                 nullDependencyIndex == 4 ? null! : logger,
-                nullDependencyIndex == 5 ? null! : elementLookup));
+                nullDependencyIndex == 5 ? null! : elementLookup,
+                nullDependencyIndex == 6 ? null! : passwordHasher,
+                nullDependencyIndex == 7 ? null! : tokenProvider,
+                nullDependencyIndex == 8 ? null! : configuration));
 
             Assert.NotNull(ex.ParamName);
         }
@@ -172,16 +204,18 @@ namespace UnitTests.Identity
         public void Constructor_WithValidDependencies_Succeeds()
         {
             var ctx = CreateContext();
-            var email = CreateEmailService();
             var logger = Mock.Of<ILogger<IdentityAccountService>>();
 
             var service = new IdentityAccountService(
                 new EfIdentityReadStore(ctx),
                 new EfIdentityWriteStore(ctx),
                 CreateJwtTokenService(),
-                new LegacyIdentityEmailSender(email),
+                Mock.Of<IIdentityEmailSender>(),
                 logger,
-                new EfIdentityElementLookup(ctx));
+                new EfIdentityElementLookup(ctx),
+                new BcryptPasswordHasher(),
+                new SecurePasswordResetTokenProvider(),
+                CreateConfiguration("http://localhost:3000"));
 
             Assert.NotNull(service);
         }
@@ -300,6 +334,67 @@ namespace UnitTests.Identity
             Assert.Equal("generated-jwt-token", result.Response.Token);
         }
 
+        [Fact]
+        public async Task AuthenticateAsync_NullPassword_ReturnsError()
+        {
+            var context = CreateContextWithSeedData();
+            var service = CreateService(context);
+            var request = new AuthenticateRequest { Email = "test@test.com", Password = null };
+
+            var result = await service.AuthenticateAsync(request);
+
+            Assert.False(result.Success);
+            Assert.Equal("Incorrect password.", result.ErrorMessage);
+        }
+
+        [Fact]
+        public async Task AuthenticateAsync_BcryptStoredPassword_ValidLogin_Succeeds()
+        {
+            var hasher = new BcryptPasswordHasher();
+            var context = CreateContextWithSeedData();
+            context.Accounts.First().Password = hasher.Hash("password123");
+            context.SaveChanges();
+
+            var service = CreateService(context, configuration: CreateConfiguration("http://localhost:3000"));
+            var request = new AuthenticateRequest { Email = "test@test.com", Password = "password123" };
+
+            var result = await service.AuthenticateAsync(request);
+
+            Assert.True(result.Success);
+        }
+
+        [Fact]
+        public async Task AuthenticateAsync_LegacyPlaintextCredentials_UpgradesToBcryptOnSuccessfulLogin()
+        {
+            var hasher = new BcryptPasswordHasher();
+            var context = CreateContextWithSeedData();
+            context.ChangeTracker.Clear();
+            var service = CreateService(context);
+            var request = new AuthenticateRequest { Email = "test@test.com", Password = "password123" };
+
+            var result = await service.AuthenticateAsync(request);
+
+            Assert.True(result.Success);
+            var stored = await context.Accounts.SingleAsync(a => a.Email == "test@test.com");
+            Assert.StartsWith("$2", stored.Password);
+            Assert.True(hasher.Verify("password123", stored.Password!));
+        }
+
+        [Fact]
+        public async Task AuthenticateAsync_LegacyPlaintextCredentials_WrongPassword_DoesNotUpgrade()
+        {
+            var context = CreateContextWithSeedData();
+            context.ChangeTracker.Clear();
+            var service = CreateService(context);
+            var request = new AuthenticateRequest { Email = "test@test.com", Password = "wrong-password" };
+
+            var result = await service.AuthenticateAsync(request);
+
+            Assert.False(result.Success);
+            var stored = await context.Accounts.SingleAsync(a => a.Email == "test@test.com");
+            Assert.Equal("password123", stored.Password);
+        }
+
         // --- RegisterAsync ---
 
         [Fact]
@@ -334,6 +429,11 @@ namespace UnitTests.Identity
             Assert.Equal("newuser@test.com", result.Email);
             Assert.Equal(2, result.RoleId);
             Assert.NotNull(result.ElementId);
+
+            var stored = await context.Accounts.SingleAsync(a => a.Email == "newuser@test.com");
+            Assert.StartsWith("$2", stored.Password);
+            Assert.NotEqual("password123", stored.Password);
+            Assert.True(new BcryptPasswordHasher().Verify("password123", stored.Password!));
         }
 
         [Fact]
@@ -405,17 +505,20 @@ namespace UnitTests.Identity
         }
 
         [Fact]
-        public async Task UpdateUserPasswordAsync_ExistingAccount_UpdatesPassword()
+        public async Task UpdateUserPasswordAsync_ExistingAccount_StoresHashedPassword()
         {
             var context = CreateContextWithSeedData();
             context.ChangeTracker.Clear();
             var service = CreateService(context);
+            var hasher = new BcryptPasswordHasher();
 
             var AccountEntity = new AccountEntity { AccountId = 1, Email = "test@test.com" };
             await service.UpdateUserPasswordAsync(AccountEntity, "newPassword123");
 
             var updated = await service.GetByIdAsync(1);
-            Assert.Equal("newPassword123", updated!.Password);
+            Assert.NotNull(updated!.Password);
+            Assert.StartsWith("$2", updated.Password);
+            Assert.True(hasher.Verify("newPassword123", updated.Password!));
         }
 
         [Fact]
@@ -539,12 +642,34 @@ namespace UnitTests.Identity
         {
             var context = CreateContextWithSeedData();
             var service = CreateService(context);
+            var hasher = new BcryptPasswordHasher();
 
             var result = await service.ChangePasswordAsync(1, "password123", "newPassword456");
 
             Assert.True(result);
             var updated = await service.GetByIdAsync(1);
-            Assert.Equal("newPassword456", updated!.Password);
+            Assert.NotNull(updated!.Password);
+            Assert.StartsWith("$2", updated.Password);
+            Assert.True(hasher.Verify("newPassword456", updated.Password!));
+            Assert.False(hasher.Verify("password123", updated.Password!));
+        }
+
+        [Fact]
+        public async Task ChangePasswordAsync_LegacyBcryptStoredCurrentPassword_VerifiesAndRehashes()
+        {
+            var hasher = new BcryptPasswordHasher();
+            var context = CreateContextWithSeedData();
+            context.Accounts.First().Password = hasher.Hash("oldPassword123");
+            context.SaveChanges();
+            context.ChangeTracker.Clear();
+            var service = CreateService(context);
+
+            var result = await service.ChangePasswordAsync(1, "oldPassword123", "newPassword456");
+
+            Assert.True(result);
+            var updated = await service.GetByIdAsync(1);
+            Assert.NotNull(updated!.Password);
+            Assert.True(hasher.Verify("newPassword456", updated.Password!));
         }
 
         [Fact]
@@ -556,6 +681,8 @@ namespace UnitTests.Identity
             var result = await service.ChangePasswordAsync(1, "wrongCurrentPass", "newPassword456");
 
             Assert.False(result);
+            var unchanged = await service.GetByIdAsync(1);
+            Assert.Equal("password123", unchanged!.Password);
         }
 
         [Fact]
@@ -591,6 +718,200 @@ namespace UnitTests.Identity
             Assert.Equal("Created User", result.FullName);
             var stored = await service.GetByIdAsync(result.AccountId);
             Assert.NotNull(stored);
+        }
+
+        [Fact]
+        public async Task CreateAsync_PlaintextPassword_StoresBcryptHash()
+        {
+            var context = CreateContext();
+            var service = CreateService(context);
+            var hasher = new BcryptPasswordHasher();
+
+            var newAccount = new AccountEntity
+            {
+                FullName = "Created User",
+                Email = "created@test.com",
+                Password = "pass123",
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now
+            };
+
+            var result = await service.CreateAsync(newAccount);
+
+            var stored = await service.GetByIdAsync(result.AccountId);
+            Assert.NotNull(stored!.Password);
+            Assert.StartsWith("$2", stored.Password);
+            Assert.True(hasher.Verify("pass123", stored.Password!));
+        }
+
+        // --- ForgotPasswordAsync ---
+
+        [Fact]
+        public async Task ForgotPasswordAsync_UnknownEmail_ReturnsTrueWithoutStoringTokens()
+        {
+            var context = CreateContext();
+            var service = CreateService(context);
+
+            var result = await service.ForgotPasswordAsync("ghost@test.com");
+
+            Assert.True(result);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_KnownEmail_StoresTokenHashAndExpiryAndSendsLink()
+        {
+            var context = CreateContextWithSeedData();
+            string? capturedLink = null;
+            var emailSenderMock = new Mock<IIdentityEmailSender>();
+            emailSenderMock
+                .Setup(sender => sender.SendPasswordResetEmailAsync("test@test.com", "Test User", It.IsAny<string>()))
+                .Callback<string, string, string>((_, __, link) => capturedLink = link)
+                .ReturnsAsync(true);
+            var tokenProvider = new SecurePasswordResetTokenProvider();
+            var service = CreateService(
+                context,
+                identityEmailSender: emailSenderMock.Object,
+                passwordResetTokenProvider: tokenProvider);
+
+            var beforeCall = DateTime.UtcNow;
+            var result = await service.ForgotPasswordAsync("test@test.com");
+            var afterCall = DateTime.UtcNow;
+
+            Assert.True(result);
+            Assert.NotNull(capturedLink);
+
+            var stored = await context.Accounts.SingleAsync(a => a.Email == "test@test.com");
+            Assert.NotNull(stored.ResetTokenHash);
+            Assert.Equal(64, stored.ResetTokenHash!.Length);
+            Assert.NotNull(stored.ResetTokenExpiresAt);
+            var expectedLowerBound = new DateTime(beforeCall.AddMinutes(15).Ticks, DateTimeKind.Utc);
+            var expectedUpperBound = new DateTime(afterCall.AddMinutes(15).Ticks, DateTimeKind.Utc);
+            Assert.InRange(stored.ResetTokenExpiresAt!.Value, expectedLowerBound.AddSeconds(-1), expectedUpperBound.AddSeconds(1));
+
+            var tokenFromLink = ExtractTokenFromResetLink(capturedLink!);
+            Assert.False(string.IsNullOrWhiteSpace(tokenFromLink));
+            Assert.Equal(tokenProvider.Hash(tokenFromLink!), stored.ResetTokenHash);
+            Assert.DoesNotContain("password is", capturedLink!, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_BuildsLinkFromConfiguredBaseUrl()
+        {
+            var context = CreateContextWithSeedData();
+            string? capturedLink = null;
+            var emailSenderMock = new Mock<IIdentityEmailSender>();
+            emailSenderMock
+                .Setup(sender => sender.SendPasswordResetEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string, string>((_, __, link) => capturedLink = link)
+                .ReturnsAsync(true);
+            var configuration = CreateConfiguration("https://frontend.example.com");
+            var service = CreateService(context, identityEmailSender: emailSenderMock.Object, configuration: configuration);
+
+            await service.ForgotPasswordAsync("test@test.com");
+
+            Assert.NotNull(capturedLink);
+            Assert.StartsWith("https://frontend.example.com/reset-password?token=", capturedLink);
+        }
+
+        [Fact]
+        public async Task ForgotPasswordAsync_EmailSendFails_ReturnsFalse()
+        {
+            var context = CreateContextWithSeedData();
+            var emailSenderMock = new Mock<IIdentityEmailSender>();
+            emailSenderMock
+                .Setup(sender => sender.SendPasswordResetEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync(false);
+            var service = CreateService(context, identityEmailSender: emailSenderMock.Object);
+
+            var result = await service.ForgotPasswordAsync("test@test.com");
+
+            Assert.False(result);
+        }
+
+        // --- ResetPasswordAsync ---
+
+        [Fact]
+        public async Task ResetPasswordAsync_ValidToken_ResetsPasswordAndClearsTokenFields()
+        {
+            var tokenProvider = new SecurePasswordResetTokenProvider();
+            var hasher = new BcryptPasswordHasher();
+            var token = tokenProvider.Generate();
+
+            var context = CreateContextWithSeedData();
+            context.Accounts.First().ResetTokenHash = tokenProvider.Hash(token);
+            context.Accounts.First().ResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(10);
+            context.SaveChanges();
+            context.ChangeTracker.Clear();
+
+            var service = CreateService(context, passwordResetTokenProvider: tokenProvider);
+            var request = new ResetPasswordRequest { Token = token, NewPassword = "brandNewPass123" };
+
+            var result = await service.ResetPasswordAsync(request);
+
+            Assert.True(result);
+            var stored = await context.Accounts.SingleAsync(a => a.Email == "test@test.com");
+            Assert.Null(stored.ResetTokenHash);
+            Assert.Null(stored.ResetTokenExpiresAt);
+            Assert.NotNull(stored.Password);
+            Assert.StartsWith("$2", stored.Password);
+            Assert.True(hasher.Verify("brandNewPass123", stored.Password!));
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_ExpiredToken_ReturnsFalseAndKeepsOldPassword()
+        {
+            var tokenProvider = new SecurePasswordResetTokenProvider();
+            var token = tokenProvider.Generate();
+
+            var context = CreateContextWithSeedData();
+            context.Accounts.First().ResetTokenHash = tokenProvider.Hash(token);
+            context.Accounts.First().ResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+            context.SaveChanges();
+            context.ChangeTracker.Clear();
+
+            var service = CreateService(context, passwordResetTokenProvider: tokenProvider);
+            var request = new ResetPasswordRequest { Token = token, NewPassword = "brandNewPass123" };
+
+            var result = await service.ResetPasswordAsync(request);
+
+            Assert.False(result);
+            var stored = await context.Accounts.SingleAsync(a => a.Email == "test@test.com");
+            Assert.Equal("password123", stored.Password);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_UnknownToken_ReturnsFalse()
+        {
+            var context = CreateContextWithSeedData();
+            var service = CreateService(context, passwordResetTokenProvider: new SecurePasswordResetTokenProvider());
+            var request = new ResetPasswordRequest { Token = "totally-unknown-token-value", NewPassword = "brandNewPass123" };
+
+            var result = await service.ResetPasswordAsync(request);
+
+            Assert.False(result);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_MissingTokenOrPassword_ReturnsFalse()
+        {
+            var context = CreateContextWithSeedData();
+            var service = CreateService(context);
+
+            Assert.False(await service.ResetPasswordAsync(new ResetPasswordRequest { Token = "", NewPassword = "validPass123" }));
+            Assert.False(await service.ResetPasswordAsync(new ResetPasswordRequest { Token = "some-token", NewPassword = "" }));
+            Assert.False(await service.ResetPasswordAsync(null!));
+        }
+
+        private static string? ExtractTokenFromResetLink(string link)
+        {
+            const string marker = "token=";
+            var markerIndex = link.IndexOf(marker, StringComparison.Ordinal);
+            if (markerIndex < 0)
+            {
+                return null;
+            }
+
+            return Uri.UnescapeDataString(link[(markerIndex + marker.Length)..]);
         }
 
         // --- GetAccountResponseByEmailAsync ---

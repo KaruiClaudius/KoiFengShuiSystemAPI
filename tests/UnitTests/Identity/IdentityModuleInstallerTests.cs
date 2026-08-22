@@ -32,6 +32,12 @@ public class IdentityModuleInstallerTests
             descriptor.ServiceType == typeof(IJwtTokenService) &&
             descriptor.ImplementationType == typeof(JwtTokenService));
         Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(IPasswordHasher) &&
+            descriptor.ImplementationType == typeof(BcryptPasswordHasher));
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(IPasswordResetTokenProvider) &&
+            descriptor.ImplementationType == typeof(SecurePasswordResetTokenProvider));
+        Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IIdentityEmailSender) &&
             descriptor.ImplementationType == typeof(LegacyIdentityEmailSender));
         Assert.Contains(services, descriptor =>

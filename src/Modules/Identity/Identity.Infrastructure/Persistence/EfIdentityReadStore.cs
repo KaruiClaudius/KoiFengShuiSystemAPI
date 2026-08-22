@@ -18,6 +18,9 @@ public class EfIdentityReadStore : IIdentityReadStore
     public Task<Account?> GetAccountByEmailAsync(string email)
         => _context.Accounts.FirstOrDefaultAsync(account => account.Email == email);
 
+    public Task<Account?> GetAccountByResetTokenHashAsync(string resetTokenHash)
+        => _context.Accounts.FirstOrDefaultAsync(account => account.ResetTokenHash == resetTokenHash);
+
     public Task<Account?> GetAccountByIdAsync(int accountId)
         => _context.Accounts.FirstOrDefaultAsync(account => account.AccountId == accountId);
 

@@ -6,6 +6,8 @@ public interface IIdentityReadStore
 {
     Task<Account?> GetAccountByEmailAsync(string email);
 
+    Task<Account?> GetAccountByResetTokenHashAsync(string resetTokenHash);
+
     Task<Account?> GetAccountByIdAsync(int accountId);
 
     Task<IReadOnlyList<Account>> GetAllAccountsAsync();

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageVersion Include="AutoMapper" Version="14.0.0" />
+    <PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageVersion Include="CloudinaryDotNet" Version="1.26.2" />
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
     <PackageVersion Include="FluentAssertions" Version="6.12.1" />

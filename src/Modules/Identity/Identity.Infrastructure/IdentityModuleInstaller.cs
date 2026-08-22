@@ -17,6 +17,8 @@ public class IdentityModuleInstaller : IModuleInstaller
         services.AddScoped<IIdentityWriteStore, EfIdentityWriteStore>();
         services.AddScoped<IIdentityElementLookup, EfIdentityElementLookup>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
+        services.AddScoped<IPasswordResetTokenProvider, SecurePasswordResetTokenProvider>();
         services.AddScoped<IIdentityEmailSender, LegacyIdentityEmailSender>();
         services.AddScoped<IAccountService, AccountService>();
         services.AddScoped<AdminAccountService>();

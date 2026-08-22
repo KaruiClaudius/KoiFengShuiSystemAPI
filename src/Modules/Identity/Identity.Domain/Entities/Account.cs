@@ -31,6 +31,11 @@ public class Account
 
     public int? RoleId { get; set; }
 
+    [MaxLength(64)]
+    public string? ResetTokenHash { get; set; }
+
+    public DateTime? ResetTokenExpiresAt { get; set; }
+
     public DateTime CreateAt { get; set; }
 
     public DateTime UpdateAt { get; set; }

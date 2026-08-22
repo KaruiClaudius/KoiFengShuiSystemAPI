@@ -20,7 +20,9 @@ public interface IAccountService
 
     Task<Account?> GetAccountByEmailAsync(string email);
 
-    Task<bool> SendPasswordResetEmailAsync(string email, string fullName, string newPassword);
+    Task<bool> ForgotPasswordAsync(string email);
+
+    Task<bool> ResetPasswordAsync(ResetPasswordRequest request);
 
     Task UpdateUserPasswordAsync(Account account, string newPassword);
 

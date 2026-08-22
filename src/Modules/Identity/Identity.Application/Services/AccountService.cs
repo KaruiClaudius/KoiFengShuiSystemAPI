@@ -2,18 +2,26 @@ using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
 using KoiFengShuiSystem.Modules.Identity.Application.Responses;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.Modules.Identity.Application.Services;
 
 public class AccountService : IAccountService
 {
+    private const int ResetTokenLifetimeMinutes = 15;
+    private const string DefaultFrontendBaseUrl = "http://localhost:3000";
+    private const string BcryptHashPrefix = "$2";
+
     private readonly IIdentityReadStore _readStore;
     private readonly IIdentityWriteStore _writeStore;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IIdentityEmailSender _identityEmailSender;
     private readonly ILogger<AccountService> _logger;
     private readonly IIdentityElementLookup _elementLookup;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IPasswordResetTokenProvider _passwordResetTokenProvider;
+    private readonly IConfiguration _configuration;
 
     public AccountService(
         IIdentityReadStore readStore,
@@ -21,7 +29,10 @@ public class AccountService : IAccountService
         IJwtTokenService jwtTokenService,
         IIdentityEmailSender identityEmailSender,
         ILogger<AccountService> logger,
-        IIdentityElementLookup elementLookup)
+        IIdentityElementLookup elementLookup,
+        IPasswordHasher passwordHasher,
+        IPasswordResetTokenProvider passwordResetTokenProvider,
+        IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(readStore);
         ArgumentNullException.ThrowIfNull(writeStore);
@@ -29,6 +40,9 @@ public class AccountService : IAccountService
         ArgumentNullException.ThrowIfNull(identityEmailSender);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(elementLookup);
+        ArgumentNullException.ThrowIfNull(passwordHasher);
+        ArgumentNullException.ThrowIfNull(passwordResetTokenProvider);
+        ArgumentNullException.ThrowIfNull(configuration);
 
         _readStore = readStore;
         _writeStore = writeStore;
@@ -36,6 +50,9 @@ public class AccountService : IAccountService
         _identityEmailSender = identityEmailSender;
         _logger = logger;
         _elementLookup = elementLookup;
+        _passwordHasher = passwordHasher;
+        _passwordResetTokenProvider = passwordResetTokenProvider;
+        _configuration = configuration;
     }
 
     public async Task<AuthenticationResult> AuthenticateAsync(AuthenticateRequest model)
@@ -47,14 +64,20 @@ public class AccountService : IAccountService
             return new AuthenticationResult { ErrorMessage = "Email not found." };
         }
 
-        if (account.Password != model.Password)
+        if (!VerifyCurrentPassword(account, model.Password))
         {
             return new AuthenticationResult { ErrorMessage = "Incorrect password." };
         }
 
+        var upgradedToHash = UpgradeLegacyStoredPassword(account, model.Password!);
+
         if (account.Dob.HasValue)
         {
             account.ElementId = await GetElementIdFromDateOfBirth(account.Dob.Value.Year, account.Gender ?? string.Empty);
+        }
+
+        if (upgradedToHash || account.Dob.HasValue)
+        {
             await _writeStore.UpdateAccountAsync(account);
             await _writeStore.SaveChangesAsync();
         }
@@ -73,12 +96,14 @@ public class AccountService : IAccountService
     {
         if (await _readStore.GetAccountByEmailAsync(model.Email ?? string.Empty) != null)
             throw new ApplicationException("Email '" + model.Email + "' is already taken");
+        if (string.IsNullOrEmpty(model.Password))
+            throw new ArgumentException("Password is required", nameof(model));
 
         var account = new Account
         {
             FullName = model.FullName,
             Email = model.Email,
-            Password = model.Password,
+            Password = _passwordHasher.Hash(model.Password),
             Dob = model.Dob.Date,
             Phone = model.Phone,
             CreateAt = DateTime.Now,
@@ -140,8 +165,60 @@ public class AccountService : IAccountService
 
     public async Task<Account?> GetAccountByEmailAsync(string email) => await _readStore.GetAccountByEmailAsync(email);
 
-    public async Task<bool> SendPasswordResetEmailAsync(string email, string fullName, string newPassword)
-        => await _identityEmailSender.SendPasswordResetEmailAsync(email, fullName, newPassword);
+    public async Task<bool> ForgotPasswordAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return true;
+        }
+
+        var account = await _readStore.GetAccountByEmailAsync(email);
+        if (account == null)
+        {
+            _logger.LogInformation("Password reset requested for an unknown email; no action taken");
+            return true;
+        }
+
+        var token = _passwordResetTokenProvider.Generate();
+        account.ResetTokenHash = _passwordResetTokenProvider.Hash(token);
+        account.ResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(ResetTokenLifetimeMinutes);
+
+        await _writeStore.UpdateAccountAsync(account);
+        await _writeStore.SaveChangesAsync();
+
+        var resetLink = BuildResetLink(token);
+
+        return await _identityEmailSender.SendPasswordResetEmailAsync(email, account.FullName, resetLink);
+    }
+
+    public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        if (request == null || string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+        {
+            return false;
+        }
+
+        var tokenHash = _passwordResetTokenProvider.Hash(request.Token);
+        var account = await _readStore.GetAccountByResetTokenHashAsync(tokenHash);
+
+        if (account == null)
+        {
+            return false;
+        }
+
+        if (account.ResetTokenExpiresAt is not { } expiresAt || expiresAt <= DateTime.UtcNow)
+        {
+            return false;
+        }
+
+        account.Password = _passwordHasher.Hash(request.NewPassword);
+        account.ResetTokenHash = null;
+        account.ResetTokenExpiresAt = null;
+
+        await _writeStore.UpdateAccountAsync(account);
+        await _writeStore.SaveChangesAsync();
+        return true;
+    }
 
     public async Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword)
         => await _identityEmailSender.SendDefaultPasswordAsync(email, fullName, defaultPassword);
@@ -166,7 +243,7 @@ public class AccountService : IAccountService
                 throw new KeyNotFoundException($"User not found. AccountId: {account.AccountId}, Email: {account.Email}");
             }
 
-            existedUser.Password = newPassword;
+            existedUser.Password = _passwordHasher.Hash(newPassword);
             await _writeStore.UpdateAccountAsync(existedUser);
             await _writeStore.SaveChangesAsync();
             _logger.LogInformation("Password updated successfully for user {Email}", existedUser.Email);
@@ -180,6 +257,11 @@ public class AccountService : IAccountService
 
     public async Task<Account> CreateAsync(Account account)
     {
+        if (!string.IsNullOrEmpty(account.Password) && _passwordHasher.NeedsRehash(account.Password))
+        {
+            account.Password = _passwordHasher.Hash(account.Password);
+        }
+
         await _writeStore.CreateAccountAsync(account);
         await _writeStore.SaveChangesAsync();
         return account;
@@ -220,10 +302,10 @@ public class AccountService : IAccountService
             if (account == null)
                 throw new KeyNotFoundException("Account not found");
 
-            if (account.Password != currentPassword)
+            if (!VerifyCurrentPassword(account, currentPassword))
                 return false;
 
-            account.Password = newPassword;
+            account.Password = _passwordHasher.Hash(newPassword);
             await _writeStore.UpdateAccountAsync(account);
             await _writeStore.SaveChangesAsync();
             return true;
@@ -233,6 +315,55 @@ public class AccountService : IAccountService
             _logger.LogError(ex, "Error changing password for account id: {AccountId}", accountId);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Verifies a supplied password against the stored value. Legacy accounts seeded with a
+    /// plaintext value (not starting with the bcrypt "$2" marker) fall back to a plaintext
+    /// comparison; callers upgrade the stored value on successful match.
+    /// </summary>
+    private bool VerifyCurrentPassword(Account account, string? suppliedPassword)
+    {
+        var stored = account.Password;
+        if (string.IsNullOrEmpty(stored) || string.IsNullOrEmpty(suppliedPassword))
+        {
+            return false;
+        }
+
+        // Documented legacy-fallback branch: stored values predating bcrypt hashing.
+        if (!stored.StartsWith(BcryptHashPrefix, StringComparison.Ordinal))
+        {
+            return string.Equals(stored, suppliedPassword, StringComparison.Ordinal);
+        }
+
+        return _passwordHasher.Verify(suppliedPassword, stored);
+    }
+
+    /// <summary>
+    /// Re-stores a verified password as a bcrypt hash when the stored value is still legacy
+    /// plaintext or was hashed with a weaker work factor. Returns true when a write-through
+    /// upgrade happened.
+    /// </summary>
+    private bool UpgradeLegacyStoredPassword(Account account, string verifiedPassword)
+    {
+        if (string.IsNullOrEmpty(account.Password) || !_passwordHasher.NeedsRehash(account.Password))
+        {
+            return false;
+        }
+
+        account.Password = _passwordHasher.Hash(verifiedPassword);
+        return true;
+    }
+
+    private string BuildResetLink(string token)
+    {
+        var baseUrl = _configuration["AppSettings:FrontendBaseUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            baseUrl = DefaultFrontendBaseUrl;
+        }
+
+        return $"{baseUrl.TrimEnd('/')}/reset-password?token={Uri.EscapeDataString(token)}";
     }
 
     private async Task<int> GetElementIdFromDateOfBirth(int yearOfBirth, string gender)
