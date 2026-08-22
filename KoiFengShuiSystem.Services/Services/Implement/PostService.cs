@@ -135,7 +135,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception e)
             {
-                return new BusinessResult(Const.ERROR_EXCEPTION, e.Message);
+                _logger.LogError(e, "PostService.GetPostById failed for id={PostId}", id);
+                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to retrieve post.");
             }
         }
 
@@ -234,7 +235,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception ex)
             {
-                return new BusinessResult(-4, ex.ToString());
+                _logger.LogError(ex, "PostService.DeletePost failed for id={PostId}", id);
+                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to delete post.");
             }
         }
 
@@ -254,7 +256,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception e)
             {
-                return new BusinessResult(-4, e.Message.ToString());
+                _logger.LogError(e, "PostService.Save failed");
+                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to save changes.");
             }
         }
 

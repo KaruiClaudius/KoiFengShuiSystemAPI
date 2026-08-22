@@ -1,4 +1,3 @@
-using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;

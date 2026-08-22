@@ -1,7 +1,8 @@
-# ADR 0004: PostgreSQL migration and EF migrations consolidation
+# 0004: PostgreSQL Migration and EF Migrations Consolidation
 
-Date: 2026-08-23
-Status: Accepted
+## Status
+
+Accepted
 
 ## Context
 
@@ -12,7 +13,7 @@ history had drifted badly from the current model (removed shop/payment entities 
 entities were missing), so it could neither be replayed nor trusted. The team decided to
 standardize on PostgreSQL for deployment.
 
-## Decisions
+## Decision
 
 1. **Provider**: `Npgsql.EntityFrameworkCore.PostgreSQL` 8.x replaces SqlServer; referenced
    only by `Shared.Infrastructure`, which owns the `DbContext`. The legacy DataAccess
