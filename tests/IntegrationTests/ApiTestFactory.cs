@@ -18,9 +18,6 @@ public class ApiTestFactory : WebApplicationFactory<Program>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Environment:PAYOS_CLIENT_ID"] = "test-client-id",
-                ["Environment:PAYOS_API_KEY"] = "test-api-key",
-                ["Environment:PAYOS_CHECKSUM_KEY"] = "test-checksum-key",
                 ["ConnectionStrings:DefaultConnection"] = "Server=.;Database=TestDb;Trusted_Connection=true;TrustServerCertificate=true;",
                 ["AppSettings:Secret"] = "test-secret-key-that-is-at-least-32-bytes-long-for-hmac",
                 ["CloundSettings:CloundName"] = "test-clound-name",

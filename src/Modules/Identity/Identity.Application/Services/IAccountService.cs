@@ -31,6 +31,4 @@ public interface IAccountService
     Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword);
 
     Task<bool> ChangePasswordAsync(int accountId, string currentPassword, string newPassword);
-
-    Task<bool> UpdateUserWalletAfterPosted(Account account, decimal amount);
 }

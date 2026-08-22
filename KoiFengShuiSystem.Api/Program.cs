@@ -15,7 +15,6 @@ using KoiFengShuiSystem.Shared.Helpers.Photos;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Net.payOS;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -25,14 +24,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
-
-// PayOS configuration
-PayOS payOS = new PayOS(
-    builder.Configuration["Environment:PAYOS_CLIENT_ID"] ?? throw new Exception("Cannot find PAYOS_CLIENT_ID"),
-    builder.Configuration["Environment:PAYOS_API_KEY"] ?? throw new Exception("Cannot find PAYOS_API_KEY"),
-    builder.Configuration["Environment:PAYOS_CHECKSUM_KEY"] ?? throw new Exception("Cannot find PAYOS_CHECKSUM_KEY")
-);
-builder.Services.AddSingleton(payOS);
 
 // Authentication and Authorization
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -86,13 +77,11 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<IMarketplaceListingService, MarketplaceListingService>();
 builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
-builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
@@ -100,10 +89,6 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<UnitOfWorkRepository>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IElementService, ElementService>();
-builder.Services.AddScoped<IMarketCategoryService, MarketCategoryService>();
-builder.Services.AddScoped<ISubcriptionTiersService, SubcriptionTiersService>();
-
-builder.Services.AddHostedService<TransactionSyncService>();
 
 builder.Services.AddScoped<CloudService>();
 
@@ -113,7 +98,6 @@ builder.Services.AddModuleInstallersFromAssemblies(
     typeof(KoiFengShuiSystem.Modules.Identity.Infrastructure.IdentityModuleInstaller).Assembly);
 
 builder.Services.AddHttpClient();
-//builder.Services.AddSingleton<IVnPayService, VnPayService>();
 
 // Swagger/OpenAPI configuration
 builder.Services.AddEndpointsApiExplorer();

@@ -26,18 +26,13 @@ public class KoiFengShuiContext : DbContext
     public virtual DbSet<Follow> Follows { get; set; }
     public virtual DbSet<Image> Images { get; set; }
     public virtual DbSet<KoiBreed> KoiBreeds { get; set; }
-    public virtual DbSet<ListingImage> ListingImages { get; set; }
-    public virtual DbSet<MarketCategory> MarketCategories { get; set; }
-    public virtual DbSet<MarketplaceListing> MarketplaceListings { get; set; }
     public virtual DbSet<Post> Posts { get; set; }
     public virtual DbSet<PostCategory> PostCategories { get; set; }
     public virtual DbSet<PostImage> PostImages { get; set; }
     public virtual DbSet<Recommendation> Recommendations { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<ShapeCategory> ShapeCategories { get; set; }
-    public virtual DbSet<SubcriptionTier> SubcriptionTiers { get; set; }
     public virtual DbSet<TrafficLog> TrafficLogs { get; set; }
-    public virtual DbSet<Transaction> Transactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

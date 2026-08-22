@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 
@@ -35,9 +34,6 @@ public class Account
     public DateTime CreateAt { get; set; }
 
     public DateTime UpdateAt { get; set; }
-
-    [Column(TypeName = "decimal(18,0)")]
-    public decimal? Wallet { get; set; }
 
     public virtual Role? Role { get; set; }
 }

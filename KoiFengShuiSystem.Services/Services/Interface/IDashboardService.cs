@@ -1,12 +1,6 @@
-﻿using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
-using KoiFengShuiSystem.Shared.Models.Request;
-using KoiFengShuiSystem.Shared.Models.Response;
+﻿using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
@@ -17,13 +11,5 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<List<AccountEntity>> ListNewUsersAsync(int days);
         Task<int> GetRegisteredUsersTrafficCount();
         Task<int> GetUniqueGuestsTrafficCount();
-        Task<int> CountNewMarketListingsAsync(int days);
-        Task<List<CategoryListingCount>> CountNewMarketListingsByCategoryAsync(int days);
-        Task<List<MarketListingSummary>> ListMarketListingsAsync(int page = 1, int pageSize = 10);
-        Task<(IEnumerable<TransactionDashboardRequest> Transactions, int TotalCount)>
-         GetTransactionsByDateRangeAsync(TransactionDateRangeRequest request);
-        Task<TotalTransactionRequest> GetTotalTransactionAmountAsync();
-        Task<TransactionCountResponse> GetTotalTransactionCountAsync();
-
     }
 }

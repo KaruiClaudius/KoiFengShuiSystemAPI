@@ -651,32 +651,5 @@ namespace UnitTests.Identity
 
             Assert.Null(result);
         }
-
-        [Fact]
-        public async Task UpdateUserWalletAfterPosted_WhenPersistenceFails_RethrowsException()
-        {
-            var account = new AccountEntity
-            {
-                AccountId = 1,
-                Email = "wallet@test.com",
-                Wallet = 100m
-            };
-
-            var writeStoreMock = new Mock<IIdentityWriteStore>();
-            writeStoreMock
-                .Setup(store => store.UpdateAccountAsync(account))
-                .ThrowsAsync(new InvalidOperationException("save failed"));
-
-            var service = new IdentityAccountService(
-                Mock.Of<IIdentityReadStore>(),
-                writeStoreMock.Object,
-                Mock.Of<IJwtTokenService>(),
-                Mock.Of<IIdentityEmailSender>(),
-                Mock.Of<ILogger<IdentityAccountService>>(),
-                Mock.Of<IIdentityElementLookup>());
-
-            await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                service.UpdateUserWalletAfterPosted(account, 10m));
-        }
     }
 }

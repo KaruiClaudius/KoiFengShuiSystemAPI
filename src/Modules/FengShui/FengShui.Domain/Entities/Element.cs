@@ -27,8 +27,6 @@ public class Element
 
     public virtual ICollection<KoiBreed> KoiBreeds { get; set; } = new List<KoiBreed>();
 
-    public virtual ICollection<MarketplaceListing> MarketplaceListings { get; set; } = new List<MarketplaceListing>();
-
     public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
 
     public virtual ICollection<ShapeCategory> ShapeCategories { get; set; } = new List<ShapeCategory>();

@@ -235,25 +235,6 @@ public class AccountService : IAccountService
         }
     }
 
-    public async Task<bool> UpdateUserWalletAfterPosted(Account existedAccount, decimal amount)
-    {
-        if (existedAccount == null)
-            throw new ArgumentNullException(nameof(existedAccount), "Account object is null");
-
-        try
-        {
-            existedAccount.Wallet -= amount;
-            await _writeStore.UpdateAccountAsync(existedAccount);
-            await _writeStore.SaveChangesAsync();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating wallet for account id: {AccountId}", existedAccount.AccountId);
-            throw;
-        }
-    }
-
     private async Task<int> GetElementIdFromDateOfBirth(int yearOfBirth, string gender)
     {
         var elementName = CalculateElement(yearOfBirth, gender);

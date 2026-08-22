@@ -33,7 +33,6 @@ public class IdentityApiContractTests : IClassFixture<IdentityApiContractTests.I
         Assert.True(paths.TryGetProperty("/api/Account/{id}", out _));
         Assert.True(paths.TryGetProperty("/api/Account/email/{email}", out _));
         Assert.True(paths.TryGetProperty("/api/Account/{id}/change-password", out _));
-        Assert.True(paths.TryGetProperty("/api/Account/UpdateWalletAfterPosted", out _));
     }
 
     public class IdentityOnlyApiTestFactory : ApiTestFactory
