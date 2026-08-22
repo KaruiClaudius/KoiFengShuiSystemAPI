@@ -63,13 +63,6 @@ public class EfRefreshTokenPort : IRefreshTokenPort
             return RotateResult.Failed(RotateResult.UnknownTokenReason);
         }
 
-        if (storedToken.RevokedAt != null)
-        {
-            // Replayed token: assume theft and revoke every still-active token of the account.
-            await RevokeAllActiveTokensAsync(storedToken.AccountId);
-            return RotateResult.Failed(RotateResult.ReuseDetectedReason);
-        }
-
         if (storedToken.ExpiresAt <= DateTime.UtcNow)
         {
             _context.RefreshTokens.Remove(storedToken);
@@ -77,11 +70,24 @@ public class EfRefreshTokenPort : IRefreshTokenPort
             return RotateResult.Failed(RotateResult.ExpiredTokenReason);
         }
 
+        // INVARIANT: a raw token can ever yield at most one valid successor.
+        //
+        // The revoke step below is an atomic conditional claim that only succeeds
+        // while the token is still active. Two concurrent rotations of the same raw
+        // token cannot both win: exactly one request's claim matches a row; the loser
+        // observes "not claimed" and is routed to the breach path. The successor row
+        // is only persisted AFTER the claim succeeds, so a lost race never leaves an
+        // orphaned active successor.
         var successorRawToken = GenerateRawToken();
         var now = DateTime.UtcNow;
 
-        storedToken.RevokedAt = now;
-        storedToken.ReplacedByTokenHash = Hash(successorRawToken);
+        if (!await TryClaimActiveTokenAsync(storedToken, now, Hash(successorRawToken)))
+        {
+            // Lost the race or revoked between fetch and claim: assume theft and revoke
+            // every still-active token of the account.
+            await RevokeAllActiveTokensAsync(storedToken.AccountId);
+            return RotateResult.Failed(RotateResult.ReuseDetectedReason);
+        }
 
         _context.RefreshTokens.Add(new RefreshToken
         {
@@ -90,14 +96,55 @@ public class EfRefreshTokenPort : IRefreshTokenPort
             ExpiresAt = now.AddDays(GetRefreshTokenDays()),
             CreatedAt = now
         });
-
         await _context.SaveChangesAsync();
+
         return RotateResult.Successful(storedToken.AccountId, successorRawToken);
     }
 
     public async Task RevokeAllForAccountAsync(int accountId)
     {
         await RevokeAllActiveTokensAsync(accountId);
+    }
+
+    /// <summary>
+    /// Atomically claims a still-active refresh token by revoking it and linking it to
+    /// its successor's hash. Returns false when the token was already consumed — the
+    /// caller must then treat this as reuse of a revoked token.
+    /// </summary>
+    private async Task<bool> TryClaimActiveTokenAsync(RefreshToken storedToken, DateTime now, string successorHash)
+    {
+        if (_context.Database.IsRelational())
+        {
+            // Relational providers translate this into a single atomic UPDATE with the
+            // predicate evaluated at the database, making concurrent rotations of the
+            // same token mutually exclusive.
+            var claimed = await _context.RefreshTokens
+                .Where(active => active.Id == storedToken.Id && active.RevokedAt == null)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(active => active.RevokedAt, now)
+                    .SetProperty(active => active.ReplacedByTokenHash, successorHash));
+
+            return claimed == 1;
+        }
+
+        // Non-relational providers (the EF InMemory database used by unit tests) cannot
+        // execute set-based updates. Emulate the same conditional claim with a fresh
+        // no-tracking read so the predicate is always evaluated against persisted state,
+        // never against possibly stale tracked copies; the tracked instance is mutated
+        // and persisted together with the successor row.
+        var stillActive = await _context.RefreshTokens
+            .AsNoTracking()
+            .Where(active => active.Id == storedToken.Id && active.RevokedAt == null)
+            .AnyAsync();
+
+        if (!stillActive)
+        {
+            return false;
+        }
+
+        storedToken.RevokedAt = now;
+        storedToken.ReplacedByTokenHash = successorHash;
+        return true;
     }
 
     private async Task RevokeAllActiveTokensAsync(int accountId)

@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
@@ -168,7 +169,7 @@ public class EfRefreshTokenPortTests
         context.ChangeTracker.Clear();
 
         Assert.False(replayResult.Success);
-        Assert.NotEmpty(replayResult.FailureReason);
+        Assert.Equal(RotateResult.ReuseDetectedReason, replayResult.FailureReason);
 
         var remainingActive = await context.RefreshTokens
             .Where(t => t.AccountId == 1 && t.RevokedAt == null)
@@ -179,6 +180,50 @@ public class EfRefreshTokenPortTests
         Assert.NotNull(siblingRow.RevokedAt);
         var successorRow = await context.RefreshTokens.SingleAsync(t => t.TokenHash == HashOf(rotated.NewRawToken!));
         Assert.NotNull(successorRow.RevokedAt);
+    }
+
+    [Fact]
+    public async Task RotateAsync_ClaimLostToConcurrentRotation_FailsRevokesFamilyAndPersistsNoOrphanSuccessor()
+    {
+        // Shared InMemory store across two contexts simulates two concurrent requests:
+        // the port's context keeps a stale tracked copy of the token while another
+        // request's rotation has already consumed it at store level.
+        var options = new DbContextOptionsBuilder<KoiFengShuiContext>()
+            .UseInMemoryDatabase($"RefreshTokenRaceDb_{Guid.NewGuid()}")
+            .Options;
+
+        var seedContext = new KoiFengShuiContext(options);
+        seedContext.Accounts.Add(new Account
+        {
+            AccountId = 1,
+            FullName = "User 1",
+            Email = "user1@test.com",
+            Password = "$2$hashed",
+            CreateAt = DateTime.Now,
+            UpdateAt = DateTime.Now,
+            RoleId = 2
+        });
+        await seedContext.SaveChangesAsync();
+
+        var context = new KoiFengShuiContext(options);
+        var port = CreatePort(context);
+        var rawToken = await port.CreateForAccountAsync(1);
+
+        var concurrentRequestContext = new KoiFengShuiContext(options);
+        var consumedRow = await concurrentRequestContext.RefreshTokens
+            .SingleAsync(rt => rt.TokenHash == HashOf(rawToken));
+        consumedRow.RevokedAt = DateTime.UtcNow;
+        await concurrentRequestContext.SaveChangesAsync();
+
+        var replayResult = await port.RotateAsync(rawToken);
+
+        Assert.False(replayResult.Success);
+        Assert.Equal(RotateResult.ReuseDetectedReason, replayResult.FailureReason);
+
+        context.ChangeTracker.Clear();
+        var rows = await context.RefreshTokens.ToListAsync();
+        Assert.Single(rows); // no orphaned successor row may survive a lost claim
+        Assert.All(rows, row => Assert.NotNull(row.RevokedAt));
     }
 
     // --- RotateAsync: rejection paths ---
