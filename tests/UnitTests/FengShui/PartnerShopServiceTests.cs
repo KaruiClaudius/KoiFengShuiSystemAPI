@@ -112,6 +112,57 @@ namespace UnitTests.FengShui
         }
 
         [Fact]
+        public async Task CreateAsync_FtpLinkUrl_ThrowsArgumentException()
+        {
+            var service = CreateService();
+            var request = CreateValidRequest();
+            request.LinkUrl = "ftp://files.example.com/koi";
+
+            await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(request));
+            _storeMock.Verify(s => s.AddAsync(It.IsAny<PartnerShop>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateAsync_NullRequest_ThrowsArgumentNullException()
+        {
+            var service = CreateService();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() => service.CreateAsync(null!));
+        }
+
+        [Fact]
+        public async Task UpdateAsync_NullRequest_ThrowsArgumentNullException()
+        {
+            var service = CreateService();
+
+            await Assert.ThrowsAsync<ArgumentNullException>(() => service.UpdateAsync(1, null!));
+        }
+
+        [Fact]
+        public async Task UpdateAsync_DeactivatedShop_IsExcludedFromActiveList()
+        {
+            var shops = new List<PartnerShop> { CreateEntity(5, isActive: true) };
+            _storeMock
+                .Setup(s => s.GetByIdAsync(5))
+                .ReturnsAsync(() => shops.Single(s => s.Id == 5));
+            _storeMock
+                .Setup(s => s.UpdateAsync(It.IsAny<PartnerShop>()))
+                .Returns(Task.CompletedTask);
+            _storeMock
+                .Setup(s => s.GetActiveAsync())
+                .ReturnsAsync(() => shops.Where(s => s.IsActive).ToList() as IReadOnlyList<PartnerShop>);
+
+            var service = CreateService();
+            var request = CreateValidRequest(isActive: false);
+
+            await service.UpdateAsync(5, request);
+
+            var active = await service.GetActiveAsync();
+
+            Assert.DoesNotContain(active, response => response.Id == 5);
+        }
+
+        [Fact]
         public async Task GetActiveAsync_FiltersInactiveShopsAndMapsResponses()
         {
             var active = CreateEntity(1);
@@ -146,7 +197,7 @@ namespace UnitTests.FengShui
             Assert.Equal(7, result.Id);
             Assert.Equal(entity.Name, result.Name);
             Assert.Equal(entity.Note, result.Note);
-            Assert.False(result.IsActive == false && entity.IsActive);
+            Assert.Equal(entity.IsActive, result.IsActive);
         }
 
         [Fact]

@@ -37,13 +37,9 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 
             var shop = new PartnerShop
             {
-                Name = request.Name,
-                Address = request.Address,
-                LinkUrl = request.LinkUrl,
-                Note = request.Note,
-                IsActive = request.IsActive,
                 CreatedAt = DateTime.UtcNow
             };
+            ApplyRequest(shop, request);
 
             var added = await _store.AddAsync(shop);
             return ToResponse(added);
@@ -59,11 +55,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
                 throw new KeyNotFoundException($"Partner shop not found. Id: {id}");
             }
 
-            shop.Name = request.Name;
-            shop.Address = request.Address;
-            shop.LinkUrl = request.LinkUrl;
-            shop.Note = request.Note;
-            shop.IsActive = request.IsActive;
+            ApplyRequest(shop, request);
 
             await _store.UpdateAsync(shop);
         }
@@ -71,24 +63,33 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
         public Task<bool> DeleteAsync(int id)
             => _store.DeleteAsync(id);
 
+        private static void ApplyRequest(PartnerShop shop, PartnerShopRequest request)
+        {
+            shop.Name = request.Name;
+            shop.Address = request.Address;
+            shop.LinkUrl = request.LinkUrl;
+            shop.Note = request.Note;
+            shop.IsActive = request.IsActive;
+        }
+
         private static void ValidateRequest(PartnerShopRequest request)
         {
             ArgumentNullException.ThrowIfNull(request);
 
             if (string.IsNullOrWhiteSpace(request.Name))
             {
-                throw new ArgumentException("Name is required", nameof(request));
+                throw new ArgumentException("Name is required", nameof(request.Name));
             }
 
             if (string.IsNullOrWhiteSpace(request.LinkUrl))
             {
-                throw new ArgumentException("LinkUrl is required", nameof(request));
+                throw new ArgumentException("LinkUrl is required", nameof(request.LinkUrl));
             }
 
             if (!Uri.TryCreate(request.LinkUrl, UriKind.Absolute, out var uri) ||
                 (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             {
-                throw new ArgumentException("LinkUrl must be a valid absolute HTTP(S) URL", nameof(request));
+                throw new ArgumentException("LinkUrl must be a valid absolute HTTP(S) URL", nameof(request.LinkUrl));
             }
         }
 

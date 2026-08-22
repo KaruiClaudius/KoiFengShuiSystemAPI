@@ -32,6 +32,10 @@ namespace KoiFengShuiSystem.Modules.FengShui.Infrastructure.Persistence
             return shop;
         }
 
+        // Full-replace semantics for detached instances: GetByIdAsync reads with AsNoTracking, so the
+        // service mutates an entity that is not tracked by this context. Update() re-attaches it and
+        // marks every property modified, which is safe today because PartnerShopRequest covers all
+        // mutable columns and CreatedAt is intentionally preserved from the fetched (immutable) value.
         public async Task UpdateAsync(PartnerShop shop)
         {
             _context.PartnerShops.Update(shop);
@@ -40,15 +44,10 @@ namespace KoiFengShuiSystem.Modules.FengShui.Infrastructure.Persistence
 
         public async Task<bool> DeleteAsync(int id)
         {
-            var shop = await _context.PartnerShops.FirstOrDefaultAsync(s => s.Id == id);
-            if (shop == null)
-            {
-                return false;
-            }
-
-            _context.PartnerShops.Remove(shop);
-            await _context.SaveChangesAsync();
-            return true;
+            var affected = await _context.PartnerShops
+                .Where(s => s.Id == id)
+                .ExecuteDeleteAsync();
+            return affected > 0;
         }
     }
 }

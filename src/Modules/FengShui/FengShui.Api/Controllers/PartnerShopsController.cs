@@ -9,6 +9,9 @@ namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
     [Route("api/partner-shops")]
     public class PartnerShopsController : Controller
     {
+        // RoleId minted into the JWT by Identity's JwtTokenService (ClaimTypes.Role = account.RoleId); 1 = admin.
+        private const string AdminRole = "1";
+
         private readonly IPartnerShopService _partnerShopService;
 
         public PartnerShopsController(IPartnerShopService partnerShopService)
@@ -37,7 +40,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
             }
         }
 
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = AdminRole)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PartnerShopRequest request)
         {
@@ -57,7 +60,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
             }
         }
 
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = AdminRole)]
         [HttpPut("{id:int}")]
         public async Task<IActionResult> Update(int id, [FromBody] PartnerShopRequest request)
         {
@@ -81,7 +84,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
             }
         }
 
-        [Authorize(Roles = "1")]
+        [Authorize(Roles = AdminRole)]
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
