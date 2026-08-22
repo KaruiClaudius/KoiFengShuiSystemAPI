@@ -4,13 +4,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.Shared.Kernel.Security;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
     [ApiController]
+    [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
     [Route("api/[controller]")]
     public class AdminPostController : ControllerBase
     {

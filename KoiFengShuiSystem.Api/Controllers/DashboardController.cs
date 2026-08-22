@@ -1,4 +1,6 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.Shared.Kernel.Security;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
@@ -6,14 +8,20 @@ using System.Threading.Tasks;
 namespace KoiFengShuiSystem.API.Controllers
 {
     [ApiController]
+    [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
     [Route("api/[controller]")]
     public class DashboardController : ControllerBase
     {
-        private readonly IDashboardService _dashboardService;
+        private const string GenericErrorMessage = "An error occurred while processing your request.";
+        private const string InvalidDaysMessage = "Days must be a positive integer.";
 
-        public DashboardController(IDashboardService dashboardService)
+        private readonly IDashboardService _dashboardService;
+        private readonly ILogger<DashboardController> _logger;
+
+        public DashboardController(IDashboardService dashboardService, ILogger<DashboardController> logger)
         {
             _dashboardService = dashboardService;
+            _logger = logger;
         }
 
         [HttpGet("new-users-count")]
@@ -24,14 +32,14 @@ namespace KoiFengShuiSystem.API.Controllers
                 var count = await _dashboardService.CountNewUsersAsync(days);
                 return Ok(new { Count = count });
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(InvalidDaysMessage);
             }
             catch (Exception ex)
             {
-                // Log the exception
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                _logger.LogError(ex, "Dashboard new-users-count failed for days={Days}", days);
+                return StatusCode(500, GenericErrorMessage);
             }
         }
 
@@ -43,14 +51,14 @@ namespace KoiFengShuiSystem.API.Controllers
                 var users = await _dashboardService.ListNewUsersAsync(days);
                 return Ok(users);
             }
-            catch (ArgumentException ex)
+            catch (ArgumentException)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(InvalidDaysMessage);
             }
             catch (Exception ex)
             {
-                // Log the exception
-                return StatusCode(500, $"An error occurred: {ex.Message}");
+                _logger.LogError(ex, "Dashboard new-users-list failed for days={Days}", days);
+                return StatusCode(500, GenericErrorMessage);
             }
         }
 
@@ -63,6 +71,16 @@ namespace KoiFengShuiSystem.API.Controllers
                 var uniqueGuests = await _dashboardService.GetUniqueGuestsTrafficCount();
 
                 var total = registeredUsers + uniqueGuests;
+                if (total == 0)
+                {
+                    return Ok(new
+                    {
+                        RegisteredUsers = 0d,
+                        UniqueGuests = 0d,
+                        TotalVisitors = 0
+                    });
+                }
+
                 var registeredPercentage = (double)registeredUsers / total * 100;
                 var uniqueGuestsPercentage = (double)uniqueGuests / total * 100;
 
@@ -75,8 +93,8 @@ namespace KoiFengShuiSystem.API.Controllers
             }
             catch (Exception ex)
             {
-                // Log the exception
-                return StatusCode(500, "An error occurred while processing your request.");
+                _logger.LogError(ex, "Dashboard traffic-distribution failed");
+                return StatusCode(500, GenericErrorMessage);
             }
         }
     }

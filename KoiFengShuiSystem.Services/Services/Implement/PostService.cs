@@ -4,16 +4,27 @@ using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
+using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
+using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.EntityFrameworkCore;
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class PostService : IPostService
     {
-        private readonly UnitOfWorkRepository _unitOfWork;
+        /// <summary>
+        /// Server-assigned status for member-created posts; admins promote them
+        /// through AdminPost management. Never accepted from the client.
+        /// </summary>
+        public const string MemberPostDefaultStatus = "Pending";
 
-        public PostService(UnitOfWorkRepository unitOfWork)
+        private readonly UnitOfWorkRepository _unitOfWork;
+        private readonly KoiFengShuiContext _context;
+
+        public PostService(UnitOfWorkRepository unitOfWork, KoiFengShuiContext context)
         {
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         public async Task<IBusinessResult> GetAll()
@@ -122,25 +133,57 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
 
 
-        public async Task<IBusinessResult> CreatePost(Post post)
+        public async Task<IBusinessResult> CreatePost(CreatePostRequest request, int authorAccountId)
         {
             try
             {
-                var entityInDb = await _unitOfWork.PostRepository.GetByIdAsync(post.PostId);
-
-                // If Post already exists, return an error indicating duplicate Post
-                if (entityInDb != null)
+                var categoryExists = await _context.PostCategories.AnyAsync(c => c.Id == request.CategoryId);
+                if (!categoryExists)
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, "Post already exists. Cannot create a new Post with the same ID.");
+                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, "The provided CategoryId does not exist.");
                 }
 
-                // If Post doesn't exist, create a new one
+                var postImages = new List<PostImage>();
+                if (request.ImageIds is { Count: > 0 })
+                {
+                    var distinctImageIds = request.ImageIds.Distinct().ToList();
+                    var images = await _unitOfWork.ImageRepository.GetAllAsync(i => distinctImageIds.Contains(i.ImageId));
+                    if (images.Count != distinctImageIds.Count)
+                    {
+                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, "One or more of the provided ImageIds do not exist.");
+                    }
+
+                    postImages.AddRange(images.Select(image => new PostImage
+                    {
+                        ImageId = image.ImageId,
+                        ImageDescription = "Member upload"
+                    }));
+                }
+
+                // Explicit mapping: everything not present on CreatePostRequest is
+                // server-owned (Status, timestamps, identity, author) and can never
+                // be mass-assigned by a client.
+                var post = new Post
+                {
+                    Name = request.Title,
+                    Description = request.Content,
+                    Id = request.CategoryId,
+                    AccountId = authorAccountId,
+                    Status = MemberPostDefaultStatus,
+                    CreateAt = DateTime.UtcNow,
+                    UpdateAt = DateTime.UtcNow,
+                };
+                foreach (var postImage in postImages)
+                {
+                    post.PostImages.Add(postImage);
+                }
+
                 await _unitOfWork.PostRepository.CreateAsync(post);
                 return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                return new BusinessResult(-4, ex.Message);
+                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to create post.");
             }
         }
 

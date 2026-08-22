@@ -4,8 +4,10 @@ using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Shared.Kernel.Security;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -52,8 +54,14 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
         [HttpPost("Create")]
+        [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
         public async Task<IActionResult> CreateAsync([FromBody] FAQRequest faqRequest)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var faqResponse = await _faqService.CreateFAQAsync(faqRequest);
             if (faqResponse == null)
             {
@@ -63,8 +71,14 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
         [HttpPut("Update/{id}")]
+        [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
         public async Task<IActionResult> Update(int id, [FromBody] FAQRequest faqRequest)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             var faqResponse = await _faqService.UpdateFAQAsync(id, faqRequest);
             if (faqResponse == null)
             {
@@ -74,6 +88,7 @@ namespace KoiFengShuiSystem.Api.Controllers
         }
 
         [HttpDelete("Delete/{id}")]
+        [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
         public async Task<IActionResult> Delete(int id)
         {
             var faqResponse = await _faqService.DeleteFAQAsync(id);

@@ -4,6 +4,7 @@ using KoiFengShuiSystem.Shared.Kernel.Results;
 using KoiFengShuiSystem.Common;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +12,7 @@ namespace KoiFengShuiSystem.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class UploadImageController : ControllerBase
     {
         private readonly ICloudService _cloudService;

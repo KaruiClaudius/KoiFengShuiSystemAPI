@@ -74,19 +74,16 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
             var newImageUrls = imageUrls.Except(existingImageUrls).ToList();
             foreach (var imageUrl in newImageUrls)
             {
-                var newImage = new Image { ImageUrl = imageUrl };
-                _context.Images.Add(newImage);
-                await _context.SaveChangesAsync();
-
                 var postImage = new PostImage
                 {
                     PostId = post.PostId,
-                    ImageId = newImage.ImageId,
+                    Image = new Image { ImageUrl = imageUrl },
                     ImageDescription = "Default description"
                 };
                 _context.PostImages.Add(postImage);
             }
 
+            // Single batched save for all image + link inserts.
             await _context.SaveChangesAsync();
 
             return await GetAdminPostByIdAsync(post.PostId);
@@ -116,19 +113,14 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                    ElementId = adminPostRequest.ElementId
                 };
 
-                _context.Posts.Add(post);
-                await _context.SaveChangesAsync();
-                //image
+                // Queue the post plus all image/link inserts, then persist them in ONE batched save.
+                // Navigation assignments let EF propagate generated PostId/ImageId keys.
                 foreach (var imageUrl in imageUrls)
                 {
-                    var newImage = new Image { ImageUrl = imageUrl };
-                    _context.Images.Add(newImage);
-                    await _context.SaveChangesAsync();
-
                     var postImage = new PostImage
                     {
-                        PostId = post.PostId,
-                        ImageId = newImage.ImageId,
+                        Post = post,
+                        Image = new Image { ImageUrl = imageUrl },
                         ImageDescription = "Default description"//auto set postimage ImageDescription
                     };
                     _context.PostImages.Add(postImage);
