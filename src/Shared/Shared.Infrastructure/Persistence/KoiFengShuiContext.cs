@@ -26,6 +26,7 @@ public class KoiFengShuiContext : DbContext
     public virtual DbSet<Follow> Follows { get; set; }
     public virtual DbSet<Image> Images { get; set; }
     public virtual DbSet<KoiBreed> KoiBreeds { get; set; }
+    public virtual DbSet<PartnerShop> PartnerShops { get; set; }
     public virtual DbSet<Post> Posts { get; set; }
     public virtual DbSet<PostCategory> PostCategories { get; set; }
     public virtual DbSet<PostImage> PostImages { get; set; }

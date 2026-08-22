@@ -12,9 +12,11 @@ namespace KoiFengShuiSystem.Modules.FengShui.Infrastructure
         public void AddServices(IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<IFengShuiReadStore, EfFengShuiReadStore>();
+            services.AddScoped<IPartnerShopStore, EfPartnerShopStore>();
             services.AddScoped<ICompatibilityService, CompatibilityService>();
             services.AddScoped<IConsultationService, ConsultationService>();
             services.AddScoped<IElementService, ElementService>();
+            services.AddScoped<IPartnerShopService, PartnerShopService>();
         }
     }
 }

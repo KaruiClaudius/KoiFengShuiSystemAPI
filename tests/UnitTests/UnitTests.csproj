@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\Host\Host.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
     <ProjectReference Include="..\..\src\Modules\FengShui\FengShui.Domain\FengShui.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\FengShui\FengShui.Application\FengShui.Application.csproj" />
     <ProjectReference Include="..\..\src\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
     <ProjectReference Include="..\..\src\Shared\Shared.Kernel\Shared.Kernel.csproj" />
   </ItemGroup>
