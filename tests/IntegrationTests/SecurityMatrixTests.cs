@@ -143,6 +143,75 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    // --- Identity account management: admin-only surface ---
+
+    [Fact]
+    public async Task Anonymous_Request_ToAccountGetAll_IsUnauthorized()
+    {
+        using var client = NewClient();
+
+        var response = await client.GetAsync("/api/Account");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Member_Token_IsForbidden_OnAccountGetAll()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2);
+
+        var response = await client.GetAsync("/api/Account");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_Token_CanListAccounts()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 1);
+
+        var response = await client.GetAsync("/api/Account");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Member_Token_IsForbidden_OnAccountDelete()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2);
+
+        var response = await client.DeleteAsync("/api/Account/999999");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Member_Token_IsForbidden_OnAccountGetByEmail()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2);
+
+        var response = await client.GetAsync("/api/Account/email/other@test.local");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    // --- Identity account management: self-service ownership guard ---
+
+    [Fact]
+    public async Task Member_Token_IsForbidden_OnUpdatingOtherAccounts()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2); // mints AccountId 102
+
+        var response = await client.PutAsJsonAsync("/api/Account/101", new { });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     public static TheoryData<string> PublicReadEndpoints => new()
     {
         "/api/FAQ/GetAll",

@@ -1,6 +1,9 @@
-using KoiFengShuiSystem.Api.Authorization;
+using System.Security.Claims;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
+using KoiFengShuiSystem.Shared.Kernel.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using IdentityAccountService = KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService;
@@ -21,6 +24,7 @@ public class AccountController : Controller
         _logger = logger;
     }
 
+    [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -32,6 +36,12 @@ public class AccountController : Controller
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
+        var forbidden = EnsureAccessToOwnAccount(id);
+        if (forbidden != null)
+        {
+            return forbidden;
+        }
+
         var account = await _accountService.GetByIdAsync(id);
         return account == null ? NotFound() : Ok(account);
     }
@@ -40,6 +50,12 @@ public class AccountController : Controller
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateRequest model)
     {
+        var forbidden = EnsureAccessToOwnAccount(id);
+        if (forbidden != null)
+        {
+            return forbidden;
+        }
+
         try
         {
             await _accountService.UpdateAsync(id, model);
@@ -51,7 +67,7 @@ public class AccountController : Controller
         }
     }
 
-    [Authorize]
+    [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -66,6 +82,7 @@ public class AccountController : Controller
         }
     }
 
+    [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
     [HttpGet("email/{email}")]
     public async Task<IActionResult> GetByEmail(string email)
     {
@@ -89,6 +106,12 @@ public class AccountController : Controller
     [HttpPut("{id}/change-password")]
     public async Task<IActionResult> ChangePassword(int id, [FromBody] ChangePasswordRequest model)
     {
+        var forbidden = EnsureAccessToOwnAccount(id);
+        if (forbidden != null)
+        {
+            return forbidden;
+        }
+
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
@@ -113,5 +136,28 @@ public class AccountController : Controller
             _logger.LogError(ex, "Error changing password for account {AccountId}", id);
             return StatusCode(500, new { message = "An unexpected error occurred while changing the password" });
         }
+    }
+
+    /// <summary>
+    /// Self-service guard: members may only act on their own account; admins bypass.
+    /// Returns 403 when the bearer principal does not own the routed account id.
+    /// </summary>
+    private IActionResult? EnsureAccessToOwnAccount(int id)
+    {
+        if (User.IsInRole(AuthorizationDefaults.Roles.Admin))
+        {
+            return null;
+        }
+
+        var accountId = ResolveAccountId(User);
+        return accountId.HasValue && accountId.Value == id ? null : StatusCode(StatusCodes.Status403Forbidden);
+    }
+
+    private static int? ResolveAccountId(ClaimsPrincipal user)
+    {
+        var value = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? user.FindFirst("id")?.Value;
+
+        return int.TryParse(value, out var accountId) ? accountId : null;
     }
 }

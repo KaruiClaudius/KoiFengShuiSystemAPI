@@ -1,7 +1,10 @@
+using System.Security.Claims;
 using KoiFengShuiSystem.Modules.Identity.Api.Controllers;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
+using KoiFengShuiSystem.Shared.Kernel.Security;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,7 +20,7 @@ public class AccountControllerTests
         var accountService = new Mock<IAccountService>(MockBehavior.Strict);
         accountService.Setup(service => service.GetAllAsync()).ReturnsAsync(accounts);
 
-        var controller = new AccountController(accountService.Object, Mock.Of<ILogger<KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService>>());
+        var controller = CreateController(accountService.Object, accountId: 101, role: AuthorizationDefaults.Roles.Admin);
 
         var result = await controller.GetAll();
 
@@ -31,7 +34,7 @@ public class AccountControllerTests
         var accountService = new Mock<IAccountService>(MockBehavior.Strict);
         accountService.Setup(service => service.GetByIdAsync(42)).ReturnsAsync((Account?)null);
 
-        var controller = new AccountController(accountService.Object, Mock.Of<ILogger<KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService>>());
+        var controller = CreateController(accountService.Object, accountId: 101, role: AuthorizationDefaults.Roles.Admin);
 
         var result = await controller.GetById(42);
 
@@ -46,7 +49,7 @@ public class AccountControllerTests
             .Setup(service => service.UpdateAsync(7, It.IsAny<UpdateRequest>()))
             .Returns(Task.FromException(new ApplicationException("boom")));
 
-        var controller = new AccountController(accountService.Object, Mock.Of<ILogger<KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService>>());
+        var controller = CreateController(accountService.Object, accountId: 101, role: AuthorizationDefaults.Roles.Admin);
 
         var result = await controller.Update(7, new UpdateRequest());
 
@@ -62,11 +65,65 @@ public class AccountControllerTests
             .Setup(service => service.DeleteAsync(7))
             .Returns(Task.FromException(new ApplicationException("boom")));
 
-        var controller = new AccountController(accountService.Object, Mock.Of<ILogger<KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService>>());
+        var controller = CreateController(accountService.Object, accountId: 101, role: AuthorizationDefaults.Roles.Admin);
 
         var result = await controller.Delete(7);
 
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("boom", badRequest.Value?.GetType().GetProperty("message")?.GetValue(badRequest.Value));
+    }
+
+    [Fact]
+    public async Task SelfService_WhenMemberTargetsForeignAccount_IsForbiddenWithoutServiceCall()
+    {
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+
+        var controller = CreateController(accountService.Object, accountId: 102, role: AuthorizationDefaults.Roles.Member);
+
+        var result = await controller.Update(101, new UpdateRequest());
+
+        var forbidden = Assert.IsType<StatusCodeResult>(result);
+        Assert.Equal(StatusCodes.Status403Forbidden, forbidden.StatusCode);
+        accountService.Verify(service => service.UpdateAsync(It.IsAny<int>(), It.IsAny<UpdateRequest>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SelfService_WhenMemberTargetsOwnAccount_ReachesService()
+    {
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        accountService
+            .Setup(service => service.UpdateAsync(102, It.IsAny<UpdateRequest>()))
+            .Returns(Task.CompletedTask);
+
+        var controller = CreateController(accountService.Object, accountId: 102, role: AuthorizationDefaults.Roles.Member);
+
+        var result = await controller.Update(102, new UpdateRequest());
+
+        Assert.IsType<OkObjectResult>(result);
+        accountService.Verify(service => service.UpdateAsync(102, It.IsAny<UpdateRequest>()), Times.Once);
+    }
+
+    private static AccountController CreateController(
+        IAccountService accountService,
+        int accountId,
+        string role)
+    {
+        var controller = new AccountController(
+            accountService,
+            Mock.Of<ILogger<KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService>>());
+
+        var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, accountId.ToString()),
+            new Claim("id", accountId.ToString()),
+            new Claim(ClaimTypes.Role, role)
+        }, "TestAuthentication"));
+
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = user }
+        };
+
+        return controller;
     }
 }
