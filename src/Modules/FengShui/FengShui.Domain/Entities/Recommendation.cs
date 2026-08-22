@@ -1,5 +1,3 @@
-using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
-
 namespace KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 
 public class Recommendation
@@ -13,8 +11,6 @@ public class Recommendation
     public int PondId { get; set; }
 
     public DateTime CreatedAt { get; set; }
-
-    public virtual Account Account { get; set; } = null!;
 
     public virtual KoiBreed Breed { get; set; } = null!;
 

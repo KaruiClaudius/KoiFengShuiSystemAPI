@@ -4,6 +4,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Shared\Shared.Kernel\Shared.Kernel.csproj" />
-    <ProjectReference Include="..\..\Identity\Identity.Domain\Identity.Domain.csproj" />
   </ItemGroup>
 </Project>

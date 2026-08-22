@@ -1,5 +1,6 @@
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,7 +10,7 @@ public class RecommendationConfiguration : IEntityTypeConfiguration<Recommendati
 {
     public void Configure(EntityTypeBuilder<Recommendation> builder)
     {
-        builder.HasOne(d => d.Account)
+        builder.HasOne<Account>()
             .WithMany()
             .HasForeignKey(d => d.AccountId)
             .OnDelete(DeleteBehavior.Restrict);

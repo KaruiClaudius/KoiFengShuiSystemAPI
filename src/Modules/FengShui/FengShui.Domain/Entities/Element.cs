@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 
 namespace KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 
@@ -20,8 +19,6 @@ public class Element
     [Required]
     [MaxLength(50)]
     public string LuckyNumber { get; set; } = string.Empty;
-
-    public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 
     public virtual ICollection<FengShuiDirection> FengShuiDirections { get; set; } = new List<FengShuiDirection>();
 
