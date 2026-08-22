@@ -31,6 +31,7 @@ public class KoiFengShuiContext : DbContext
     public virtual DbSet<PostCategory> PostCategories { get; set; }
     public virtual DbSet<PostImage> PostImages { get; set; }
     public virtual DbSet<Recommendation> Recommendations { get; set; }
+    public virtual DbSet<RefreshToken> RefreshTokens { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
     public virtual DbSet<ShapeCategory> ShapeCategories { get; set; }
     public virtual DbSet<TrafficLog> TrafficLogs { get; set; }

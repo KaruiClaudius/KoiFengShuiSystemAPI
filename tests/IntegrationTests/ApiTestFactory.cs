@@ -20,6 +20,10 @@ public class ApiTestFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:DefaultConnection"] = "Server=.;Database=TestDb;Trusted_Connection=true;TrustServerCertificate=true;",
                 ["AppSettings:Secret"] = "test-secret-key-that-is-at-least-32-bytes-long-for-hmac",
+                ["AppSettings:Issuer"] = "KoiFengShuiSystem",
+                ["AppSettings:Audience"] = "KoiFengShuiSystemClients",
+                ["AppSettings:AccessTokenMinutes"] = "15",
+                ["AppSettings:RefreshTokenDays"] = "30",
                 ["CloundSettings:CloundName"] = "test-clound-name",
                 ["CloundSettings:CloundKey"] = "test-clound-key",
                 ["CloundSettings:CloundSecret"] = "test-clound-secret",

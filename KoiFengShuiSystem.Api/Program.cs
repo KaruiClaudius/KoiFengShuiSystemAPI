@@ -29,6 +29,9 @@ builder.Configuration.AddEnvironmentVariables();
 // Fail fast if placeholder credentials leaked into configuration outside development
 PlaceholderConfigurationGuard.Validate(builder.Configuration, builder.Environment.EnvironmentName);
 
+// Fail fast on a weak JWT signing secret in every environment
+PlaceholderConfigurationGuard.ValidateJwtSecret(builder.Configuration);
+
 // Authentication and Authorization
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -37,8 +40,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Secret"] ?? throw new Exception("Cannot find AppSettings:Secret"))),
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["AppSettings:Issuer"] ?? throw new Exception("Cannot find AppSettings:Issuer"),
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["AppSettings:Audience"] ?? throw new Exception("Cannot find AppSettings:Audience"),
+            ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
     });

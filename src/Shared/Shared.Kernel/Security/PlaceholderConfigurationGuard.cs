@@ -9,6 +9,30 @@ public static class PlaceholderConfigurationGuard
 
     private const string DevelopmentEnvironmentName = "Development";
 
+    public const string SecretConfigurationKey = "AppSettings:Secret";
+
+    private const int MinimumJwtSecretLength = 32;
+
+    /// <summary>
+    /// Enforces a minimum JWT signing-secret strength at startup. Unlike <see cref="Validate"/>,
+    /// this check applies in every environment: a weak HMAC key silently downgrades token
+    /// security even during local development, so it always fails fast.
+    /// </summary>
+    public static void ValidateJwtSecret(IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        var secret = configuration[SecretConfigurationKey];
+        if (!string.IsNullOrWhiteSpace(secret) && secret.Length >= MinimumJwtSecretLength)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Configuration key '{SecretConfigurationKey}' must be set to a non-empty value of at least {MinimumJwtSecretLength} characters. " +
+            "Supply a strong signing secret via user-secrets or environment variables before starting the application.");
+    }
+
     public static void Validate(IConfiguration configuration, string environmentName, ILogger? logger = null)
     {
         ArgumentNullException.ThrowIfNull(configuration);

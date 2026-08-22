@@ -29,6 +29,8 @@ public class IdentityApiContractTests : IClassFixture<IdentityApiContractTests.I
         Assert.True(paths.TryGetProperty("/api/Auth/SignUp", out _));
         Assert.True(paths.TryGetProperty("/api/Auth/ForgotPassword", out _));
         Assert.True(paths.TryGetProperty("/api/Auth/google-login", out _));
+        Assert.True(paths.TryGetProperty("/api/Auth/refresh", out _));
+        Assert.True(paths.TryGetProperty("/api/Auth/logout", out _));
         Assert.True(paths.TryGetProperty("/api/Account", out _));
         Assert.True(paths.TryGetProperty("/api/Account/{id}", out _));
         Assert.True(paths.TryGetProperty("/api/Account/email/{email}", out _));

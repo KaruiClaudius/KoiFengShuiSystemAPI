@@ -68,6 +68,50 @@ public class PlaceholderConfigurationGuardTests
             entry.Level == LogLevel.Warning && entry.Message.Contains("MailSettings:Smtp:Password"));
     }
 
+    // --- ValidateJwtSecret ---
+
+    [Fact]
+    public void ValidateJwtSecret_SecretShorterThan32Chars_ThrowsInvalidOperationException()
+    {
+        var configuration = BuildConfig(("AppSettings:Secret", "short-secret"));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateJwtSecret(configuration));
+
+        Assert.Contains("AppSettings:Secret", exception.Message);
+        Assert.Contains("32", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateJwtSecret_Exactly32CharSecret_Passes()
+    {
+        var configuration = BuildConfig(("AppSettings:Secret", new string('a', 32)));
+
+        PlaceholderConfigurationGuard.ValidateJwtSecret(configuration);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidateJwtSecret_MissingOrBlankSecret_ThrowsInvalidOperationException(string? secret)
+    {
+        var configuration = BuildConfig(("AppSettings:Secret", secret));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateJwtSecret(configuration));
+
+        Assert.Contains("AppSettings:Secret", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateJwtSecret_LongStrongSecret_Passes()
+    {
+        var configuration = BuildConfig(("AppSettings:Secret", "test-secret-key-that-is-at-least-32-bytes-long-for-hmac"));
+
+        PlaceholderConfigurationGuard.ValidateJwtSecret(configuration);
+    }
+
     private static IConfiguration BuildConfig(params (string Key, string? Value)[] settings) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(settings.Select(s => new KeyValuePair<string, string?>(s.Key, s.Value)))

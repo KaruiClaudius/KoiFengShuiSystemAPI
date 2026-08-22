@@ -11,6 +11,8 @@ namespace KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 
 public class JwtTokenService : IJwtTokenService
 {
+    private const int DefaultAccessTokenMinutes = 15;
+
     private readonly AppSettings _appSettings;
 
     public JwtTokenService(IOptions<AppSettings> appSettings)
@@ -23,6 +25,11 @@ public class JwtTokenService : IJwtTokenService
         }
     }
 
+    public int AccessTokenLifetimeMinutes => ResolveAccessTokenMinutes();
+
+    private int ResolveAccessTokenMinutes()
+        => _appSettings.AccessTokenMinutes is > 0 ? _appSettings.AccessTokenMinutes.Value : DefaultAccessTokenMinutes;
+
     public string GenerateJwtToken(Account account)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
@@ -33,13 +40,24 @@ public class JwtTokenService : IJwtTokenService
             {
                 new Claim("id", account.AccountId.ToString()),
                 new Claim(ClaimTypes.Email, account.Email!),
-                new Claim(ClaimTypes.Role, account.RoleId?.ToString() ?? string.Empty)
+                new Claim(ClaimTypes.Role, account.RoleId?.ToString() ?? string.Empty),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             }),
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = DateTime.UtcNow.AddMinutes(ResolveAccessTokenMinutes()),
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),
                 SecurityAlgorithms.HmacSha256Signature)
         };
+
+        if (!string.IsNullOrWhiteSpace(_appSettings.Issuer))
+        {
+            tokenDescriptor.Issuer = _appSettings.Issuer;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_appSettings.Audience))
+        {
+            tokenDescriptor.Audience = _appSettings.Audience;
+        }
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
         return tokenHandler.WriteToken(token);
@@ -61,8 +79,11 @@ public class JwtTokenService : IJwtTokenService
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = false,
-                ValidateAudience = false,
+                ValidateIssuer = !string.IsNullOrWhiteSpace(_appSettings.Issuer),
+                ValidIssuer = _appSettings.Issuer,
+                ValidateAudience = !string.IsNullOrWhiteSpace(_appSettings.Audience),
+                ValidAudience = _appSettings.Audience,
+                ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             }, out var validatedToken);
 

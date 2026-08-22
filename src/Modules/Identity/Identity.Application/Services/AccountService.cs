@@ -22,6 +22,7 @@ public class AccountService : IAccountService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordResetTokenProvider _passwordResetTokenProvider;
     private readonly IConfiguration _configuration;
+    private readonly IRefreshTokenPort _refreshTokenPort;
 
     public AccountService(
         IIdentityReadStore readStore,
@@ -32,7 +33,8 @@ public class AccountService : IAccountService
         IIdentityElementLookup elementLookup,
         IPasswordHasher passwordHasher,
         IPasswordResetTokenProvider passwordResetTokenProvider,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IRefreshTokenPort refreshTokenPort)
     {
         ArgumentNullException.ThrowIfNull(readStore);
         ArgumentNullException.ThrowIfNull(writeStore);
@@ -43,6 +45,7 @@ public class AccountService : IAccountService
         ArgumentNullException.ThrowIfNull(passwordHasher);
         ArgumentNullException.ThrowIfNull(passwordResetTokenProvider);
         ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(refreshTokenPort);
 
         _readStore = readStore;
         _writeStore = writeStore;
@@ -53,6 +56,7 @@ public class AccountService : IAccountService
         _passwordHasher = passwordHasher;
         _passwordResetTokenProvider = passwordResetTokenProvider;
         _configuration = configuration;
+        _refreshTokenPort = refreshTokenPort;
     }
 
     public async Task<AuthenticationResult> AuthenticateAsync(AuthenticateRequest model)
@@ -83,7 +87,12 @@ public class AccountService : IAccountService
         }
 
         var token = _jwtTokenService.GenerateJwtToken(account);
-        var response = new AuthenticateResponse(account, token);
+        var refreshToken = await _refreshTokenPort.CreateForAccountAsync(account.AccountId);
+        var response = new AuthenticateResponse(account, token)
+        {
+            RefreshToken = refreshToken,
+            ExpiresInMinutes = _jwtTokenService.AccessTokenLifetimeMinutes
+        };
 
         return new AuthenticationResult { Response = response };
     }
@@ -217,6 +226,10 @@ public class AccountService : IAccountService
 
         await _writeStore.UpdateAccountAsync(account);
         await _writeStore.SaveChangesAsync();
+
+        // A password reset invalidates every outstanding session of the account.
+        await _refreshTokenPort.RevokeAllForAccountAsync(account.AccountId);
+
         return true;
     }
 
@@ -308,6 +321,10 @@ public class AccountService : IAccountService
             account.Password = _passwordHasher.Hash(newPassword);
             await _writeStore.UpdateAccountAsync(account);
             await _writeStore.SaveChangesAsync();
+
+            // A password change invalidates every outstanding session of the account.
+            await _refreshTokenPort.RevokeAllForAccountAsync(accountId);
+
             return true;
         }
         catch (Exception ex)

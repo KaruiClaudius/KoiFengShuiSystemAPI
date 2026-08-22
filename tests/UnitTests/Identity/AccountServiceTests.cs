@@ -124,7 +124,8 @@ namespace UnitTests.Identity
             IIdentityElementLookup? elementLookup = null,
             IPasswordHasher? passwordHasher = null,
             IPasswordResetTokenProvider? passwordResetTokenProvider = null,
-            IConfiguration? configuration = null)
+            IConfiguration? configuration = null,
+            IRefreshTokenPort? refreshTokenPort = null)
         {
             var ctx = context ?? CreateContext();
             var jwt = jwtTokenService ?? Mock.Of<IJwtTokenService>(j => j.GenerateJwtToken(It.IsAny<AccountEntity>()) == "test-token");
@@ -139,6 +140,7 @@ namespace UnitTests.Identity
                 })
                 .Build();
             var logger = Mock.Of<ILogger<IdentityAccountService>>();
+            var port = refreshTokenPort ?? Mock.Of<IRefreshTokenPort>();
 
             return new IdentityAccountService(
                 new EfIdentityReadStore(ctx),
@@ -149,7 +151,8 @@ namespace UnitTests.Identity
                 lookup,
                 hasher,
                 tokenProvider,
-                config);
+                config,
+                port);
         }
 
         private static IConfiguration CreateConfiguration(string baseUrl)
@@ -172,6 +175,7 @@ namespace UnitTests.Identity
         [InlineData(6)]
         [InlineData(7)]
         [InlineData(8)]
+        [InlineData(9)]
         public void Constructor_NullDependency_ThrowsArgumentNullException(int nullDependencyIndex)
         {
             var ctx = CreateContext();
@@ -185,6 +189,7 @@ namespace UnitTests.Identity
             IPasswordHasher passwordHasher = new BcryptPasswordHasher();
             IPasswordResetTokenProvider tokenProvider = new SecurePasswordResetTokenProvider();
             IConfiguration configuration = CreateConfiguration("http://localhost:3000");
+            IRefreshTokenPort refreshTokenPort = Mock.Of<IRefreshTokenPort>();
 
             var ex = Assert.Throws<ArgumentNullException>(() => new IdentityAccountService(
                 nullDependencyIndex == 0 ? null! : readStore,
@@ -195,7 +200,8 @@ namespace UnitTests.Identity
                 nullDependencyIndex == 5 ? null! : elementLookup,
                 nullDependencyIndex == 6 ? null! : passwordHasher,
                 nullDependencyIndex == 7 ? null! : tokenProvider,
-                nullDependencyIndex == 8 ? null! : configuration));
+                nullDependencyIndex == 8 ? null! : configuration,
+                nullDependencyIndex == 9 ? null! : refreshTokenPort));
 
             Assert.NotNull(ex.ParamName);
         }
@@ -215,7 +221,8 @@ namespace UnitTests.Identity
                 new EfIdentityElementLookup(ctx),
                 new BcryptPasswordHasher(),
                 new SecurePasswordResetTokenProvider(),
-                CreateConfiguration("http://localhost:3000"));
+                CreateConfiguration("http://localhost:3000"),
+                Mock.Of<IRefreshTokenPort>());
 
             Assert.NotNull(service);
         }
@@ -345,6 +352,59 @@ namespace UnitTests.Identity
 
             Assert.False(result.Success);
             Assert.Equal("Incorrect password.", result.ErrorMessage);
+        }
+
+        // --- AuthenticateAsync: refresh-token issuance ---
+
+        [Fact]
+        public async Task AuthenticateAsync_ValidCredentials_ResponseIncludesRefreshTokenAndExpiresIn()
+        {
+            var context = CreateContextWithSeedData();
+            var jwtMock = new Mock<IJwtTokenService>();
+            jwtMock
+                .Setup(service => service.GenerateJwtToken(It.IsAny<AccountEntity>()))
+                .Returns("generated-jwt-token");
+            jwtMock.SetupGet(service => service.AccessTokenLifetimeMinutes).Returns(15);
+            var portMock = new Mock<IRefreshTokenPort>();
+            portMock.Setup(port => port.CreateForAccountAsync(1)).ReturnsAsync("raw-refresh-token");
+            var service = CreateService(context, jwtTokenService: jwtMock.Object, refreshTokenPort: portMock.Object);
+
+            var result = await service.AuthenticateAsync(new AuthenticateRequest { Email = "test@test.com", Password = "password123" });
+
+            Assert.True(result.Success);
+            Assert.Equal("generated-jwt-token", result.Response!.Token);
+            Assert.Equal("raw-refresh-token", result.Response.RefreshToken);
+            Assert.Equal(15, result.Response.ExpiresInMinutes);
+        }
+
+        [Fact]
+        public async Task AuthenticateAsync_ConfiguredAccessTokenLifetime_AdvertisesSameExpiresIn()
+        {
+            var context = CreateContextWithSeedData();
+            var jwtMock = new Mock<IJwtTokenService>();
+            jwtMock
+                .Setup(service => service.GenerateJwtToken(It.IsAny<AccountEntity>()))
+                .Returns("generated-jwt-token");
+            jwtMock.SetupGet(service => service.AccessTokenLifetimeMinutes).Returns(7);
+            var service = CreateService(context, jwtTokenService: jwtMock.Object);
+
+            var result = await service.AuthenticateAsync(new AuthenticateRequest { Email = "test@test.com", Password = "password123" });
+
+            Assert.True(result.Success);
+            Assert.Equal(7, result.Response!.ExpiresInMinutes);
+        }
+
+        [Fact]
+        public async Task AuthenticateAsync_FailedLogin_DoesNotCreateRefreshToken()
+        {
+            var context = CreateContextWithSeedData();
+            var portMock = new Mock<IRefreshTokenPort>();
+            var service = CreateService(context, refreshTokenPort: portMock.Object);
+
+            var result = await service.AuthenticateAsync(new AuthenticateRequest { Email = "test@test.com", Password = "wrong-password" });
+
+            Assert.False(result.Success);
+            portMock.Verify(port => port.CreateForAccountAsync(It.IsAny<int>()), Times.Never);
         }
 
         [Fact]
@@ -695,6 +755,34 @@ namespace UnitTests.Identity
                 service.ChangePasswordAsync(999, "old", "new"));
         }
 
+        // --- ChangePasswordAsync: refresh-token revocation ---
+
+        [Fact]
+        public async Task ChangePasswordAsync_SuccessfulChange_RevokesAllRefreshTokensForAccount()
+        {
+            var context = CreateContextWithSeedData();
+            var portMock = new Mock<IRefreshTokenPort>();
+            var service = CreateService(context, refreshTokenPort: portMock.Object);
+
+            var result = await service.ChangePasswordAsync(1, "password123", "newPassword456");
+
+            Assert.True(result);
+            portMock.Verify(port => port.RevokeAllForAccountAsync(1), Times.Once);
+        }
+
+        [Fact]
+        public async Task ChangePasswordAsync_WrongCurrentPassword_DoesNotRevokeRefreshTokens()
+        {
+            var context = CreateContextWithSeedData();
+            var portMock = new Mock<IRefreshTokenPort>();
+            var service = CreateService(context, refreshTokenPort: portMock.Object);
+
+            var result = await service.ChangePasswordAsync(1, "wrong-password", "newPassword456");
+
+            Assert.False(result);
+            portMock.Verify(port => port.RevokeAllForAccountAsync(It.IsAny<int>()), Times.Never);
+        }
+
         // --- CreateAsync ---
 
         [Fact]
@@ -900,6 +988,41 @@ namespace UnitTests.Identity
             Assert.False(await service.ResetPasswordAsync(new ResetPasswordRequest { Token = "", NewPassword = "validPass123" }));
             Assert.False(await service.ResetPasswordAsync(new ResetPasswordRequest { Token = "some-token", NewPassword = "" }));
             Assert.False(await service.ResetPasswordAsync(null!));
+        }
+
+        // --- ResetPasswordAsync: refresh-token revocation ---
+
+        [Fact]
+        public async Task ResetPasswordAsync_ValidToken_RevokesAllRefreshTokensForAccount()
+        {
+            var tokenProvider = new SecurePasswordResetTokenProvider();
+            var token = tokenProvider.Generate();
+
+            var context = CreateContextWithSeedData();
+            context.Accounts.First().ResetTokenHash = tokenProvider.Hash(token);
+            context.Accounts.First().ResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(10);
+            context.SaveChanges();
+            context.ChangeTracker.Clear();
+
+            var portMock = new Mock<IRefreshTokenPort>();
+            var service = CreateService(context, passwordResetTokenProvider: tokenProvider, refreshTokenPort: portMock.Object);
+
+            var result = await service.ResetPasswordAsync(new ResetPasswordRequest { Token = token, NewPassword = "brandNewPass123" });
+
+            Assert.True(result);
+            portMock.Verify(port => port.RevokeAllForAccountAsync(1), Times.Once);
+        }
+
+        [Fact]
+        public async Task ResetPasswordAsync_InvalidToken_DoesNotRevokeRefreshTokens()
+        {
+            var context = CreateContextWithSeedData();
+            var portMock = new Mock<IRefreshTokenPort>();
+            var service = CreateService(context, refreshTokenPort: portMock.Object);
+
+            await service.ResetPasswordAsync(new ResetPasswordRequest { Token = "unknown-token", NewPassword = "brandNewPass123" });
+
+            portMock.Verify(port => port.RevokeAllForAccountAsync(It.IsAny<int>()), Times.Never);
         }
 
         private static string? ExtractTokenFromResetLink(string link)

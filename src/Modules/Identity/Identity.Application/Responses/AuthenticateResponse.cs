@@ -12,6 +12,16 @@ public class AuthenticateResponse
 
     public string Token { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Opaque refresh token handed to the client exactly once; only its hash is stored server-side.
+    /// </summary>
+    public string? RefreshToken { get; set; }
+
+    /// <summary>
+    /// Access-token lifetime in minutes, advertised so clients can refresh proactively.
+    /// </summary>
+    public int ExpiresInMinutes { get; set; }
+
     public AuthenticateResponse(Account account, string token)
     {
         Id = account.AccountId;

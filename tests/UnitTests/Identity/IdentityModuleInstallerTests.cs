@@ -3,8 +3,7 @@ using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
-using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
-using Microsoft.Extensions.Configuration;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace UnitTests.Identity;
@@ -37,6 +36,9 @@ public class IdentityModuleInstallerTests
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IPasswordResetTokenProvider) &&
             descriptor.ImplementationType == typeof(SecurePasswordResetTokenProvider));
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(IRefreshTokenPort) &&
+            descriptor.ImplementationType == typeof(EfRefreshTokenPort));
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IIdentityEmailSender) &&
             descriptor.ImplementationType == typeof(LegacyIdentityEmailSender));

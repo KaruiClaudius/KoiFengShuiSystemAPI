@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text.Json;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
@@ -21,13 +22,20 @@ public class AuthController : ControllerBase
 {
     private readonly IAccountService _accountService;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IRefreshTokenPort _refreshTokenPort;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(IAccountService accountService, IJwtTokenService jwtTokenService, IHttpClientFactory httpClientFactory, ILogger<AuthController> logger)
+    public AuthController(
+        IAccountService accountService,
+        IJwtTokenService jwtTokenService,
+        IRefreshTokenPort refreshTokenPort,
+        IHttpClientFactory httpClientFactory,
+        ILogger<AuthController> logger)
     {
         _accountService = accountService;
         _jwtTokenService = jwtTokenService;
+        _refreshTokenPort = refreshTokenPort;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
@@ -43,12 +51,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = result.ErrorMessage });
         }
 
-        var response = result.Response;
-        return Ok(new
-        {
-            Token = response.Token,
-            Email = response.Email
-        });
+        return Ok(result.Response);
     }
 
     [AllowAnonymous]
@@ -174,12 +177,79 @@ public class AuthController : ControllerBase
             var token = _jwtTokenService.GenerateJwtToken(account);
             _logger.LogInformation("JWT token generated successfully.");
 
-            return Ok(new AuthenticateResponse(account, token));
+            var refreshToken = await _refreshTokenPort.CreateForAccountAsync(account.AccountId);
+
+            return Ok(new AuthenticateResponse(account, token)
+            {
+                RefreshToken = refreshToken,
+                ExpiresInMinutes = _jwtTokenService.AccessTokenLifetimeMinutes
+            });
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error during Google login");
             return StatusCode(500, "An unexpected error occurred");
         }
+    }
+
+    /// <summary>
+    /// Exchanges a valid refresh token for a new access/refresh pair. Reuse of an
+    /// already-consumed refresh token is rejected with 401 (and revokes the account's
+    /// remaining tokens inside the port).
+    /// </summary>
+    [AllowAnonymous]
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.RefreshToken))
+        {
+            return Unauthorized();
+        }
+
+        var rotation = await _refreshTokenPort.RotateAsync(request.RefreshToken);
+        if (!rotation.Success || rotation.AccountId is not { } accountId)
+        {
+            return Unauthorized();
+        }
+
+        var account = await _accountService.GetByIdAsync(accountId);
+        if (account == null)
+        {
+            return Unauthorized();
+        }
+
+        var accessToken = _jwtTokenService.GenerateJwtToken(account);
+
+        return Ok(new
+        {
+            token = accessToken,
+            refreshToken = rotation.NewRawToken,
+            expiresIn = _jwtTokenService.AccessTokenLifetimeMinutes
+        });
+    }
+
+    /// <summary>
+    /// Revokes every outstanding refresh token of the signed-in account.
+    /// </summary>
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        var accountId = ResolveAccountId(User);
+        if (accountId == null)
+        {
+            return Unauthorized();
+        }
+
+        await _refreshTokenPort.RevokeAllForAccountAsync(accountId.Value);
+
+        return NoContent();
+    }
+
+    private static int? ResolveAccountId(ClaimsPrincipal user)
+    {
+        var value = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                    ?? user.FindFirst("id")?.Value;
+
+        return int.TryParse(value, out var accountId) ? accountId : null;
     }
 }
