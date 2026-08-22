@@ -837,6 +837,57 @@ namespace UnitTests.Identity
             Assert.True(hasher.Verify("pass123", stored.Password!));
         }
 
+        [Fact]
+        public async Task CreateAsync_PasswordlessAccount_PersistsWithNullPasswordAndProfileFields()
+        {
+            var context = CreateContext();
+            var service = CreateService(context);
+
+            // Mirrors the Google-login create path: no password is issued and no
+            // date of birth / gender is fabricated for the account.
+            var newAccount = new AccountEntity
+            {
+                FullName = "Google User",
+                Email = "google.user@gmail.com",
+                RoleId = 2,
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now
+            };
+
+            var result = await service.CreateAsync(newAccount);
+
+            var stored = await service.GetByIdAsync(result.AccountId);
+            Assert.NotNull(stored);
+            Assert.Null(stored!.Password);
+            Assert.Null(stored.Dob);
+            Assert.Null(stored.Gender);
+        }
+
+        [Fact]
+        public async Task UpdateAsync_AccountWithoutDateOfBirth_SkipsElementDerivation()
+        {
+            var context = CreateContext();
+            context.Accounts.Add(new AccountEntity
+            {
+                AccountId = 1,
+                FullName = "Google User",
+                Email = "incomplete.profile@gmail.com",
+                Password = null,
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now,
+                RoleId = 2
+            });
+            context.SaveChanges();
+
+            var service = CreateService(context);
+
+            await service.UpdateAsync(1, new UpdateRequest { FullName = "Completed Name" });
+
+            var updated = await service.GetByIdAsync(1);
+            Assert.Equal("Completed Name", updated!.FullName);
+            Assert.Null(updated.ElementId);
+        }
+
         // --- ForgotPasswordAsync ---
 
         [Fact]

@@ -30,7 +30,5 @@ public interface IAccountService
 
     Task<AccountResponse?> GetAccountResponseByEmailAsync(string email);
 
-    Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword);
-
     Task<bool> ChangePasswordAsync(int accountId, string currentPassword, string newPassword);
 }

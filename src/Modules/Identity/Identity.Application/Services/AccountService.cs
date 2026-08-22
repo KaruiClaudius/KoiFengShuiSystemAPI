@@ -161,13 +161,19 @@ public class AccountService : IAccountService
         account.UpdateAt = DateTime.Now;
 
         // Fresh input is validated strictly; when the request carries no gender the stored
-        // value drives a lenient re-derivation instead.
-        var genderFromInput = !string.IsNullOrWhiteSpace(model.Gender);
-        account.ElementId = await GetElementIdFromDateOfBirth(
-            model.Dob?.Year ?? account.Dob?.Year ?? DateTime.Now.Year,
-            genderFromInput ? model.Gender : account.Gender,
-            account.AccountId,
-            genderFromInput);
+        // value drives a lenient re-derivation instead. Accounts without any date of birth
+        // (e.g. fresh Google logins, which are created without one) skip derivation entirely
+        // rather than fabricating an element from the current year.
+        var effectiveYearOfBirth = model.Dob?.Year ?? account.Dob?.Year;
+        if (effectiveYearOfBirth.HasValue)
+        {
+            var genderFromInput = !string.IsNullOrWhiteSpace(model.Gender);
+            account.ElementId = await GetElementIdFromDateOfBirth(
+                effectiveYearOfBirth.Value,
+                genderFromInput ? model.Gender : account.Gender,
+                account.AccountId,
+                genderFromInput);
+        }
 
         await _writeStore.UpdateAccountAsync(account);
         await _writeStore.SaveChangesAsync();
@@ -243,9 +249,6 @@ public class AccountService : IAccountService
 
         return true;
     }
-
-    public async Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword)
-        => await _identityEmailSender.SendDefaultPasswordAsync(email, fullName, defaultPassword);
 
     public async Task UpdateUserPasswordAsync(Account account, string newPassword)
     {

@@ -327,6 +327,238 @@ public class AuthControllerTests
         refreshTokenPort.Verify(port => port.RevokeAllForAccountAsync(It.IsAny<int>()), Times.Never);
     }
 
+    // --- POST api/Auth/google-login ---
+
+    [Fact]
+    public async Task GoogleLogin_NewUser_CreatesPasswordlessAccountWithoutFabricatedData()
+    {
+        const string googlePayload = """{"sub":"google-subject-id","email":"new.user@gmail.com","name":"New User"}""";
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        Account? createdAccount = null;
+        accountService
+            .Setup(service => service.GetAccountByEmailAsync("new.user@gmail.com"))
+            .ReturnsAsync((Account?)null);
+        accountService
+            .Setup(service => service.CreateAsync(It.IsAny<Account>()))
+            .Callback<Account>(account =>
+            {
+                account.AccountId = 55;
+                createdAccount = account;
+            })
+            .ReturnsAsync((Account account) => account);
+        var jwtTokenService = new Mock<IJwtTokenService>(MockBehavior.Strict);
+        jwtTokenService
+            .Setup(service => service.GenerateJwtToken(It.IsAny<Account>()))
+            .Returns("access-token");
+        jwtTokenService.SetupGet(service => service.AccessTokenLifetimeMinutes).Returns(15);
+        var refreshTokenPort = new Mock<IRefreshTokenPort>(MockBehavior.Strict);
+        refreshTokenPort
+            .Setup(port => port.CreateForAccountAsync(55))
+            .ReturnsAsync("raw-refresh-token");
+        var controller = CreateController(
+            accountService,
+            jwtTokenService,
+            refreshTokenPort,
+            CreateGoogleHttpClientFactory(googlePayload));
+
+        var result = await controller.GoogleLogin(new GoogleLoginRequest { AccessToken = "valid-google-access-token" });
+
+        Assert.NotNull(createdAccount);
+        Assert.Equal("new.user@gmail.com", createdAccount!.Email);
+        Assert.Equal("New User", createdAccount.FullName);
+        Assert.Equal(2, createdAccount.RoleId);
+        Assert.Null(createdAccount.Password);
+        Assert.Null(createdAccount.Gender);
+        Assert.Null(createdAccount.Dob);
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<AuthenticateResponse>(okResult.Value);
+        Assert.Equal("access-token", response.Token);
+        Assert.Equal("raw-refresh-token", response.RefreshToken);
+        Assert.Equal(15, response.ExpiresInMinutes);
+
+        accountService.Verify(service => service.GetAccountByEmailAsync("new.user@gmail.com"), Times.Once);
+        accountService.Verify(service => service.CreateAsync(It.IsAny<Account>()), Times.Once);
+        accountService.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GoogleLogin_NewUser_SkipsElementAssignment()
+    {
+        const string googlePayload = """{"sub":"google-subject-id","email":"element.skip@gmail.com","name":"Element Skip"}""";
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        Account? createdAccount = null;
+        accountService
+            .Setup(service => service.GetAccountByEmailAsync("element.skip@gmail.com"))
+            .ReturnsAsync((Account?)null);
+        accountService
+            .Setup(service => service.CreateAsync(It.IsAny<Account>()))
+            .Callback<Account>(account =>
+            {
+                account.AccountId = 56;
+                createdAccount = account;
+            })
+            .ReturnsAsync((Account account) => account);
+        var jwtTokenService = new Mock<IJwtTokenService>(MockBehavior.Strict);
+        jwtTokenService
+            .Setup(service => service.GenerateJwtToken(It.IsAny<Account>()))
+            .Returns("access-token");
+        jwtTokenService.SetupGet(service => service.AccessTokenLifetimeMinutes).Returns(15);
+        var controller = CreateController(
+            accountService,
+            jwtTokenService,
+            httpClientFactory: CreateGoogleHttpClientFactory(googlePayload));
+
+        await controller.GoogleLogin(new GoogleLoginRequest { AccessToken = "valid-google-access-token" });
+
+        Assert.NotNull(createdAccount);
+        Assert.Null(createdAccount!.ElementId);
+    }
+
+    [Fact]
+    public async Task GoogleLogin_ExistingUser_MatchesByEmailWithoutCreatingNewAccount()
+    {
+        const string googlePayload = """{"sub":"google-subject-id","email":"existing@test.com","name":"Existing User"}""";
+        var existingAccount = new Account
+        {
+            AccountId = 9,
+            Email = "existing@test.com",
+            FullName = "Existing User",
+            RoleId = 2
+        };
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        accountService
+            .Setup(service => service.GetAccountByEmailAsync("existing@test.com"))
+            .ReturnsAsync(existingAccount);
+        var jwtTokenService = new Mock<IJwtTokenService>(MockBehavior.Strict);
+        jwtTokenService
+            .Setup(service => service.GenerateJwtToken(It.IsAny<Account>()))
+            .Returns("access-token");
+        jwtTokenService.SetupGet(service => service.AccessTokenLifetimeMinutes).Returns(15);
+        var refreshTokenPort = new Mock<IRefreshTokenPort>(MockBehavior.Strict);
+        refreshTokenPort
+            .Setup(port => port.CreateForAccountAsync(9))
+            .ReturnsAsync("raw-refresh-token");
+        var controller = CreateController(
+            accountService,
+            jwtTokenService,
+            refreshTokenPort,
+            CreateGoogleHttpClientFactory(googlePayload));
+
+        var result = await controller.GoogleLogin(new GoogleLoginRequest { AccessToken = "valid-google-access-token" });
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        var response = Assert.IsType<AuthenticateResponse>(okResult.Value);
+        Assert.Equal(9, response.Id);
+        Assert.Equal("access-token", response.Token);
+        Assert.Equal("raw-refresh-token", response.RefreshToken);
+        accountService.Verify(service => service.CreateAsync(It.IsAny<Account>()), Times.Never);
+    }
+
+    // --- GET api/Auth/profile-status ---
+    //
+    // Response shape: { "requiresProfileCompletion": true|false }
+    // True while the signed-in account's date of birth or gender is still missing
+    // (e.g. accounts created through Google login start without both).
+
+    [Fact]
+    public async Task ProfileStatus_IncompleteProfile_RequiresCompletion()
+    {
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        accountService
+            .Setup(service => service.GetByIdAsync(7))
+            .ReturnsAsync(new Account { AccountId = 7, Email = "incomplete@test.com" });
+        var controller = CreateController(accountService, new Mock<IJwtTokenService>(MockBehavior.Strict));
+        SetAuthenticatedUser(controller, new Claim(ClaimTypes.NameIdentifier, "7"));
+
+        var result = await controller.GetProfileStatus();
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.True(ReadRequiresProfileCompletion(okResult.Value));
+    }
+
+    [Fact]
+    public async Task ProfileStatus_CompleteProfile_DoesNotRequireCompletion()
+    {
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        accountService
+            .Setup(service => service.GetByIdAsync(7))
+            .ReturnsAsync(new Account
+            {
+                AccountId = 7,
+                Email = "complete@test.com",
+                Dob = new DateTime(1990, 1, 1),
+                Gender = "male"
+            });
+        var controller = CreateController(accountService, new Mock<IJwtTokenService>(MockBehavior.Strict));
+        SetAuthenticatedUser(controller, new Claim(ClaimTypes.NameIdentifier, "7"));
+
+        var result = await controller.GetProfileStatus();
+
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.False(ReadRequiresProfileCompletion(okResult.Value));
+    }
+
+    [Fact]
+    public async Task ProfileStatus_Unauthenticated_ReturnsUnauthorized()
+    {
+        var controller = CreateController(
+            new Mock<IAccountService>(MockBehavior.Strict),
+            new Mock<IJwtTokenService>(MockBehavior.Strict));
+        SetAuthenticatedUser(controller);
+
+        var result = await controller.GetProfileStatus();
+
+        Assert.IsType<UnauthorizedResult>(result);
+    }
+
+    [Fact]
+    public async Task ProfileStatus_UnknownAccount_ReturnsUnauthorized()
+    {
+        var accountService = new Mock<IAccountService>(MockBehavior.Strict);
+        accountService
+            .Setup(service => service.GetByIdAsync(7))
+            .ReturnsAsync((Account?)null);
+        var controller = CreateController(accountService, new Mock<IJwtTokenService>(MockBehavior.Strict));
+        SetAuthenticatedUser(controller, new Claim(ClaimTypes.NameIdentifier, "7"));
+
+        var result = await controller.GetProfileStatus();
+
+        Assert.IsType<UnauthorizedResult>(result);
+    }
+
+    private static bool ReadRequiresProfileCompletion(object value)
+    {
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(value));
+        return document.RootElement.GetProperty("requiresProfileCompletion").GetBoolean();
+    }
+
+    private static Mock<IHttpClientFactory> CreateGoogleHttpClientFactory(string jsonPayload)
+    {
+        var httpClient = new HttpClient(new StubGoogleUserInfoHandler(jsonPayload));
+        var factory = new Mock<IHttpClientFactory>(MockBehavior.Strict);
+        factory.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(httpClient);
+        return factory;
+    }
+
+    private sealed class StubGoogleUserInfoHandler : HttpMessageHandler
+    {
+        private readonly string _jsonPayload;
+
+        public StubGoogleUserInfoHandler(string jsonPayload)
+        {
+            _jsonPayload = jsonPayload;
+        }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+            => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(_jsonPayload, Encoding.UTF8, "application/json")
+            });
+    }
+
     private static void SetAuthenticatedUser(AuthController controller, params Claim[] claims)
     {
         controller.ControllerContext.HttpContext = new DefaultHttpContext

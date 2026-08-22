@@ -144,30 +144,21 @@ public class AuthController : ControllerBase
             if (account == null)
             {
                 _logger.LogInformation("Creating new Google login account.");
-                var defaultPassword = SecurityUtil.GenerateRandomPassword();
                 account = new AccountEntity
                 {
                     Email = googleUser.Email,
                     FullName = googleUser.Name,
-                    Password = defaultPassword,
-                    Dob = DateTime.Now,
-                    Gender = "male",
+                    // Passwordless by design: no default password is generated, stored or emailed.
+                    // Password stays null so password sign-in cannot succeed for these accounts;
+                    // users authenticate through Google and receive the standard token pair.
+                    // Gender/Dob stay null until the user completes their profile (see profile-status),
+                    // which also keeps element derivation skipped until a real date of birth exists.
                     CreateAt = DateTime.Now,
                     UpdateAt = DateTime.Now,
                     RoleId = 2,
                 };
                 await _accountService.CreateAsync(account);
                 _logger.LogInformation("Created new Google login account with account ID {AccountId}", account.AccountId);
-
-                var emailSent = await _accountService.SendDefaultPasswordAsync(googleUser.Email, googleUser.Name, defaultPassword);
-                if (emailSent)
-                {
-                    _logger.LogInformation("Sent default password email for Google login account ID {AccountId}", account.AccountId);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to send default password email for Google login account ID {AccountId}", account.AccountId);
-                }
             }
             else
             {
@@ -243,6 +234,35 @@ public class AuthController : ControllerBase
         await _refreshTokenPort.RevokeAllForAccountAsync(accountId.Value);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Reports whether the signed-in account still needs to complete required profile data.
+    /// Response shape: <c>{ "requiresProfileCompletion": true|false }</c>.
+    /// Completion is required while date of birth or gender has not been provided yet —
+    /// accounts created through Google login start without both and are passwordless.
+    /// The frontend should drive completion through the existing profile-update endpoint
+    /// before treating onboarding as finished.
+    /// </summary>
+    [HttpGet("profile-status")]
+    public async Task<IActionResult> GetProfileStatus()
+    {
+        var accountId = ResolveAccountId(User);
+        if (accountId == null)
+        {
+            return Unauthorized();
+        }
+
+        var account = await _accountService.GetByIdAsync(accountId.Value);
+        if (account == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new
+        {
+            requiresProfileCompletion = account.Dob == null || account.Gender == null
+        });
     }
 
     private static int? ResolveAccountId(ClaimsPrincipal user)
