@@ -5,11 +5,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.WebUtilities" />
-		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 		<PackageReference Include="Microsoft.IdentityModel.Tokens" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+		<PackageReference Include="MailKit" />
 		<PackageReference Include="MimeKit" />
 		<PackageReference Include="CloudinaryDotNet" />
 	</ItemGroup>

@@ -1,5 +1,4 @@
-﻿using AutoMapper.Internal;
-using KoiFengShuiSystem.Shared.Models.Request;
+﻿using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using System;
 using System.Collections.Generic;
