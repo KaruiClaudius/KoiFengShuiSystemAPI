@@ -8,7 +8,7 @@ services:
       - ASPNETCORE_URLS=https://+:7285
       - ASPNETCORE_HTTPS_PORT=7285
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=KoiFengShui;User Id=sa;Password=12345;TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=${KFS_DB_CONNECTION_STRING:-Server=host.docker.internal,1433;Database=KoiFengShui;User Id=sa;Password=ROTATE_ME;TrustServerCertificate=True}
     volumes:
       - ${APPDATA}/microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${USERPROFILE}/.aspnet/https:/root/.aspnet/https:ro
