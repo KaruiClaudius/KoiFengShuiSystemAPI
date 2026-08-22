@@ -5,6 +5,7 @@ using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
 
@@ -20,14 +21,17 @@ public class EfRefreshTokenPort : IRefreshTokenPort
 
     private readonly KoiFengShuiContext _context;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<EfRefreshTokenPort> _logger;
 
-    public EfRefreshTokenPort(KoiFengShuiContext context, IConfiguration configuration)
+    public EfRefreshTokenPort(KoiFengShuiContext context, IConfiguration configuration, ILogger<EfRefreshTokenPort> logger)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(logger);
 
         _context = context;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<string> CreateForAccountAsync(int accountId)
@@ -65,6 +69,10 @@ public class EfRefreshTokenPort : IRefreshTokenPort
 
         if (storedToken.ExpiresAt <= DateTime.UtcNow)
         {
+            _logger.LogWarning(
+                "Expired refresh token presented for account {AccountId}; removing expired token row",
+                storedToken.AccountId);
+
             _context.RefreshTokens.Remove(storedToken);
             await _context.SaveChangesAsync();
             return RotateResult.Failed(RotateResult.ExpiredTokenReason);
@@ -85,7 +93,12 @@ public class EfRefreshTokenPort : IRefreshTokenPort
         {
             // Lost the race or revoked between fetch and claim: assume theft and revoke
             // every still-active token of the account.
-            await RevokeAllActiveTokensAsync(storedToken.AccountId);
+            var revokedCount = await RevokeAllActiveTokensAsync(storedToken.AccountId);
+            _logger.LogError(
+                "Refresh token reuse detected for account {AccountId}; revoking all {Count} active tokens",
+                storedToken.AccountId,
+                revokedCount);
+
             return RotateResult.Failed(RotateResult.ReuseDetectedReason);
         }
 
@@ -147,7 +160,7 @@ public class EfRefreshTokenPort : IRefreshTokenPort
         return true;
     }
 
-    private async Task RevokeAllActiveTokensAsync(int accountId)
+    private async Task<int> RevokeAllActiveTokensAsync(int accountId)
     {
         var activeTokens = await _context.RefreshTokens
             .Where(token => token.AccountId == accountId && token.RevokedAt == null)
@@ -155,7 +168,7 @@ public class EfRefreshTokenPort : IRefreshTokenPort
 
         if (activeTokens.Count == 0)
         {
-            return;
+            return 0;
         }
 
         var now = DateTime.UtcNow;
@@ -165,6 +178,7 @@ public class EfRefreshTokenPort : IRefreshTokenPort
         }
 
         await _context.SaveChangesAsync();
+        return activeTokens.Count;
     }
 
     private static string GenerateRawToken()

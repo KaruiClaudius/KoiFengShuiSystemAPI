@@ -3,7 +3,8 @@ using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
-using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;using Microsoft.Extensions.Configuration;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace UnitTests.Identity;

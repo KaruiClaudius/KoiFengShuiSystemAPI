@@ -6,6 +6,8 @@ using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace UnitTests.Identity.Security;
 
@@ -24,8 +26,8 @@ public class EfRefreshTokenPortTests
             })
             .Build();
 
-    private static EfRefreshTokenPort CreatePort(KoiFengShuiContext context, IConfiguration? configuration = null)
-        => new(context, configuration ?? CreateConfiguration());
+    private static EfRefreshTokenPort CreatePort(KoiFengShuiContext context, IConfiguration? configuration = null, Mock<ILogger<EfRefreshTokenPort>>? logger = null)
+        => new(context, configuration ?? CreateConfiguration(), (logger?.Object) ?? Mock.Of<ILogger<EfRefreshTokenPort>>());
 
     private static async Task<KoiFengShuiContext> CreateSeededContextAsync(params int[] accountIds)
     {
@@ -271,6 +273,58 @@ public class EfRefreshTokenPortTests
 
         Assert.False(result.Success);
         Assert.Empty(await context.RefreshTokens.ToListAsync());
+    }
+
+    // --- Security event logging ---
+
+    [Fact]
+    public async Task RotateAsync_ReuseDetected_LogsErrorWithAccountIdAndRevokedCount()
+    {
+        var context = await CreateSeededContextAsync(1);
+        var logger = new Mock<ILogger<EfRefreshTokenPort>>();
+        var port = CreatePort(context, logger: logger);
+        var originalRaw = await port.CreateForAccountAsync(1);
+        await port.RotateAsync(originalRaw);          // successor token, active
+        await port.CreateForAccountAsync(1);          // sibling token, active
+        context.ChangeTracker.Clear();
+
+        await port.RotateAsync(originalRaw);
+
+        logger.Verify(
+            l => l.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) =>
+                    state.ToString()!.Contains("reuse detected", StringComparison.OrdinalIgnoreCase) &&
+                    state.ToString()!.Contains("revoking all 2 active tokens")),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RotateAsync_ExpiredToken_LogsWarning()
+    {
+        var context = await CreateSeededContextAsync(1);
+        var logger = new Mock<ILogger<EfRefreshTokenPort>>();
+        var port = CreatePort(context, logger: logger);
+        var rawToken = await port.CreateForAccountAsync(1);
+
+        var row = await context.RefreshTokens.SingleAsync();
+        row.ExpiresAt = DateTime.UtcNow.AddMinutes(-1);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        await port.RotateAsync(rawToken);
+
+        logger.Verify(
+            l => l.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((state, _) => state.ToString()!.Contains("expired")),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
     // --- RevokeAllForAccountAsync ---

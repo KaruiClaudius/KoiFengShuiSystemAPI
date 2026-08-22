@@ -11,6 +11,10 @@ public static class PlaceholderConfigurationGuard
 
     public const string SecretConfigurationKey = "AppSettings:Secret";
 
+    public const string IssuerConfigurationKey = "AppSettings:Issuer";
+
+    public const string AudienceConfigurationKey = "AppSettings:Audience";
+
     private const int MinimumJwtSecretLength = 32;
 
     /// <summary>
@@ -31,6 +35,37 @@ public static class PlaceholderConfigurationGuard
         throw new InvalidOperationException(
             $"Configuration key '{SecretConfigurationKey}' must be set to a non-empty value of at least {MinimumJwtSecretLength} characters. " +
             "Supply a strong signing secret via user-secrets or environment variables before starting the application.");
+    }
+
+    /// <summary>
+    /// Ensures the JWT issuer and audience are configured before JwtBearer validation
+    /// is registered. Both hosts validate issuer/audience on every token, so a missing
+    /// value would reject all authentication; like <see cref="ValidateJwtSecret"/>,
+    /// this check fails fast in every environment.
+    /// </summary>
+    public static void ValidateJwtIssuerAudience(IConfiguration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        var offendingKeys = new List<string>();
+        if (string.IsNullOrWhiteSpace(configuration[IssuerConfigurationKey]))
+        {
+            offendingKeys.Add(IssuerConfigurationKey);
+        }
+
+        if (string.IsNullOrWhiteSpace(configuration[AudienceConfigurationKey]))
+        {
+            offendingKeys.Add(AudienceConfigurationKey);
+        }
+
+        if (offendingKeys.Count == 0)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Configuration key(s) {string.Join(", ", offendingKeys)} must be set to non-empty values. " +
+            "Every issued token carries these values and JwtBearer rejects tokens without a matching issuer/audience.");
     }
 
     public static void Validate(IConfiguration configuration, string environmentName, ILogger? logger = null)

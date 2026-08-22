@@ -7,6 +7,8 @@ namespace UnitTests.Security;
 public class PlaceholderConfigurationGuardTests
 {
     private const string PlaceholderValue = "ROTATE_ME__SET_VIA_USER_SECRETS_OR_ENV";
+    private const string Issuer = "KoiFengShuiSystem";
+    private const string Audience = "KoiFengShuiSystemClients";
 
     [Fact]
     public void Validate_ProductionEnvironmentWithPlaceholderKey_ThrowsInvalidOperationExceptionNamingTheKey()
@@ -110,6 +112,52 @@ public class PlaceholderConfigurationGuardTests
         var configuration = BuildConfig(("AppSettings:Secret", "test-secret-key-that-is-at-least-32-bytes-long-for-hmac"));
 
         PlaceholderConfigurationGuard.ValidateJwtSecret(configuration);
+    }
+
+    // --- ValidateJwtIssuerAudience ---
+
+    [Fact]
+    public void ValidateJwtIssuerAudience_MissingIssuer_ThrowsInvalidOperationExceptionNamingTheKey()
+    {
+        var configuration = BuildConfig(("AppSettings:Issuer", null), ("AppSettings:Audience", Audience));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(configuration));
+
+        Assert.Contains("AppSettings:Issuer", exception.Message);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ValidateJwtIssuerAudience_EmptyOrWhitespaceAudience_ThrowsInvalidOperationExceptionNamingTheKey(string? audience)
+    {
+        var configuration = BuildConfig(("AppSettings:Issuer", Issuer), ("AppSettings:Audience", audience));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(configuration));
+
+        Assert.Contains("AppSettings:Audience", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateJwtIssuerAudience_MissingIssuerAndAudience_ListsBothOffendingKeys()
+    {
+        var configuration = BuildConfig();
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(configuration));
+
+        Assert.Contains("AppSettings:Issuer", exception.Message);
+        Assert.Contains("AppSettings:Audience", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateJwtIssuerAudience_BothPresent_Passes()
+    {
+        var configuration = BuildConfig(("AppSettings:Issuer", Issuer), ("AppSettings:Audience", Audience));
+
+        PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(configuration);
     }
 
     private static IConfiguration BuildConfig(params (string Key, string? Value)[] settings) =>

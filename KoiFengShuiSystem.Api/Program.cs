@@ -31,6 +31,7 @@ PlaceholderConfigurationGuard.Validate(builder.Configuration, builder.Environmen
 
 // Fail fast on a weak JWT signing secret in every environment
 PlaceholderConfigurationGuard.ValidateJwtSecret(builder.Configuration);
+PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(builder.Configuration);
 
 // Authentication and Authorization
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
