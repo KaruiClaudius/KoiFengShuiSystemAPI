@@ -35,7 +35,7 @@ public class AdminAccountService
                 FullName = "System Administrator",
                 RoleId = 1,
                 Dob = DateTime.Now,
-                Gender = "Other",
+                Gender = "male",
                 CreateAt = DateTime.Now,
                 UpdateAt = DateTime.Now,
                 Phone = "0379499630"

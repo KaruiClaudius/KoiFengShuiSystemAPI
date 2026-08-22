@@ -78,8 +78,14 @@ namespace UnitTests.Identity
 
         // --- Gender string normalization at the Application boundary ---
 
-        private static (AccountService Service, Mock<IIdentityWriteStore> WriteStore, Mock<IIdentityElementLookup> Lookup) CreateService(
-            IElementCalculator? elementCalculator = null)
+        private sealed record ServiceHarness(
+            AccountService Service,
+            Mock<IIdentityReadStore> ReadStore,
+            Mock<IIdentityWriteStore> WriteStore,
+            Mock<IIdentityElementLookup> Lookup,
+            Mock<ILogger<AccountService>> Logger);
+
+        private static ServiceHarness CreateService(IElementCalculator? elementCalculator = null)
         {
             var readStore = new Mock<IIdentityReadStore>();
             readStore.Setup(r => r.GetAccountByEmailAsync(It.IsAny<string>())).ReturnsAsync((Account?)null);
@@ -103,12 +109,14 @@ namespace UnitTests.Identity
                 .ReturnsAsync((string name) => idsByName.TryGetValue(name, out var id) ? id : (int?)null);
             lookup.Setup(l => l.GetElementNameByIdAsync(It.IsAny<int>())).ReturnsAsync((string?)null);
 
+            var logger = new Mock<ILogger<AccountService>>();
+
             var service = new AccountService(
                 readStore.Object,
                 writeStore.Object,
                 Mock.Of<IJwtTokenService>(),
                 Mock.Of<IIdentityEmailSender>(),
-                Mock.Of<ILogger<AccountService>>(),
+                logger.Object,
                 lookup.Object,
                 elementCalculator ?? new FengShuiElementCalculator(),
                 Mock.Of<IPasswordHasher>(h => h.Hash(It.IsAny<string>()) == "hashed"),
@@ -116,7 +124,7 @@ namespace UnitTests.Identity
                 new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(),
                 Mock.Of<IRefreshTokenPort>());
 
-            return (service, writeStore, lookup);
+            return new ServiceHarness(service, readStore, writeStore, lookup, logger);
         }
 
         private static RegisterRequest CreateRegisterRequest(int yearOfBirth, string? gender)
@@ -141,11 +149,11 @@ namespace UnitTests.Identity
         [InlineData(" Male ")]
         public async Task Register_MaleGenderAliases_AssignsMalePathElement(string gender)
         {
-            var (service, writeStore, _) = CreateService();
+            var harness = CreateService();
 
-            await service.RegisterAsync(CreateRegisterRequest(1990, gender));
+            await harness.Service.RegisterAsync(CreateRegisterRequest(1990, gender));
 
-            var created = writeStore.Invocations
+            var created = harness.WriteStore.Invocations
                 .Where(i => i.Method.Name == nameof(IIdentityWriteStore.CreateAccountAsync))
                 .Select(i => (Account)i.Arguments[0])
                 .Single();
@@ -161,11 +169,11 @@ namespace UnitTests.Identity
         [InlineData("NỮ")]
         public async Task Register_FemaleGenderAliases_AssignsFemalePathElement(string gender)
         {
-            var (service, writeStore, _) = CreateService();
+            var harness = CreateService();
 
-            await service.RegisterAsync(CreateRegisterRequest(1990, gender));
+            await harness.Service.RegisterAsync(CreateRegisterRequest(1990, gender));
 
-            var created = writeStore.Invocations
+            var created = harness.WriteStore.Invocations
                 .Where(i => i.Method.Name == nameof(IIdentityWriteStore.CreateAccountAsync))
                 .Select(i => (Account)i.Arguments[0])
                 .Single();
@@ -175,11 +183,11 @@ namespace UnitTests.Identity
         [Fact]
         public async Task Register_AbsentGender_KeepsLegacyFemaleDefault()
         {
-            var (service, writeStore, _) = CreateService();
+            var harness = CreateService();
 
-            await service.RegisterAsync(CreateRegisterRequest(1990, null));
+            await harness.Service.RegisterAsync(CreateRegisterRequest(1990, null));
 
-            var created = writeStore.Invocations
+            var created = harness.WriteStore.Invocations
                 .Where(i => i.Method.Name == nameof(IIdentityWriteStore.CreateAccountAsync))
                 .Select(i => (Account)i.Arguments[0])
                 .Single();
@@ -192,9 +200,12 @@ namespace UnitTests.Identity
         [InlineData("namemale")]
         public async Task Register_UnrecognizedGender_ThrowsArgumentException(string gender)
         {
-            var (service, _, _) = CreateService();
+            var harness = CreateService();
 
-            await Assert.ThrowsAsync<ArgumentException>(() => service.RegisterAsync(CreateRegisterRequest(1990, gender)));
+            var ex = await Assert.ThrowsAsync<ArgumentException>(
+                () => harness.Service.RegisterAsync(CreateRegisterRequest(1990, gender)));
+
+            Assert.Equal("gender", ex.ParamName);
         }
 
         [Fact]
@@ -202,16 +213,133 @@ namespace UnitTests.Identity
         {
             var port = new Mock<IElementCalculator>();
             port.Setup(p => p.CalculateElement(It.IsAny<int>(), It.IsAny<bool>())).Returns("Sentinel");
-            var (service, writeStore, lookup) = CreateService(elementCalculator: port.Object);
-            lookup.Setup(l => l.GetElementIdByNameAsync("Sentinel")).ReturnsAsync(99);
+            var harness = CreateService(elementCalculator: port.Object);
+            harness.Lookup.Setup(l => l.GetElementIdByNameAsync("Sentinel")).ReturnsAsync(99);
 
-            await service.RegisterAsync(CreateRegisterRequest(1990, "male"));
+            await harness.Service.RegisterAsync(CreateRegisterRequest(1990, "male"));
 
-            var created = writeStore.Invocations
+            var created = harness.WriteStore.Invocations
                 .Where(i => i.Method.Name == nameof(IIdentityWriteStore.CreateAccountAsync))
                 .Select(i => (Account)i.Arguments[0])
                 .Single();
             Assert.Equal(99, created.ElementId);
+        }
+
+        // --- Stored-data re-derivation boundary (login / profile-update element refresh) ---
+        // Stored rows may hold legacy or unnormalized gender values; re-derivation must stay
+        // lenient (female-branch fallback + warning) so authentication never hard-fails.
+
+        private static Account CreateStoredAccount(int accountId, string? storedGender)
+        {
+            return new Account
+            {
+                AccountId = accountId,
+                Email = $"stored{accountId}@test.local",
+                Password = "password123", // legacy plaintext: verifies via the documented fallback
+                Dob = new DateTime(1990, 1, 1),
+                Gender = storedGender,
+                RoleId = 2
+            };
+        }
+
+        private static Account? CapturedUpdatedAccount(ServiceHarness harness)
+        {
+            return harness.WriteStore.Invocations
+                .Where(i => i.Method.Name == nameof(IIdentityWriteStore.UpdateAccountAsync))
+                .Select(i => (Account)i.Arguments[0])
+                .SingleOrDefault();
+        }
+
+        private static void VerifyWarningLogged(Mock<ILogger<AccountService>> logger, Times times)
+        {
+            logger.Verify(
+                l => l.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((state, type) => true),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                times);
+        }
+
+        [Theory]
+        [InlineData("Other")]
+        [InlineData("Khác")]
+        public async Task Authenticate_StoredUnrecognizedGender_DerivesElementViaFemaleBranch_AndWarns(string storedGender)
+        {
+            var harness = CreateService();
+            var account = CreateStoredAccount(7, storedGender);
+            harness.ReadStore.Setup(r => r.GetAccountByEmailAsync(account.Email)).ReturnsAsync(account);
+
+            var result = await harness.Service.AuthenticateAsync(new AuthenticateRequest { Email = account.Email, Password = "password123" });
+
+            Assert.Null(result.ErrorMessage);
+            Assert.NotNull(result.Response);
+            var updated = CapturedUpdatedAccount(harness);
+            Assert.NotNull(updated);
+            Assert.Equal(2, updated!.ElementId); // 1990 female branch, not an ArgumentException
+            VerifyWarningLogged(harness.Logger, Times.Once());
+        }
+
+        [Fact]
+        public async Task Update_StoredUnrecognizedGenderWithNoFreshInput_RefreshesElementLeniently()
+        {
+            var harness = CreateService();
+            var account = CreateStoredAccount(5, "Khác");
+            harness.ReadStore.Setup(r => r.GetAccountByIdAsync(account.AccountId)).ReturnsAsync(account);
+
+            await harness.Service.UpdateAsync(account.AccountId, new UpdateRequest());
+
+            Assert.Equal(2, account.ElementId); // lenient refresh from stored value, no throw
+            VerifyWarningLogged(harness.Logger, Times.Once());
+        }
+
+        [Fact]
+        public async Task Authenticate_AbsentStoredGender_DefaultsFemaleSilently()
+        {
+            var harness = CreateService();
+            var account = CreateStoredAccount(7, null);
+            harness.ReadStore.Setup(r => r.GetAccountByEmailAsync(account.Email)).ReturnsAsync(account);
+
+            var result = await harness.Service.AuthenticateAsync(new AuthenticateRequest { Email = account.Email, Password = "password123" });
+
+            Assert.Null(result.ErrorMessage);
+            Assert.Equal(2, CapturedUpdatedAccount(harness)?.ElementId); // legacy default branch
+            VerifyWarningLogged(harness.Logger, Times.Never()); // absent data is not dirty data: no ops noise
+        }
+
+        [Fact]
+        public async Task Update_FreshUnrecognizedGender_StillThrowsArgumentException()
+        {
+            var harness = CreateService();
+            var account = CreateStoredAccount(5, "Nam");
+            harness.ReadStore.Setup(r => r.GetAccountByIdAsync(account.AccountId)).ReturnsAsync(account);
+
+            var ex = await Assert.ThrowsAsync<ArgumentException>(
+                () => harness.Service.UpdateAsync(account.AccountId, new UpdateRequest { Gender = "robot" }));
+
+            Assert.Equal("gender", ex.ParamName);
+        }
+
+        [Theory]
+        [InlineData(" Male ", 1)] // pre-widening this row derived via the female branch; now corrected to male
+        [InlineData("M", 1)]
+        [InlineData("Nam", 1)]
+        [InlineData("nữ", 2)]
+        [InlineData("f", 2)]
+        public async Task Authenticate_StoredLegacyGenderAliases_AreDataCorrectedToMatchingBranch(string storedGender, int expectedElementId)
+        {
+            var harness = CreateService();
+            var account = CreateStoredAccount(7, storedGender);
+            harness.ReadStore.Setup(r => r.GetAccountByEmailAsync(account.Email)).ReturnsAsync(account);
+
+            var result = await harness.Service.AuthenticateAsync(new AuthenticateRequest { Email = account.Email, Password = "password123" });
+
+            Assert.Null(result.ErrorMessage);
+            var updated = CapturedUpdatedAccount(harness);
+            Assert.NotNull(updated);
+            Assert.Equal(expectedElementId, updated!.ElementId); // recognized alias wins over the female default
+            VerifyWarningLogged(harness.Logger, Times.Never()); // alias matched: not flagged as dirty data
         }
     }
 }

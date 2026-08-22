@@ -81,7 +81,8 @@ public class AccountService : IAccountService
 
         if (account.Dob.HasValue)
         {
-            account.ElementId = await GetElementIdFromDateOfBirth(account.Dob.Value.Year, account.Gender ?? string.Empty);
+            // Re-derivation over STORED data: stay lenient so legacy rows cannot break login.
+            account.ElementId = await GetElementIdFromDateOfBirth(account.Dob.Value.Year, account.Gender, account.AccountId, fromUserInput: false);
         }
 
         if (upgradedToHash || account.Dob.HasValue)
@@ -127,7 +128,8 @@ public class AccountService : IAccountService
 
         if (account.Dob.HasValue)
         {
-            account.ElementId = await GetElementIdFromDateOfBirth(account.Dob.Value.Year, account.Gender ?? string.Empty);
+            // Fresh user input: strict validation applies.
+            account.ElementId = await GetElementIdFromDateOfBirth(account.Dob.Value.Year, model.Gender, account.AccountId, fromUserInput: true);
         }
 
         await _writeStore.CreateAccountAsync(account);
@@ -158,9 +160,14 @@ public class AccountService : IAccountService
             account.Gender = model.Gender;
         account.UpdateAt = DateTime.Now;
 
+        // Fresh input is validated strictly; when the request carries no gender the stored
+        // value drives a lenient re-derivation instead.
+        var genderFromInput = !string.IsNullOrWhiteSpace(model.Gender);
         account.ElementId = await GetElementIdFromDateOfBirth(
             model.Dob?.Year ?? account.Dob?.Year ?? DateTime.Now.Year,
-            model.Gender ?? account.Gender ?? string.Empty);
+            genderFromInput ? model.Gender : account.Gender,
+            account.AccountId,
+            genderFromInput);
 
         await _writeStore.UpdateAccountAsync(account);
         await _writeStore.SaveChangesAsync();
@@ -390,9 +397,10 @@ public class AccountService : IAccountService
         return $"{baseUrl.TrimEnd('/')}/reset-password?token={Uri.EscapeDataString(token)}";
     }
 
-    private async Task<int> GetElementIdFromDateOfBirth(int yearOfBirth, string gender)
+    private async Task<int> GetElementIdFromDateOfBirth(int yearOfBirth, string? gender, int accountId, bool fromUserInput)
     {
-        var elementName = _elementCalculator.CalculateElement(yearOfBirth, ResolveIsMale(gender));
+        var isMale = fromUserInput ? ResolveIsMaleStrict(gender) : ResolveIsMaleLenient(gender, accountId);
+        var elementName = _elementCalculator.CalculateElement(yearOfBirth, isMale);
         var elementId = await _elementLookup.GetElementIdByNameAsync(elementName);
 
         if (!elementId.HasValue)
@@ -405,22 +413,68 @@ public class AccountService : IAccountService
     }
 
     /// <summary>
-    /// Normalizes the stored free-text gender to the calculator's male flag. Recognized aliases
-    /// are matched case-insensitively after trimming; an absent value keeps the documented legacy
-    /// default (female path), while any other non-empty token is rejected.
+    /// Input-boundary resolution (registration / profile-update payloads): an absent value keeps
+    /// the documented legacy female default, recognized aliases map to their branch, and any other
+    /// non-empty token is rejected so bad client data cannot persist.
     /// </summary>
-    private static bool ResolveIsMale(string? gender)
+    private static bool ResolveIsMaleStrict(string? gender)
     {
         if (string.IsNullOrWhiteSpace(gender))
         {
             return false;
         }
 
-        return gender.Trim().ToLowerInvariant() switch
+        if (!TryResolveGenderAlias(gender, out var isMale))
         {
-            "male" or "nam" or "m" => true,
-            "female" or "nữ" or "nu" or "f" => false,
-            _ => throw new ArgumentException($"Unknown gender value: '{gender}'.")
-        };
+            throw new ArgumentException($"Unknown gender value: '{gender}'.", nameof(gender));
+        }
+
+        return isMale;
+    }
+
+    /// <summary>
+    /// Stored-data re-derivation (element refresh over previously persisted rows): unrecognized
+    /// legacy values keep deriving via the female branch instead of failing login or update; a
+    /// warning lets operations locate the dirty rows for cleanup.
+    /// </summary>
+    private bool ResolveIsMaleLenient(string? gender, int accountId)
+    {
+        if (string.IsNullOrWhiteSpace(gender))
+        {
+            return false;
+        }
+
+        if (TryResolveGenderAlias(gender, out var isMale))
+        {
+            return isMale;
+        }
+
+        _logger.LogWarning(
+            "Unrecognized stored gender '{Gender}' for account {AccountId}; defaulting element derivation to female branch",
+            gender,
+            accountId);
+        return false;
+    }
+
+    /// <summary>Shared alias table for both boundaries. Trim-tolerant and case-insensitive.</summary>
+    private static bool TryResolveGenderAlias(string? gender, out bool isMale)
+    {
+        switch (gender?.Trim().ToLowerInvariant())
+        {
+            case "male":
+            case "nam":
+            case "m":
+                isMale = true;
+                return true;
+            case "female":
+            case "nữ":
+            case "nu":
+            case "f":
+                isMale = false;
+                return true;
+            default:
+                isMale = false;
+                return false;
+        }
     }
 }
