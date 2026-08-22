@@ -2,6 +2,7 @@ using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
@@ -28,6 +29,9 @@ public class IdentityModuleInstallerTests
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IIdentityElementLookup) &&
             descriptor.ImplementationType == typeof(EfIdentityElementLookup));
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(IElementCalculator) &&
+            descriptor.ImplementationType == typeof(FengShuiElementCalculator));
         Assert.Contains(services, descriptor =>
             descriptor.ServiceType == typeof(IJwtTokenService) &&
             descriptor.ImplementationType == typeof(JwtTokenService));

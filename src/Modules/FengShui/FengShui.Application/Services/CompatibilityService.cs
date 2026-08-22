@@ -1,4 +1,5 @@
 using KoiFengShuiSystem.Modules.FengShui.Application.Abstractions;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Calculations;
 using KoiFengShuiSystem.Modules.FengShui.Application.Calculations;
 using KoiFengShuiSystem.Modules.FengShui.Application.Requests;
 using KoiFengShuiSystem.Modules.FengShui.Application.Responses;
@@ -56,7 +57,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
         {
             try
             {
-                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale);
+                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale ? Gender.Male : Gender.Female);
 
                 var element = await _readStore.GetElementByNameAsync(cungPhiResult.Menh);
                 if (element == null)
@@ -102,7 +103,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 
                 var recommendedColors = breeds
                     .Where(b => b.ElementId == elementId)
-                    .SelectMany(b => CungPhiCalculator.CleanColorName(b.Color).Split(' '))
+                    .SelectMany(b => ColorNameCleaner.CleanColorName(b.Color).Split(' '))
                     .GroupBy(c => c)
                     .OrderByDescending(g => g.Count())
                     .Select(g => g.Key)
@@ -110,7 +111,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 
                 var elementColors = breeds
                     .Where(b => b.ElementId == elementId)
-                    .SelectMany(b => CungPhiCalculator.CleanColorName(b.Color).Split(' '))
+                    .SelectMany(b => ColorNameCleaner.CleanColorName(b.Color).Split(' '))
                     .Distinct()
                     .ToList();
 
@@ -124,7 +125,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 
                 foreach (var color in colors)
                 {
-                    var cleanedColor = CungPhiCalculator.CleanColorName(color);
+                    var cleanedColor = ColorNameCleaner.CleanColorName(color);
                     _logger.LogDebug("Original Color: {Original}, Cleaned Color: {Cleaned}", color, cleanedColor);
                     double colorScore;
 
@@ -156,7 +157,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 
                     foreach (var color in colors)
                     {
-                        var cleanedColor = CungPhiCalculator.CleanColorName(color);
+                        var cleanedColor = ColorNameCleaner.CleanColorName(color);
                         if (recommendedColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                         {
                             colorScores[color] = Math.Round(colorScores[color] + adjustment, 2);
@@ -301,7 +302,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
                     .Select(b => new
                     {
                         OriginalColor = b.Color,
-                        NormalizedColors = CungPhiCalculator.CleanColorName(b.Color)
+                        NormalizedColors = ColorNameCleaner.CleanColorName(b.Color)
                             .Split(' ')
                             .Where(c => !string.IsNullOrWhiteSpace(c))
                             .Distinct()

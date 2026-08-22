@@ -90,7 +90,7 @@ namespace UnitTests.Identity
         {
             var context = CreateContext();
 
-            var thuyName = KoiFengShuiSystem.Common.FengShui.CungPhiCalculator.Calculate(1990, true).Menh;
+            var thuyName = KoiFengShuiSystem.Modules.FengShui.Domain.Calculations.CungPhiCalculator.Calculate(1990, KoiFengShuiSystem.Modules.FengShui.Domain.Calculations.Gender.Male).Menh;
 
             context.Elements.Add(new Element
             {
@@ -149,6 +149,7 @@ namespace UnitTests.Identity
                 email,
                 logger,
                 lookup,
+                new KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui.FengShuiElementCalculator(),
                 hasher,
                 tokenProvider,
                 config,
@@ -176,6 +177,7 @@ namespace UnitTests.Identity
         [InlineData(7)]
         [InlineData(8)]
         [InlineData(9)]
+        [InlineData(10)]
         public void Constructor_NullDependency_ThrowsArgumentNullException(int nullDependencyIndex)
         {
             var ctx = CreateContext();
@@ -186,6 +188,7 @@ namespace UnitTests.Identity
             IIdentityEmailSender identityEmailSender = Mock.Of<IIdentityEmailSender>();
             ILogger<IdentityAccountService> logger = Mock.Of<ILogger<IdentityAccountService>>();
             IIdentityElementLookup elementLookup = new EfIdentityElementLookup(ctx);
+            KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui.FengShuiElementCalculator elementCalculator = new();
             IPasswordHasher passwordHasher = new BcryptPasswordHasher();
             IPasswordResetTokenProvider tokenProvider = new SecurePasswordResetTokenProvider();
             IConfiguration configuration = CreateConfiguration("http://localhost:3000");
@@ -198,10 +201,11 @@ namespace UnitTests.Identity
                 nullDependencyIndex == 3 ? null! : identityEmailSender,
                 nullDependencyIndex == 4 ? null! : logger,
                 nullDependencyIndex == 5 ? null! : elementLookup,
-                nullDependencyIndex == 6 ? null! : passwordHasher,
-                nullDependencyIndex == 7 ? null! : tokenProvider,
-                nullDependencyIndex == 8 ? null! : configuration,
-                nullDependencyIndex == 9 ? null! : refreshTokenPort));
+                nullDependencyIndex == 6 ? null! : elementCalculator,
+                nullDependencyIndex == 7 ? null! : passwordHasher,
+                nullDependencyIndex == 8 ? null! : tokenProvider,
+                nullDependencyIndex == 9 ? null! : configuration,
+                nullDependencyIndex == 10 ? null! : refreshTokenPort));
 
             Assert.NotNull(ex.ParamName);
         }
@@ -219,6 +223,7 @@ namespace UnitTests.Identity
                 Mock.Of<IIdentityEmailSender>(),
                 logger,
                 new EfIdentityElementLookup(ctx),
+                new KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui.FengShuiElementCalculator(),
                 new BcryptPasswordHasher(),
                 new SecurePasswordResetTokenProvider(),
                 CreateConfiguration("http://localhost:3000"),
@@ -461,7 +466,7 @@ namespace UnitTests.Identity
         public async Task RegisterAsync_ValidRequest_CreatesAccount()
         {
             var context = CreateContext();
-            var thuyName = KoiFengShuiSystem.Common.FengShui.CungPhiCalculator.Calculate(1990, true).Menh;
+            var thuyName = KoiFengShuiSystem.Modules.FengShui.Domain.Calculations.CungPhiCalculator.Calculate(1990, KoiFengShuiSystem.Modules.FengShui.Domain.Calculations.Gender.Male).Menh;
             context.Elements.Add(new Element
             {
                 ElementId = 1,
@@ -630,7 +635,7 @@ namespace UnitTests.Identity
         public async Task UpdateAsync_DuplicateEmail_ThrowsApplicationException()
         {
             var context = CreateContext();
-            var thuyName = KoiFengShuiSystem.Common.FengShui.CungPhiCalculator.Calculate(1990, true).Menh;
+            var thuyName = KoiFengShuiSystem.Modules.FengShui.Domain.Calculations.CungPhiCalculator.Calculate(1990, KoiFengShuiSystem.Modules.FengShui.Domain.Calculations.Gender.Male).Menh;
             context.Elements.Add(new Element
             {
                 ElementId = 1,

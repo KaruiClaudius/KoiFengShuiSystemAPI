@@ -19,6 +19,7 @@ public class AccountService : IAccountService
     private readonly IIdentityEmailSender _identityEmailSender;
     private readonly ILogger<AccountService> _logger;
     private readonly IIdentityElementLookup _elementLookup;
+    private readonly IElementCalculator _elementCalculator;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IPasswordResetTokenProvider _passwordResetTokenProvider;
     private readonly IConfiguration _configuration;
@@ -31,6 +32,7 @@ public class AccountService : IAccountService
         IIdentityEmailSender identityEmailSender,
         ILogger<AccountService> logger,
         IIdentityElementLookup elementLookup,
+        IElementCalculator elementCalculator,
         IPasswordHasher passwordHasher,
         IPasswordResetTokenProvider passwordResetTokenProvider,
         IConfiguration configuration,
@@ -42,6 +44,7 @@ public class AccountService : IAccountService
         ArgumentNullException.ThrowIfNull(identityEmailSender);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(elementLookup);
+        ArgumentNullException.ThrowIfNull(elementCalculator);
         ArgumentNullException.ThrowIfNull(passwordHasher);
         ArgumentNullException.ThrowIfNull(passwordResetTokenProvider);
         ArgumentNullException.ThrowIfNull(configuration);
@@ -53,6 +56,7 @@ public class AccountService : IAccountService
         _identityEmailSender = identityEmailSender;
         _logger = logger;
         _elementLookup = elementLookup;
+        _elementCalculator = elementCalculator;
         _passwordHasher = passwordHasher;
         _passwordResetTokenProvider = passwordResetTokenProvider;
         _configuration = configuration;
@@ -388,7 +392,7 @@ public class AccountService : IAccountService
 
     private async Task<int> GetElementIdFromDateOfBirth(int yearOfBirth, string gender)
     {
-        var elementName = CalculateElement(yearOfBirth, gender);
+        var elementName = _elementCalculator.CalculateElement(yearOfBirth, ResolveIsMale(gender));
         var elementId = await _elementLookup.GetElementIdByNameAsync(elementName);
 
         if (!elementId.HasValue)
@@ -400,84 +404,23 @@ public class AccountService : IAccountService
         return elementId.Value;
     }
 
-    private class CungPhiResult
+    /// <summary>
+    /// Normalizes the stored free-text gender to the calculator's male flag. Recognized aliases
+    /// are matched case-insensitively after trimming; an absent value keeps the documented legacy
+    /// default (female path), while any other non-empty token is rejected.
+    /// </summary>
+    private static bool ResolveIsMale(string? gender)
     {
-        public string Cung { get; set; } = string.Empty;
-        public string Menh { get; set; } = string.Empty;
-    }
-
-    private readonly Dictionary<int, CungPhiResult> _cungPhiMap = new Dictionary<int, CungPhiResult>
-    {
-        { 1, new CungPhiResult { Cung = "Khảm", Menh = "Thủy" } },
-        { 2, new CungPhiResult { Cung = "Khôn", Menh = "Thổ" } },
-        { 3, new CungPhiResult { Cung = "Chấn", Menh = "Mộc" } },
-        { 4, new CungPhiResult { Cung = "Tốn", Menh = "Mộc" } },
-        { 5, new CungPhiResult { Cung = "Trung cung", Menh = "Thổ" } },
-        { 6, new CungPhiResult { Cung = "Càn", Menh = "Kim" } },
-        { 7, new CungPhiResult { Cung = "Đoài", Menh = "Kim" } },
-        { 8, new CungPhiResult { Cung = "Cấn", Menh = "Thổ" } },
-        { 9, new CungPhiResult { Cung = "Ly", Menh = "Hoả" } }
-    };
-
-    // TODO: Replace this duplicate calculation with a shared FengShui calculator port.
-    private string CalculateElement(int yearOfBirth, string gender)
-    {
-        if (yearOfBirth <= 0)
+        if (string.IsNullOrWhiteSpace(gender))
         {
-            throw new ArgumentException($"Invalid year of birth: {yearOfBirth}. Year must be a positive number.");
+            return false;
         }
 
-        int lastTwoDigits = yearOfBirth % 100;
-        int a = (lastTwoDigits / 10) + (lastTwoDigits % 10);
-        if (a > 9)
+        return gender.Trim().ToLowerInvariant() switch
         {
-            a = (a / 10) + (a % 10);
-        }
-
-        int resultNumber;
-        bool isMale = gender?.ToLower() == "male" || gender?.ToLower() == "nam";
-
-        if (yearOfBirth < 2000)
-        {
-            if (isMale)
-            {
-                resultNumber = 10 - a;
-            }
-            else
-            {
-                resultNumber = 5 + a;
-                if (resultNumber > 9)
-                {
-                    resultNumber = (resultNumber / 10) + (resultNumber % 10);
-                }
-            }
-        }
-        else
-        {
-            if (isMale)
-            {
-                resultNumber = 9 - a;
-                if (resultNumber == 0)
-                {
-                    resultNumber = 9;
-                }
-            }
-            else
-            {
-                resultNumber = 6 + a;
-                if (resultNumber > 9)
-                {
-                    resultNumber = (resultNumber / 10) + (resultNumber % 10);
-                }
-            }
-        }
-
-        if (resultNumber == 5)
-        {
-            resultNumber = isMale ? 2 : 8;
-        }
-
-        var cungPhiResult = _cungPhiMap[resultNumber];
-        return cungPhiResult.Menh;
+            "male" or "nam" or "m" => true,
+            "female" or "nữ" or "nu" or "f" => false,
+            _ => throw new ArgumentException($"Unknown gender value: '{gender}'.")
+        };
     }
 }

@@ -1,5 +1,5 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.Common.FengShui;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Calculations;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
@@ -23,9 +23,9 @@ namespace UnitTests.FengShui
         {
             var context = new KoiFengShuiContext(CreateInMemoryOptions());
 
-            var thuyResult = CungPhiCalculator.Calculate(1990, true);
-            var mocResult = CungPhiCalculator.Calculate(1985, true);
-            var kimResult = CungPhiCalculator.Calculate(1984, true);
+            var thuyResult = CungPhiCalculator.Calculate(1990, Gender.Male);
+            var mocResult = CungPhiCalculator.Calculate(1985, Gender.Male);
+            var kimResult = CungPhiCalculator.Calculate(1984, Gender.Male);
 
             context.Elements.AddRange(
                 new Element { ElementId = 1, ElementName = thuyResult.Menh, Description = "Water", LuckyNumber = "1,6" },

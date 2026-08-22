@@ -1,6 +1,7 @@
 using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 using KoiFengShuiSystem.Shared.Kernel.Modules;
@@ -16,6 +17,7 @@ public class IdentityModuleInstaller : IModuleInstaller
         services.AddScoped<IIdentityReadStore, EfIdentityReadStore>();
         services.AddScoped<IIdentityWriteStore, EfIdentityWriteStore>();
         services.AddScoped<IIdentityElementLookup, EfIdentityElementLookup>();
+        services.AddSingleton<IElementCalculator, FengShuiElementCalculator>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.AddScoped<IPasswordResetTokenProvider, SecurePasswordResetTokenProvider>();

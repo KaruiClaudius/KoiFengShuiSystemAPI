@@ -1,5 +1,5 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.Common.FengShui;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Calculations;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
@@ -34,7 +34,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
         try
         {
-            var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale);
+            var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale ? Gender.Male : Gender.Female);
 
             var element = await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
             if (element == null)

@@ -1,5 +1,5 @@
 using KoiFengShuiSystem.Modules.FengShui.Application.Abstractions;
-using KoiFengShuiSystem.Modules.FengShui.Application.Calculations;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Calculations;
 using KoiFengShuiSystem.Modules.FengShui.Application.Responses;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using Microsoft.Extensions.Logging;
@@ -21,7 +21,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
         {
             try
             {
-                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale);
+                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale ? Gender.Male : Gender.Female);
 
                 var element = await _readStore.GetElementByNameAsync(cungPhiResult.Menh);
                 if (element == null)

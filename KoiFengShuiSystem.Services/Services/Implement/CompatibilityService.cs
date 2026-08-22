@@ -1,6 +1,9 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.Common.FengShui;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Calculations;
 using KoiFengShuiSystem.DataAccess.Base;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
@@ -76,7 +79,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         {
             try
             {
-                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale);
+                var cungPhiResult = CungPhiCalculator.Calculate(yearOfBirth, isMale ? Gender.Male : Gender.Female);
 
                 var element = await _elementRepository.FindAsync(e => e.ElementName == cungPhiResult.Menh);
                 if (element == null)
@@ -149,7 +152,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
                 foreach (var color in colors)
                 {
-                    var cleanedColor = CungPhiCalculator.CleanColorName(color);
+                    var cleanedColor = CleanColorName(color);
                     _logger.LogDebug("Original Color: {Original}, Cleaned Color: {Cleaned}", color, cleanedColor);
                     double colorScore;
 
@@ -210,7 +213,29 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
         }
 
-        private string CleanColorName(string color) => CungPhiCalculator.CleanColorName(color);
+        private string CleanColorName(string color)
+        {
+            color = RemoveDiacritics(color);
+            color = Regex.Replace(color, @"[;,\s]|\s*va\s*", " ", RegexOptions.IgnoreCase).Trim();
+            return color.ToLowerInvariant();
+        }
+
+        private static string RemoveDiacritics(string text)
+        {
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
+        }
 
 
         private async Task<double> GetQuantityCompatibilityScore(int quantity, int elementId)

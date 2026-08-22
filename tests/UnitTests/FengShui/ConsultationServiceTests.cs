@@ -1,5 +1,5 @@
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.Common.FengShui;
+using KoiFengShuiSystem.Modules.FengShui.Domain.Calculations;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
@@ -22,11 +22,11 @@ namespace UnitTests.FengShui
         {
             var context = new KoiFengShuiContext(CreateInMemoryOptions());
 
-            var thuyResult = CungPhiCalculator.Calculate(1990, true);
-            var mocResult = CungPhiCalculator.Calculate(1985, true);
-            var hoaResult = CungPhiCalculator.Calculate(2000, true);
-            var thoResult = CungPhiCalculator.Calculate(1995, true);
-            var kimResult = CungPhiCalculator.Calculate(1984, true);
+            var thuyResult = CungPhiCalculator.Calculate(1990, Gender.Male);
+            var mocResult = CungPhiCalculator.Calculate(1985, Gender.Male);
+            var hoaResult = CungPhiCalculator.Calculate(2000, Gender.Male);
+            var thoResult = CungPhiCalculator.Calculate(1995, Gender.Male);
+            var kimResult = CungPhiCalculator.Calculate(1984, Gender.Male);
 
             context.Elements.AddRange(
                 new Element { ElementId = 1, ElementName = thuyResult.Menh, Description = "Water", LuckyNumber = "1,6" },
@@ -78,7 +78,7 @@ namespace UnitTests.FengShui
             var result = await service.GetFengShuiConsultationAsync(1990, true);
 
             Assert.NotNull(result);
-            var expected = CungPhiCalculator.Calculate(1990, true);
+            var expected = CungPhiCalculator.Calculate(1990, Gender.Male);
             Assert.Equal(expected.Menh, result.Element);
             Assert.Equal(expected.Cung, result.Cung);
         }
@@ -203,7 +203,7 @@ namespace UnitTests.FengShui
             var result = await service.GetFengShuiConsultationAsync(2000, true);
 
             Assert.NotNull(result);
-            var expected = CungPhiCalculator.Calculate(2000, true);
+            var expected = CungPhiCalculator.Calculate(2000, Gender.Male);
             Assert.Equal(expected.Menh, result.Element);
         }
     }
