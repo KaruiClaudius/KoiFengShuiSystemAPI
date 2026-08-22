@@ -117,6 +117,32 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Member_Token_IsForbidden_OnFaqCreate()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2);
+
+        var response = await client.PostAsJsonAsync("/api/FAQ/Create", new
+        {
+            question = "Member question?",
+            answer = "Should not be created"
+        });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Member_Token_IsForbidden_OnPostDelete()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2);
+
+        var response = await client.DeleteAsync("/api/Post/Delete/1");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     public static TheoryData<string> PublicReadEndpoints => new()
     {
         "/api/FAQ/GetAll",

@@ -64,10 +64,13 @@ namespace UnitTests.Admin
                 Status = "Published"
             };
 
-            await service.CreatePostWithImagesAsync(request, new List<string> { "img-a", "img-b" });
+            var response = await service.CreatePostWithImagesAsync(request, new List<string> { "img-a", "img-b" });
 
             Assert.Equal(1, _context.SaveChangesAsyncCallCount);
-            Assert.Equal(2, await _context.PostImages.CountAsync(pi => pi.Post.PostId != 0 && pi.Image.ImageUrl.StartsWith("img-")));
+            Assert.NotNull(response);
+            Assert.True(response.PostId > 0, "post must be persisted with a generated key");
+            Assert.Equal("New post", await _context.Posts.Where(p => p.PostId == response.PostId).Select(p => p.Name).SingleAsync());
+            Assert.Equal(2, await _context.PostImages.CountAsync(pi => pi.PostId == response.PostId));
         }
 
         [Fact]
@@ -87,7 +90,7 @@ namespace UnitTests.Admin
         }
 
         [Fact]
-        public async Task CreatePostWithImagesAsync_WithNoImages_SavesOnceForThePost()
+        public async Task CreatePostWithImagesAsync_WithNoImages_PersistsThePost()
         {
             var service = new AdminPostService(_context, ImageServiceStub());
             var request = new AdminPostRequest
@@ -99,9 +102,16 @@ namespace UnitTests.Admin
                 Status = "Published"
             };
 
-            await service.CreatePostWithImagesAsync(request, new List<string>());
+            var response = await service.CreatePostWithImagesAsync(request, new List<string>());
 
             Assert.Equal(1, _context.SaveChangesAsyncCallCount);
+            Assert.NotNull(response);
+            Assert.True(response.PostId > 0, "zero-image creation must still persist the post with a generated key");
+
+            var saved = await _context.Posts.SingleAsync(p => p.Name == "No images");
+            Assert.Equal(response.PostId, saved.PostId);
+            Assert.Equal("Body", saved.Description);
+            Assert.Equal("Published", saved.Status);
         }
 
         private static IImageService ImageServiceStub()

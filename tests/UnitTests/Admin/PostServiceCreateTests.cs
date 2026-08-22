@@ -23,7 +23,8 @@ namespace UnitTests.Admin
             _context.PostCategories.Add(new PostCategory { Id = 1, PostType = "Blog" });
             _context.Images.Add(new Image { ImageId = 5, ImageUrl = "https://cdn.example/i5.png" });
             _context.SaveChanges();
-            _service = new PostService(new UnitOfWorkRepository(_context), _context);
+            _service = new PostService(new UnitOfWorkRepository(_context), _context,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<PostService>.Instance);
         }
 
         public void Dispose() => _context.Dispose();

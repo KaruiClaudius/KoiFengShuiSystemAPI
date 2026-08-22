@@ -113,8 +113,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                    ElementId = adminPostRequest.ElementId
                 };
 
-                // Queue the post plus all image/link inserts, then persist them in ONE batched save.
-                // Navigation assignments let EF propagate generated PostId/ImageId keys.
+                // Track the post explicitly so creation persists even with zero images;
+                // PostImage/Image navigations still propagate generated keys on the shared save.
+                _context.Posts.Add(post);
                 foreach (var imageUrl in imageUrls)
                 {
                     var postImage = new PostImage

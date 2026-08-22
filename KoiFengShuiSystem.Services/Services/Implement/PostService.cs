@@ -8,6 +8,7 @@ using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class PostService : IPostService
@@ -20,11 +21,13 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
         private readonly UnitOfWorkRepository _unitOfWork;
         private readonly KoiFengShuiContext _context;
+        private readonly ILogger<PostService> _logger;
 
-        public PostService(UnitOfWorkRepository unitOfWork, KoiFengShuiContext context)
+        public PostService(UnitOfWorkRepository unitOfWork, KoiFengShuiContext context, ILogger<PostService> logger)
         {
             _unitOfWork = unitOfWork;
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IBusinessResult> GetAll()
@@ -43,7 +46,9 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CreateAt = po.CreateAt,
                         AccountId = po.AccountId,
                         UpdateAt = po.UpdateAt,
-                        ElementId = (int) po.ElementId,
+                        // Posts without an element (e.g. member submissions) read as "uncategorized"
+                        // instead of throwing on the nullable cast.
+                        ElementId = po.ElementId ?? 0,
                         Follows = po.Follows,
                         Id = po.Id,
                         Name = po.Name,
@@ -65,7 +70,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception e)
             {
-                return new BusinessResult(-4, e.Message.ToString());
+                _logger.LogError(e, "PostService.GetAll failed");
+                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to retrieve posts.");
             }
         }
 
@@ -85,7 +91,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         CreateAt = po.CreateAt,
                         AccountId = po.AccountId,
                         UpdateAt = po.UpdateAt,
-                        ElementId = (int) po.ElementId,
+                        // See GetAll: null element reads as "uncategorized".
+                        ElementId = po.ElementId ?? 0,
                         Follows = po.Follows,
                         Id = po.Id,
                         Name = po.Name,
@@ -107,7 +114,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             }
             catch (Exception e)
             {
-                return new BusinessResult(-4, e.Message.ToString());
+                _logger.LogError(e, "PostService.GetPostByPostTypeId failed for postTypeId={PostTypeId}", postTypeId);
+                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to retrieve posts.");
             }
         }
 
