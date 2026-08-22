@@ -34,3 +34,26 @@ Captured on 2026-05-17 for branch `refactor/phase-1`.
 **Task 3.3 (DI Extension):** `AddSharedInfrastructure` extension method added in `src/Shared/Shared.Infrastructure/DependencyInjection.cs`, registered in `Program.cs`.
 
 **Bug fix (discovered during Phase 3):** `CompatibilityService` color scoring was comparing full cleaned strings against word-split color lists. Fixed by splitting cleaned colors into words and checking word-level membership against `recommendedColors` and `elementColors`.
+
+## Modular Monolith Completion & Hardening Effort (2026-08-22)
+
+Master plan: `docs/superpowers/plans/2026-08-22-modular-monolith-completion.md`. Branch: `refactor/phase-1`.
+
+### Measured checkpoints
+
+| Commit | Change | Build | Tests |
+| --- | --- | --- | --- |
+| `f618014` | Snapshot of phase-6 Identity extraction WIP | 0 errors / 172 warnings | 122 unit + 5 integration |
+| `db2e152` | Secrets purged from config files → placeholders | unchanged | unchanged |
+| `997e19f` | Payment gateway (PayOS/VnPay) + marketplace/shop features removed incl. wallet | 0 errors / 126 warnings | 112 unit + 5 integration |
+| `bf85126`, `b989274` | ROTATE_ME placeholder fail-fast guard (+ deps alignment) | 0 errors | 117 unit + 5 integration |
+| `1c197a2` | SDK pin (`global.json` 8.0.424), central package management (`Directory.Packages.props`), npm artifacts removed, VS Code configs target `src/Host` | 0 errors / 126 warnings (fresh rebuild) | 117 unit + 5 integration |
+
+### Known issues carried forward
+
+- NU1903 (high): `AutoMapper` 14.0.0 — scheduled for replacement in package-modernization task.
+- NU1902 (moderate): `MailKit`/`MimeKit` — version bump scheduled.
+- Stray `FluentAssertions` PackageReference in production project `KoiFengShuiSystem.Api` — remove in package-modernization task.
+- EF model snapshot/migrations intentionally stale vs live model (removed shop/payment tables + `Accounts.Wallet`) until migrations consolidate under `src/` — drop-tables migration planned then.
+- Temporary model/DB drift accepted by decision; no `dotnet ef` runs until consolidation.
+
