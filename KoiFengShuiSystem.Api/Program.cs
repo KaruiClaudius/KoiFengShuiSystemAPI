@@ -12,6 +12,7 @@ using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Helpers.Photos;
+using KoiFengShuiSystem.Shared.Kernel.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -24,6 +25,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 builder.Configuration.AddEnvironmentVariables();
+
+// Fail fast if placeholder credentials leaked into configuration outside development
+PlaceholderConfigurationGuard.Validate(builder.Configuration, builder.Environment.EnvironmentName);
 
 // Authentication and Authorization
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
