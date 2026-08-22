@@ -37,7 +37,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Id = po.Id,
                         Name = po.Name,
                         ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
-                        AccountName = po.Account.FullName,
+                        AccountName = "N/A", // Account nav removed - use AccountId for lookup
                         Status = po.Status,
                     }).ToList();
                     if (postResponses == null)
@@ -79,7 +79,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Id = po.Id,
                         Name = po.Name,
                         ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
-                        AccountName = po.Account.FullName,
+                        AccountName = "N/A", // Account nav removed - use AccountId for lookup
                         Status = po.Status,
                     }).ToList();
                     if (postResponses == null)

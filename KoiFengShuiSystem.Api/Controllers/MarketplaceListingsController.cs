@@ -1,9 +1,11 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.Api.Controllers
 {
@@ -15,8 +17,8 @@ namespace KoiFengShuiSystem.Api.Controllers
         private IMarketplaceListingService _marketplaceListingService;
         private readonly ILogger<MarketplaceListingsController> _logger;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly GenericRepository<Account> _accountRepository;
-        public MarketplaceListingsController(IMarketplaceListingService marketplaceListingService, ILogger<MarketplaceListingsController> logger, IHttpContextAccessor httpContextAccessor, GenericRepository<Account> accountRepository)
+        private readonly GenericRepository<AccountEntity> _accountRepository;
+        public MarketplaceListingsController(IMarketplaceListingService marketplaceListingService, ILogger<MarketplaceListingsController> logger, IHttpContextAccessor httpContextAccessor, GenericRepository<AccountEntity> accountRepository)
         {
             _marketplaceListingService = marketplaceListingService;
             _logger = logger;

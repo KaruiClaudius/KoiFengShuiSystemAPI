@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using KoiFengShuiSystem.DataAccess;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
@@ -27,7 +28,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
         public async Task<List<AdminPostResponse>> GetAllAdminPostsAsync()
         {
             var posts = await _context.Posts
-                .Include(p => p.Account)
                 .Include(p => p.PostImages)
                     .ThenInclude(pi => pi.Image)
                 .ToListAsync();
@@ -38,7 +38,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
         public async Task<AdminPostResponse> GetAdminPostByIdAsync(int id)
         {
             var post = await _context.Posts
-                .Include(p => p.Account)
                 .Include(p => p.PostImages)
                     .ThenInclude(pi => pi.Image)
                 .FirstOrDefaultAsync(p => p.PostId == id);
@@ -194,7 +193,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
                 AccountId = post.AccountId,
                 Status = post.Status,
                 ElementId = post.ElementId,
-                AccountName = post.Account?.FullName,
+                AccountName = "N/A", // Account nav removed - use AccountId for lookup
                 ImageUrls = post.PostImages.Select(pi => pi.Image.ImageUrl).ToList()
             };
         }

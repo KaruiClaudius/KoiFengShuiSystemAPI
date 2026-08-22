@@ -10,7 +10,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         public async Task<IEnumerable<Post>> GetAllWithElementAsync()
         {
             return await _dbSet
-                .Include(p => p.Account)
                 .ToListAsync();
 
         }
@@ -18,7 +17,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var posts = await _dbSet
                 .Where(p => p.Id == postTypeId)
-                .Include(p => p.Account)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

@@ -6,6 +6,7 @@ using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
+using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Host.Middleware;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure;
@@ -52,8 +53,9 @@ builder.Services.AddAuthorization();
 
 // Controller configuration - discover controllers from API assembly
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(KoiFengShuiSystem.Api.Controllers.AuthController).Assembly)
+    .AddApplicationPart(typeof(KoiFengShuiSystem.Api.Controllers.FAQController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.FengShui.Api.Controllers.CompatibilityController).Assembly)
+    .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Identity.Api.IdentityApiAssemblyMarker).Assembly)
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -87,11 +89,9 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 
 // Service registrations
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IMarketplaceListingService, MarketplaceListingService>();
-builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -102,7 +102,6 @@ builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<AdminAccountService>();
 builder.Services.AddScoped<UnitOfWorkRepository>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IElementService, ElementService>();
@@ -116,7 +115,8 @@ builder.Services.AddScoped<CloudService>();
 builder.Services.AddModuleInstallersFromAssemblies(
     builder.Configuration,
     typeof(Program).Assembly,
-    typeof(KoiFengShuiSystem.Modules.FengShui.Infrastructure.FengShuiModuleInstaller).Assembly);
+    typeof(KoiFengShuiSystem.Modules.FengShui.Infrastructure.FengShuiModuleInstaller).Assembly,
+    typeof(KoiFengShuiSystem.Modules.Identity.Infrastructure.IdentityModuleInstaller).Assembly);
 
 builder.Services.AddHttpClient();
 

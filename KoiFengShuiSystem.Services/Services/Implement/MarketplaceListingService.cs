@@ -6,19 +6,22 @@ using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Http;
+
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class MarketplaceListingService : IMarketplaceListingService
     {
         private readonly UnitOfWorkRepository _unitOfWork;
-        private readonly GenericRepository<Account> _accountRepository;
+        private readonly GenericRepository<AccountEntity> _accountRepository;
         private readonly ICloudService _cloudService;
 
-        public MarketplaceListingService(UnitOfWorkRepository unitOfWork, GenericRepository<Account> accountRepository, ICloudService cloudService)
+        public MarketplaceListingService(UnitOfWorkRepository unitOfWork, GenericRepository<AccountEntity> accountRepository, ICloudService cloudService)
         {
             _unitOfWork = unitOfWork;
             _accountRepository = accountRepository;
@@ -134,7 +137,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Color = mp.Color,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
-                        AccountName = mp.Account.FullName,
+                        AccountName = "N/A", // Account nav removed
                         ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
@@ -181,7 +184,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Color = mp.Color,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
-                        AccountName = mp.Account.FullName,
+                        AccountName = "N/A", // Account nav removed
                         ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
@@ -239,7 +242,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Color = mp.Color,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
-                        AccountName = mp.Account.FullName,
+                        AccountName = "N/A", // Account nav removed
                         ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
@@ -308,7 +311,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         Color = mp.Color,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
-                        AccountName = mp.Account.FullName,
+                        AccountName = "N/A", // Account nav removed
                         ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,
@@ -367,8 +370,8 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         ExpiresAt = mp.ExpiresAt,
                         IsActive = mp.IsActive,
                         ElementId = mp.ElementId,
-                        AccountName = mp.Account.FullName,
-                        AccountPhoneNumber = mp.Account.Phone,
+                        AccountName = "N/A", // Account nav removed
+                        AccountPhoneNumber = "N/A", // Account nav removed
                         ElementName = mp.ElementId.HasValue && elementDict.TryGetValue(mp.ElementId.Value, out var en) ? en : null,
                         TierName = mp.Tier.TierName,
                         Status = mp.Status,

@@ -1,8 +1,7 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Threading.Tasks;
+
+namespace KoiFengShuiSystem.Modules.Identity.Application.Services;
 
 public class AdminAccountService
 {
@@ -34,7 +33,7 @@ public class AdminAccountService
                 Email = adminEmail,
                 Password = adminPassword,
                 FullName = "System Administrator",
-                RoleId = 1, // Assuming 1 is the admin role
+                RoleId = 1,
                 Dob = DateTime.Now,
                 Gender = "Other",
                 CreateAt = DateTime.Now,
@@ -44,8 +43,6 @@ public class AdminAccountService
 
             await _accountService.CreateAsync(newAdmin);
             await _accountService.UpdateUserPasswordAsync(newAdmin, adminPassword);
-
-            Console.WriteLine($"Admin account created with email: {adminEmail}");
         }
     }
 }

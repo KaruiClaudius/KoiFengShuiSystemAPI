@@ -1,0 +1,55 @@
+using KoiFengShuiSystem.BusinessLogic.Services.Implement;
+using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
+using KoiFengShuiSystem.Shared.Helpers;
+
+namespace KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
+
+public class LegacyIdentityEmailSender : IIdentityEmailSender
+{
+    private readonly EmailService _emailService;
+
+    public LegacyIdentityEmailSender(EmailService emailService)
+    {
+        _emailService = emailService;
+    }
+
+    public async Task<bool> SendPasswordResetEmailAsync(string email, string fullName, string newPassword)
+    {
+        var mailData = new MailData
+        {
+            EmailToId = email,
+            EmailToName = fullName,
+            EmailBody = $@"
+<div style=""max-width: 400px; margin: 50px auto; padding: 30px; text-align: center; font-size: 120%; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); position: relative;"">
+    <img src=""https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRDn7YDq7gsgIdHOEP2_Mng6Ym3OzmvfUQvQ&usqp=CAU"" alt=""Noto Image"" style=""max-width: 100px; height: auto; display: block; margin: 0 auto; border-radius: 50%;"">
+    <h2 style=""text-transform: uppercase; color: #3498db; margin-top: 20px; font-size: 28px; font-weight: bold;"">Password Reset</h2>
+    <p>Your new password is: <span style=""font-weight: bold; color: #e74c3c;"">{newPassword}</span></p>
+    <p>Please log in and change your password.</p>
+    <p style=""color: #888; font-size: 14px;"">Powered by KoiFengShui</p>
+</div>",
+            EmailSubject = "Password Reset"
+        };
+
+        return await _emailService.SendEmailAsync(mailData);
+    }
+
+    public async Task<bool> SendDefaultPasswordAsync(string email, string fullName, string defaultPassword)
+    {
+        var mailData = new MailData
+        {
+            EmailToId = email,
+            EmailToName = fullName,
+            EmailBody = $@"
+<div style=""max-width: 400px; margin: 50px auto; padding: 30px; text-align: center; font-size: 120%; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); position: relative;"">
+    <img src=""https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRDn7YDq7gsgIdHOEP2_Mng6Ym3OzmvfUQvQ&usqp=CAU"" alt=""Noto Image"" style=""max-width: 100px; height: auto; display: block; margin: 0 auto; border-radius: 50%;"">
+    <h2 style=""text-transform: uppercase; color: #3498db; margin-top: 20px; font-size: 28px; font-weight: bold;"">Default Password</h2>
+    <p>Your default password is: <span style=""font-weight: bold; color: #e74c3c;"">{defaultPassword}</span></p>
+    <p>Please log in and change your password.</p>
+    <p style=""color: #888; font-size: 14px;"">Powered by KoiFengShui</p>
+</div>",
+            EmailSubject = "Default Password"
+        };
+
+        return await _emailService.SendEmailAsync(mailData);
+    }
+}

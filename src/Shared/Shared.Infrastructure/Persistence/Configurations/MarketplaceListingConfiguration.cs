@@ -1,5 +1,6 @@
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,8 +10,8 @@ public class MarketplaceListingConfiguration : IEntityTypeConfiguration<Marketpl
 {
     public void Configure(EntityTypeBuilder<MarketplaceListing> builder)
     {
-        builder.HasOne(d => d.Account)
-            .WithMany(p => p.MarketplaceListings)
+        builder.HasOne<Account>()
+            .WithMany()
             .HasForeignKey(d => d.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -20,7 +21,7 @@ public class MarketplaceListingConfiguration : IEntityTypeConfiguration<Marketpl
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Element>()
-            .WithMany(p => p.MarketplaceListings)
+            .WithMany()
             .HasForeignKey(d => d.ElementId);
 
         builder.HasOne(d => d.Tier)

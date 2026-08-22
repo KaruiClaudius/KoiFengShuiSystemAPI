@@ -11,7 +11,5 @@ public class Follow
 
     public int AccountId { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
-
     public virtual Post Post { get; set; } = null!;
 }

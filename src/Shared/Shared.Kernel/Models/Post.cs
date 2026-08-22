@@ -29,8 +29,6 @@ public class Post
 
     public int? ElementId { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
-
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
     public virtual PostCategory IdNavigation { get; set; } = null!;

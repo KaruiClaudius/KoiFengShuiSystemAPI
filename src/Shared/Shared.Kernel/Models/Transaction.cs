@@ -25,8 +25,6 @@ public class Transaction
 
     public int? ListingId { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
-
     public virtual MarketplaceListing? Listing { get; set; }
 
     public virtual SubcriptionTier? Tier { get; set; }

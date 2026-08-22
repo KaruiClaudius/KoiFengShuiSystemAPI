@@ -11,11 +11,10 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         public async Task<IEnumerable<MarketplaceListing>> GetAllWithElementAsync()
         {
             return await _dbSet
-                .Include(p => p.Account)
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
-                 .OrderByDescending(p => p.Tier.TierId.Equals(2)) // 2. Tin Nổi Bật
+                 .OrderByDescending(p => p.Tier.TierId.Equals(2))
                 .ThenByDescending(p => p.CreateAt)
                 .ToListAsync();
 
@@ -24,7 +23,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.CategoryId == categoryId)
-                .Include(p => p.Account)
                 .Include(p => p.Tier)
                 .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
@@ -39,12 +37,11 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.ElementId == elementId && p.ListingId != excludeListingId && p.CategoryId == categoryId)
-                .Include(p => p.Account)
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
-                .OrderByDescending(p => p.Tier.TierId.Equals(2)) // 2. Tin Nổi Bật
+                .OrderByDescending(p => p.Tier.TierId.Equals(2))
                 .ThenByDescending(p => p.CreateAt)
                 .Take(pageSize)
                 .ToListAsync();
@@ -56,12 +53,11 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             var marketplaces = await _dbSet
                 .Where(p => p.AccountId == accountId && p.CategoryId == categoryId && p.ListingId != excludeListingId)
-                .Include(p => p.Account)
                 .Include(p => p.Tier)
                 .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)
                 .Skip((pageNumber - 1) * pageSize)
-                .OrderByDescending(p => p.Tier.TierId.Equals(2)) // Premium listings first
+                .OrderByDescending(p => p.Tier.TierId.Equals(2))
                 .ThenByDescending(p => p.CreateAt)
                 .Take(pageSize)
                 .ToListAsync();
@@ -73,7 +69,6 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         {
             return await _dbSet
                 .Where(p => p.ListingId == id)
-                .Include(p => p.Account)
                 .Include(p => p.Tier)
                  .Include(p => p.ListingImages)
                 .ThenInclude(p => p.Image)

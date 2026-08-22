@@ -27,7 +27,7 @@
 		<PackageReference Include="MimeKit" Version="4.11.0" />
 		<PackageReference Include="payOS" Version="1.0.7" />
 		<PackageReference Include="System.Text.Json" Version="8.0.5" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.0-rc.1.24431.7" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\src\Modules\FengShui\FengShui.Domain\FengShui.Domain.csproj" />

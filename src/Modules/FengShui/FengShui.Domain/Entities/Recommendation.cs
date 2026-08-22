@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 
 namespace KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 

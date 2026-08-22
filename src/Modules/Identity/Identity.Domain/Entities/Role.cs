@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace KoiFengShuiSystem.DataAccess.Models;
+namespace KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 
 public class Role
 {
@@ -10,6 +10,4 @@ public class Role
     [Required]
     [MaxLength(50)]
     public string RoleName { get; set; } = string.Empty;
-
-    public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 }

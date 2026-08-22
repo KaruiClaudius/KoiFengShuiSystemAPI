@@ -19,10 +19,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Common\KoiFengShuiSystem.Common.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Host\Host.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
     <ProjectReference Include="..\..\src\Modules\FengShui\FengShui.Domain\FengShui.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

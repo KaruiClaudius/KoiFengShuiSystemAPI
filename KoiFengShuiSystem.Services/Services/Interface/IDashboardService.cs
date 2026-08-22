@@ -1,4 +1,5 @@
 ﻿using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using System;
@@ -6,13 +7,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
 {
     public interface IDashboardService
     {
         Task<int> CountNewUsersAsync(int days);
-        Task<List<Account>> ListNewUsersAsync(int days);
+        Task<List<AccountEntity>> ListNewUsersAsync(int days);
         Task<int> GetRegisteredUsersTrafficCount();
         Task<int> GetUniqueGuestsTrafficCount();
         Task<int> CountNewMarketListingsAsync(int days);

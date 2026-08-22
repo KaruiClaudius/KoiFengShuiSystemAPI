@@ -22,127 +22,6 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Account", b =>
-                {
-                    b.Property<int>("AccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("Dob")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ElementId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Gender")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("Password")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("RoleId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("Wallet")
-                        .HasColumnType("decimal(18,0)");
-
-                    b.HasKey("AccountId");
-
-                    b.HasIndex("ElementId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("Accounts", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Country", b =>
-                {
-                    b.Property<int>("CountryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryId"));
-
-                    b.Property<string>("CountryName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("CountryId");
-
-                    b.ToTable("Countries", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Direction", b =>
-                {
-                    b.Property<int>("DirectionId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DirectionId"));
-
-                    b.Property<string>("DirectionName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("DirectionId");
-
-                    b.ToTable("Directions", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Element", b =>
-                {
-                    b.Property<int>("ElementId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ElementId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ElementName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("LuckyNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("ElementId");
-
-                    b.ToTable("Elements", (string)null);
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FAQ", b =>
                 {
                     b.Property<int>("FAQId")
@@ -170,58 +49,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("FAQs", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FengShuiDirection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("DirectionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ElementId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DirectionId");
-
-                    b.HasIndex("ElementId");
-
-                    b.ToTable("FengShuiDirections", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FishPond", b =>
-                {
-                    b.Property<int>("PondId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PondId"));
-
-                    b.Property<int>("DirectionPlacement")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShapeId")
-                        .HasColumnType("int");
-
-                    b.HasKey("PondId");
-
-                    b.HasIndex("DirectionPlacement");
-
-                    b.HasIndex("ShapeId");
-
-                    b.ToTable("FishPonds", (string)null);
+                    b.ToTable("FAQs");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Follow", b =>
@@ -244,7 +72,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Follows", (string)null);
+                    b.ToTable("Follows");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Image", b =>
@@ -262,45 +90,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasKey("ImageId");
 
-                    b.ToTable("Images", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.KoiBreed", b =>
-                {
-                    b.Property<int>("BreedId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BreedId"));
-
-                    b.Property<string>("BreedName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Color")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("CountryId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ElementId")
-                        .HasColumnType("int");
-
-                    b.HasKey("BreedId");
-
-                    b.HasIndex("CountryId");
-
-                    b.HasIndex("ElementId");
-
-                    b.ToTable("KoiBreeds", (string)null);
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ListingImage", b =>
@@ -326,7 +116,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("MarketListingId");
 
-                    b.ToTable("ListingImages", (string)null);
+                    b.ToTable("ListingImages");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketCategory", b =>
@@ -344,7 +134,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasKey("Categoryid");
 
-                    b.ToTable("MarketCategories", (string)null);
+                    b.ToTable("MarketCategories");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", b =>
@@ -373,6 +163,9 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("ElementId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ElementId1")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ExpiresAt")
@@ -407,9 +200,11 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("ElementId");
 
+                    b.HasIndex("ElementId1");
+
                     b.HasIndex("TierId");
 
-                    b.ToTable("MarketplaceListings", (string)null);
+                    b.ToTable("MarketplaceListings");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Post", b =>
@@ -434,6 +229,9 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Property<int?>("ElementId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ElementId1")
+                        .HasColumnType("int");
+
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
@@ -456,9 +254,11 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("ElementId");
 
+                    b.HasIndex("ElementId1");
+
                     b.HasIndex("Id");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.PostCategory", b =>
@@ -476,7 +276,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PostCategories", (string)null);
+                    b.ToTable("PostCategories");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.PostImage", b =>
@@ -502,84 +302,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostImages", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Recommendation", b =>
-                {
-                    b.Property<int>("RecommendationId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecommendationId"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BreedId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PondId")
-                        .HasColumnType("int");
-
-                    b.HasKey("RecommendationId");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("BreedId");
-
-                    b.HasIndex("PondId");
-
-                    b.ToTable("Recommendations", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Role", b =>
-                {
-                    b.Property<int>("RoleId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("RoleId");
-
-                    b.ToTable("Roles", (string)null);
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ShapeCategory", b =>
-                {
-                    b.Property<int>("ShapeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShapeId"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("ElementId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ShapeName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("ShapeId");
-
-                    b.HasIndex("ElementId");
-
-                    b.ToTable("ShapeCategories", (string)null);
+                    b.ToTable("PostImages");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", b =>
@@ -597,7 +320,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasKey("TierId");
 
-                    b.ToTable("SubcriptionTiers", (string)null);
+                    b.ToTable("SubcriptionTiers");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.TrafficLog", b =>
@@ -637,7 +360,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("TrafficLogs", (string)null);
+                    b.ToTable("TrafficLogs");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Transaction", b =>
@@ -679,77 +402,314 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
                     b.HasIndex("TierId");
 
-                    b.ToTable("Transactions", (string)null);
+                    b.ToTable("Transactions");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Account", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Country", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Element", "Element")
-                        .WithMany("Accounts")
-                        .HasForeignKey("ElementId");
+                    b.Property<int>("CountryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Role", "Role")
-                        .WithMany("Accounts")
-                        .HasForeignKey("RoleId");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryId"));
 
-                    b.Navigation("Element");
+                    b.Property<string>("CountryName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
-                    b.Navigation("Role");
+                    b.HasKey("CountryId");
+
+                    b.ToTable("Countries");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Direction", b =>
+                {
+                    b.Property<int>("DirectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DirectionId"));
+
+                    b.Property<string>("DirectionName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("DirectionId");
+
+                    b.ToTable("Directions");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", b =>
+                {
+                    b.Property<int>("ElementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ElementId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ElementName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("LuckyNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ElementId");
+
+                    b.ToTable("Elements");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FengShuiDirection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("DirectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ElementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DirectionId");
+
+                    b.HasIndex("ElementId");
+
+                    b.ToTable("FengShuiDirections");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FishPond", b =>
+                {
+                    b.Property<int>("PondId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PondId"));
+
+                    b.Property<int>("DirectionPlacement")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShapeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PondId");
+
+                    b.HasIndex("DirectionPlacement");
+
+                    b.HasIndex("ShapeId");
+
+                    b.ToTable("FishPonds");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.KoiBreed", b =>
+                {
+                    b.Property<int>("BreedId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BreedId"));
+
+                    b.Property<string>("BreedName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ElementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BreedId");
+
+                    b.HasIndex("CountryId");
+
+                    b.HasIndex("ElementId");
+
+                    b.ToTable("KoiBreeds");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Recommendation", b =>
+                {
+                    b.Property<int>("RecommendationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecommendationId"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BreedId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PondId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecommendationId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("BreedId");
+
+                    b.HasIndex("PondId");
+
+                    b.ToTable("Recommendations");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.ShapeCategory", b =>
+                {
+                    b.Property<int>("ShapeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShapeId"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ElementId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ShapeName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("ShapeId");
+
+                    b.HasIndex("ElementId");
+
+                    b.ToTable("ShapeCategories");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", b =>
+                {
+                    b.Property<int>("AccountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
+
+                    b.Property<DateTime>("CreateAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Dob")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ElementId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ElementId1")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Gender")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdateAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Wallet")
+                        .HasColumnType("decimal(18,0)");
+
+                    b.HasKey("AccountId");
+
+                    b.HasIndex("ElementId");
+
+                    b.HasIndex("ElementId1");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("Accounts");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Role", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FAQ", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("FAQs")
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
+                        .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Account");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FengShuiDirection", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Direction", "Direction")
-                        .WithMany("FengShuiDirections")
-                        .HasForeignKey("DirectionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Element", "Element")
-                        .WithMany("FengShuiDirections")
-                        .HasForeignKey("ElementId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Direction");
-
-                    b.Navigation("Element");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FishPond", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.FengShuiDirection", "DirectionPlacementNavigation")
-                        .WithMany("FishPonds")
-                        .HasForeignKey("DirectionPlacement")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.ShapeCategory", "Shape")
-                        .WithMany("FishPonds")
-                        .HasForeignKey("ShapeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("DirectionPlacementNavigation");
-
-                    b.Navigation("Shape");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Follow", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("Follows")
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
+                        .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -760,28 +720,7 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Account");
-
                     b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.KoiBreed", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Country", "Country")
-                        .WithMany("KoiBreeds")
-                        .HasForeignKey("CountryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Element", "Element")
-                        .WithMany("KoiBreeds")
-                        .HasForeignKey("ElementId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Country");
-
-                    b.Navigation("Element");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ListingImage", b =>
@@ -805,8 +744,8 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("MarketplaceListings")
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
+                        .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -817,9 +756,13 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Element", "Element")
-                        .WithMany("MarketplaceListings")
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
+                        .WithMany()
                         .HasForeignKey("ElementId");
+
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
+                        .WithMany("MarketplaceListings")
+                        .HasForeignKey("ElementId1");
 
                     b.HasOne("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", "Tier")
                         .WithMany("MarketplaceListings")
@@ -827,36 +770,32 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Account");
-
                     b.Navigation("Category");
-
-                    b.Navigation("Element");
 
                     b.Navigation("Tier");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Post", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("Posts")
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
+                        .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Element", "Element")
-                        .WithMany("Posts")
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
+                        .WithMany()
                         .HasForeignKey("ElementId");
+
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
+                        .WithMany("Posts")
+                        .HasForeignKey("ElementId1");
 
                     b.HasOne("KoiFengShuiSystem.DataAccess.Models.PostCategory", "IdNavigation")
                         .WithMany("Posts")
                         .HasForeignKey("Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Account");
-
-                    b.Navigation("Element");
 
                     b.Navigation("IdNavigation");
                 });
@@ -880,55 +819,17 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Recommendation", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("Recommendations")
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.KoiBreed", "Breed")
-                        .WithMany("Recommendations")
-                        .HasForeignKey("BreedId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.FishPond", "Pond")
-                        .WithMany("Recommendations")
-                        .HasForeignKey("PondId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Account");
-
-                    b.Navigation("Breed");
-
-                    b.Navigation("Pond");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ShapeCategory", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Element", "Element")
-                        .WithMany("ShapeCategories")
-                        .HasForeignKey("ElementId");
-
-                    b.Navigation("Element");
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.TrafficLog", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("TrafficLogs")
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
+                        .WithMany()
                         .HasForeignKey("AccountId");
-
-                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Transaction", b =>
                 {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Account", "Account")
-                        .WithMany("Transactions")
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
+                        .WithMany()
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -941,63 +842,119 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                         .WithMany("Transactions")
                         .HasForeignKey("TierId");
 
-                    b.Navigation("Account");
-
                     b.Navigation("Listing");
 
                     b.Navigation("Tier");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Account", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FengShuiDirection", b =>
                 {
-                    b.Navigation("FAQs");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Direction", "Direction")
+                        .WithMany("FengShuiDirections")
+                        .HasForeignKey("DirectionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("Follows");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", "Element")
+                        .WithMany("FengShuiDirections")
+                        .HasForeignKey("ElementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("MarketplaceListings");
+                    b.Navigation("Direction");
 
-                    b.Navigation("Posts");
-
-                    b.Navigation("Recommendations");
-
-                    b.Navigation("TrafficLogs");
-
-                    b.Navigation("Transactions");
+                    b.Navigation("Element");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Country", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FishPond", b =>
                 {
-                    b.Navigation("KoiBreeds");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FengShuiDirection", "DirectionPlacementNavigation")
+                        .WithMany("FishPonds")
+                        .HasForeignKey("DirectionPlacement")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.ShapeCategory", "Shape")
+                        .WithMany("FishPonds")
+                        .HasForeignKey("ShapeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DirectionPlacementNavigation");
+
+                    b.Navigation("Shape");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Direction", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.KoiBreed", b =>
                 {
-                    b.Navigation("FengShuiDirections");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Country", "Country")
+                        .WithMany("KoiBreeds")
+                        .HasForeignKey("CountryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", "Element")
+                        .WithMany("KoiBreeds")
+                        .HasForeignKey("ElementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Country");
+
+                    b.Navigation("Element");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Element", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Recommendation", b =>
                 {
-                    b.Navigation("Accounts");
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("FengShuiDirections");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.KoiBreed", "Breed")
+                        .WithMany("Recommendations")
+                        .HasForeignKey("BreedId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("KoiBreeds");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FishPond", "Pond")
+                        .WithMany("Recommendations")
+                        .HasForeignKey("PondId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("MarketplaceListings");
+                    b.Navigation("Account");
 
-                    b.Navigation("Posts");
+                    b.Navigation("Breed");
 
-                    b.Navigation("ShapeCategories");
+                    b.Navigation("Pond");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FengShuiDirection", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.ShapeCategory", b =>
                 {
-                    b.Navigation("FishPonds");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", "Element")
+                        .WithMany("ShapeCategories")
+                        .HasForeignKey("ElementId");
+
+                    b.Navigation("Element");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FishPond", b =>
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", b =>
                 {
-                    b.Navigation("Recommendations");
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
+                        .WithMany()
+                        .HasForeignKey("ElementId");
+
+                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
+                        .WithMany("Accounts")
+                        .HasForeignKey("ElementId1");
+
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Image", b =>
@@ -1005,11 +962,6 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Navigation("ListingImages");
 
                     b.Navigation("PostImages");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.KoiBreed", b =>
-                {
-                    b.Navigation("Recommendations");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketCategory", b =>
@@ -1036,21 +988,56 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Navigation("Posts");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Role", b =>
-                {
-                    b.Navigation("Accounts");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ShapeCategory", b =>
-                {
-                    b.Navigation("FishPonds");
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", b =>
                 {
                     b.Navigation("MarketplaceListings");
 
                     b.Navigation("Transactions");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Country", b =>
+                {
+                    b.Navigation("KoiBreeds");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Direction", b =>
+                {
+                    b.Navigation("FengShuiDirections");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", b =>
+                {
+                    b.Navigation("Accounts");
+
+                    b.Navigation("FengShuiDirections");
+
+                    b.Navigation("KoiBreeds");
+
+                    b.Navigation("MarketplaceListings");
+
+                    b.Navigation("Posts");
+
+                    b.Navigation("ShapeCategories");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FengShuiDirection", b =>
+                {
+                    b.Navigation("FishPonds");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FishPond", b =>
+                {
+                    b.Navigation("Recommendations");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.KoiBreed", b =>
+                {
+                    b.Navigation("Recommendations");
+                });
+
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.ShapeCategory", b =>
+                {
+                    b.Navigation("FishPonds");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,5 +1,6 @@
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -9,13 +10,13 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 {
     public void Configure(EntityTypeBuilder<Post> builder)
     {
-        builder.HasOne(d => d.Account)
-            .WithMany(p => p.Posts)
+        builder.HasOne<Account>()
+            .WithMany()
             .HasForeignKey(d => d.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Element>()
-            .WithMany(p => p.Posts)
+            .WithMany()
             .HasForeignKey(d => d.ElementId);
 
         builder.HasOne(d => d.IdNavigation)

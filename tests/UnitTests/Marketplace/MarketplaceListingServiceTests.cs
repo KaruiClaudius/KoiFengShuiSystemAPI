@@ -4,6 +4,8 @@ using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Models.Request;
@@ -31,7 +33,7 @@ namespace UnitTests.Marketplace
         {
             var context = CreateContext();
 
-            context.Accounts.Add(new Account
+            context.Accounts.Add(new AccountEntity
             {
                 AccountId = 1,
                 FullName = "Test Seller",
@@ -89,7 +91,7 @@ namespace UnitTests.Marketplace
         {
             return new MarketplaceListingService(
                 new UnitOfWorkRepository(context),
-                new GenericRepository<Account>(context),
+                new GenericRepository<AccountEntity>(context),
                 cloudService ?? Mock.Of<ICloudService>());
         }
 

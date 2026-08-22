@@ -1,16 +1,17 @@
-﻿using KoiFengShuiSystem.DataAccess.Models;
+﻿using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using KoiFengShuiSystem.Shared.Helpers;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public interface IJwtUtils
     {
-        public string GenerateJwtToken(Account account);
+        public string GenerateJwtToken(AccountEntity account);
         public int? ValidateJwtToken(string? token);
 
     }
@@ -27,7 +28,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 throw new Exception("JWT secret not configured");
         }
 
-        public string GenerateJwtToken(Account account)
+        public string GenerateJwtToken(AccountEntity account)
         {
             // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();

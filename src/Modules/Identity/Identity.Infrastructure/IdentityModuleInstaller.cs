@@ -1,0 +1,24 @@
+using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
+using KoiFengShuiSystem.Modules.Identity.Application.Services;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
+using KoiFengShuiSystem.Shared.Kernel.Modules;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace KoiFengShuiSystem.Modules.Identity.Infrastructure;
+
+public class IdentityModuleInstaller : IModuleInstaller
+{
+    public void AddServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddScoped<IIdentityReadStore, EfIdentityReadStore>();
+        services.AddScoped<IIdentityWriteStore, EfIdentityWriteStore>();
+        services.AddScoped<IIdentityElementLookup, EfIdentityElementLookup>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IIdentityEmailSender, LegacyIdentityEmailSender>();
+        services.AddScoped<IAccountService, AccountService>();
+        services.AddScoped<AdminAccountService>();
+    }
+}

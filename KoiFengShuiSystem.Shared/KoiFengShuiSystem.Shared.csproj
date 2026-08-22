@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
+    <ProjectReference Include="..\src\Modules\Identity\Identity.Domain\Identity.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

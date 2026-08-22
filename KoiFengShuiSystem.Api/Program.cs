@@ -7,6 +7,7 @@ using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
+using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
@@ -83,11 +84,9 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(nameof(CloundSettings)));
 // Service registrations
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IMarketplaceListingService, MarketplaceListingService>();
-builder.Services.AddScoped<IJwtUtils, JwtUtils>();
 builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -98,7 +97,6 @@ builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<AdminAccountService>();
 builder.Services.AddScoped<UnitOfWorkRepository>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IElementService, ElementService>();
@@ -109,7 +107,10 @@ builder.Services.AddHostedService<TransactionSyncService>();
 
 builder.Services.AddScoped<CloudService>();
 
-builder.Services.AddModuleInstallersFromAssemblies(builder.Configuration, typeof(Program).Assembly);
+builder.Services.AddModuleInstallersFromAssemblies(
+    builder.Configuration,
+    typeof(Program).Assembly,
+    typeof(KoiFengShuiSystem.Modules.Identity.Infrastructure.IdentityModuleInstaller).Assembly);
 
 builder.Services.AddHttpClient();
 //builder.Services.AddSingleton<IVnPayService, VnPayService>();

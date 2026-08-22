@@ -1,6 +1,7 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Models.Request;
@@ -10,11 +11,13 @@ using Net.payOS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
+
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class TransactionService : ITransactionService
     {
-        private readonly GenericRepository<Account> _accountRepository;
+        private readonly GenericRepository<AccountEntity> _accountRepository;
         private readonly GenericRepository<MarketplaceListing> _marketplaceListingRepository;
         private readonly GenericRepository<DataAccess.Models.Transaction> _transactionRepository;
         private readonly PayOS _payOS;
@@ -22,7 +25,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
         private readonly ILogger<TransactionService> _logger;
 
         public TransactionService(
-            GenericRepository<Account> accountRepository,
+            GenericRepository<AccountEntity> accountRepository,
             GenericRepository<MarketplaceListing> marketplaceListingRepository,
             GenericRepository<DataAccess.Models.Transaction> transactionRepository,
             PayOS payOS,

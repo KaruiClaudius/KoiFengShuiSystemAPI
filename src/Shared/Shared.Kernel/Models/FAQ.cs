@@ -17,6 +17,4 @@ public class FAQ
     public DateTime CreateAt { get; set; }
 
     public int AccountId { get; set; }
-
-    public virtual Account Account { get; set; } = null!;
 }

@@ -1,6 +1,7 @@
 ﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.DataAccess.Base;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Models.Request;
 using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.EntityFrameworkCore;
@@ -10,12 +11,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 {
     public class DashboardService : IDashboardService
     {
-        private readonly GenericRepository<Account> _accountRepository;
+        private readonly GenericRepository<AccountEntity> _accountRepository;
         private readonly GenericRepository<TrafficLog> _trafficLogRepository;
         private readonly GenericRepository<MarketplaceListing> _marketplaceListingRepository;
         private readonly GenericRepository<Transaction> _transactionRepository;
@@ -26,7 +28,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
 
 
         public DashboardService(
-            GenericRepository<Account> accountRepository,
+            GenericRepository<AccountEntity> accountRepository,
             GenericRepository<TrafficLog> trafficLogRepository,
             GenericRepository<MarketplaceListing> marketplaceListingRepository,
             GenericRepository<Transaction> transactionRepository,
@@ -46,7 +48,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
             return (await ListNewUsersAsync(days)).Count;
         }
 
-        public async Task<List<Account>> ListNewUsersAsync(int days)
+        public async Task<List<AccountEntity>> ListNewUsersAsync(int days)
         {
             if (days <= 0)
             {

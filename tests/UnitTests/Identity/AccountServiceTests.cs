@@ -1,11 +1,18 @@
-using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.DataAccess.Base;
+using KoiFengShuiSystem.BusinessLogic.Services.Implement;
+using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
+using KoiFengShuiSystem.Modules.Identity.Application.Requests;
+using KoiFengShuiSystem.Modules.Identity.Application.Responses;
+using KoiFengShuiSystem.Modules.Identity.Application.Services;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Email;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Persistence;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
-using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
+using IdentityAccountService = KoiFengShuiSystem.Modules.Identity.Application.Services.AccountService;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
-using KoiFengShuiSystem.Shared.Models.Request;
-using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +22,8 @@ namespace UnitTests.Identity
 {
     public class AccountServiceTests
     {
+        private const string JwtSecret = "test-secret-key-that-is-at-least-32-bytes-long-for-hmac";
+
         private static DbContextOptions<KoiFengShuiContext> CreateInMemoryOptions()
         {
             return new DbContextOptionsBuilder<KoiFengShuiContext>()
@@ -25,6 +34,11 @@ namespace UnitTests.Identity
         private static KoiFengShuiContext CreateContext()
         {
             return new KoiFengShuiContext(CreateInMemoryOptions());
+        }
+
+        private static JwtTokenService CreateJwtTokenService()
+        {
+            return new JwtTokenService(Options.Create(new AppSettings { Secret = JwtSecret }));
         }
 
         private static EmailService CreateEmailService()
@@ -56,7 +70,7 @@ namespace UnitTests.Identity
                 LuckyNumber = "1,6"
             });
 
-            context.Accounts.Add(new Account
+            context.Accounts.Add(new AccountEntity
             {
                 AccountId = 1,
                 FullName = "Test User",
@@ -85,7 +99,7 @@ namespace UnitTests.Identity
                 LuckyNumber = "1,6"
             });
 
-            context.Accounts.Add(new Account
+            context.Accounts.Add(new AccountEntity
             {
                 AccountId = 1,
                 FullName = "Test User",
@@ -102,54 +116,80 @@ namespace UnitTests.Identity
             return context;
         }
 
-        private static AccountService CreateService(
+        private static IdentityAccountService CreateService(
             KoiFengShuiContext? context = null,
-            IJwtUtils? jwtUtils = null,
-            EmailService? emailService = null)
+            IJwtTokenService? jwtTokenService = null,
+            IIdentityEmailSender? identityEmailSender = null,
+            IIdentityElementLookup? elementLookup = null)
         {
             var ctx = context ?? CreateContext();
-            var jwt = jwtUtils ?? Mock.Of<IJwtUtils>(j => j.GenerateJwtToken(It.IsAny<Account>()) == "test-token");
-            var email = emailService ?? CreateEmailService();
-            var logger = Mock.Of<ILogger<AccountService>>();
+            var jwt = jwtTokenService ?? Mock.Of<IJwtTokenService>(j => j.GenerateJwtToken(It.IsAny<AccountEntity>()) == "test-token");
+            var email = identityEmailSender ?? new LegacyIdentityEmailSender(CreateEmailService());
+            var lookup = elementLookup ?? new EfIdentityElementLookup(ctx);
+            var logger = Mock.Of<ILogger<IdentityAccountService>>();
 
-            return new AccountService(
+            return new IdentityAccountService(
+                new EfIdentityReadStore(ctx),
+                new EfIdentityWriteStore(ctx),
                 jwt,
-                new GenericRepository<Account>(ctx),
                 email,
                 logger,
-                new GenericRepository<Element>(ctx));
+                lookup);
         }
 
         // --- Constructor ---
 
-        [Fact]
-        public void Constructor_AllowsNullDependencies()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        [InlineData(5)]
+        public void Constructor_NullDependency_ThrowsArgumentNullException(int nullDependencyIndex)
         {
             var ctx = CreateContext();
-            var email = CreateEmailService();
 
-            var ex = Record.Exception(() => new AccountService(
-                null!, null!, null!, null!, null!));
+            IIdentityReadStore readStore = new EfIdentityReadStore(ctx);
+            IIdentityWriteStore writeStore = new EfIdentityWriteStore(ctx);
+            IJwtTokenService jwtTokenService = CreateJwtTokenService();
+            IIdentityEmailSender identityEmailSender = new LegacyIdentityEmailSender(CreateEmailService());
+            ILogger<IdentityAccountService> logger = Mock.Of<ILogger<IdentityAccountService>>();
+            IIdentityElementLookup elementLookup = new EfIdentityElementLookup(ctx);
 
-            Assert.Null(ex);
+            var ex = Assert.Throws<ArgumentNullException>(() => new IdentityAccountService(
+                nullDependencyIndex == 0 ? null! : readStore,
+                nullDependencyIndex == 1 ? null! : writeStore,
+                nullDependencyIndex == 2 ? null! : jwtTokenService,
+                nullDependencyIndex == 3 ? null! : identityEmailSender,
+                nullDependencyIndex == 4 ? null! : logger,
+                nullDependencyIndex == 5 ? null! : elementLookup));
+
+            Assert.NotNull(ex.ParamName);
         }
 
         [Fact]
         public void Constructor_WithValidDependencies_Succeeds()
         {
             var ctx = CreateContext();
-            var jwt = Mock.Of<IJwtUtils>();
             var email = CreateEmailService();
-            var logger = Mock.Of<ILogger<AccountService>>();
+            var logger = Mock.Of<ILogger<IdentityAccountService>>();
 
-            var service = new AccountService(
-                jwt,
-                new GenericRepository<Account>(ctx),
-                email,
+            var service = new IdentityAccountService(
+                new EfIdentityReadStore(ctx),
+                new EfIdentityWriteStore(ctx),
+                CreateJwtTokenService(),
+                new LegacyIdentityEmailSender(email),
                 logger,
-                new GenericRepository<Element>(ctx));
+                new EfIdentityElementLookup(ctx));
 
             Assert.NotNull(service);
+        }
+
+        [Fact]
+        public void EfIdentityElementLookup_NullContext_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(() => new EfIdentityElementLookup(null!));
         }
 
         // --- GetAllAsync ---
@@ -242,9 +282,11 @@ namespace UnitTests.Identity
         public async Task AuthenticateAsync_ValidCredentials_ReturnsSuccess()
         {
             var context = CreateContextWithSeedData();
-            var jwtMock = new Mock<IJwtUtils>();
-            jwtMock.Setup(j => j.GenerateJwtToken(It.IsAny<Account>())).Returns("generated-jwt-token");
-            var service = CreateService(context, jwtUtils: jwtMock.Object);
+            var jwtMock = new Mock<IJwtTokenService>();
+            jwtMock
+                .Setup(service => service.GenerateJwtToken(It.IsAny<AccountEntity>()))
+                .Returns("generated-jwt-token");
+            var service = CreateService(context, jwtTokenService: jwtMock.Object);
             var request = new AuthenticateRequest { Email = "test@test.com", Password = "password123" };
 
             var result = await service.AuthenticateAsync(request);
@@ -348,7 +390,7 @@ namespace UnitTests.Identity
 
             var ex = await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 service.UpdateUserPasswordAsync(null!, "newpass"));
-            Assert.Contains("Account", ex.Message);
+            Assert.Contains("account", ex.Message);
         }
 
         [Fact]
@@ -358,7 +400,7 @@ namespace UnitTests.Identity
             var service = CreateService(context);
 
             var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-                service.UpdateUserPasswordAsync(new Account { AccountId = 1, Email = "test@test.com" }, ""));
+                service.UpdateUserPasswordAsync(new AccountEntity { AccountId = 1, Email = "test@test.com" }, ""));
             Assert.Contains("password", ex.Message, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -369,8 +411,8 @@ namespace UnitTests.Identity
             context.ChangeTracker.Clear();
             var service = CreateService(context);
 
-            var account = new Account { AccountId = 1, Email = "test@test.com" };
-            await service.UpdateUserPasswordAsync(account, "newPassword123");
+            var AccountEntity = new AccountEntity { AccountId = 1, Email = "test@test.com" };
+            await service.UpdateUserPasswordAsync(AccountEntity, "newPassword123");
 
             var updated = await service.GetByIdAsync(1);
             Assert.Equal("newPassword123", updated!.Password);
@@ -382,7 +424,7 @@ namespace UnitTests.Identity
             var context = CreateContext();
             var service = CreateService(context);
 
-            var nonExistent = new Account { AccountId = 999, Email = "ghost@test.com" };
+            var nonExistent = new AccountEntity { AccountId = 999, Email = "ghost@test.com" };
 
             await Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 service.UpdateUserPasswordAsync(nonExistent, "newpass"));
@@ -434,7 +476,7 @@ namespace UnitTests.Identity
                 LuckyNumber = "1,6"
             });
             context.Accounts.AddRange(
-                new Account
+                new AccountEntity
                 {
                     AccountId = 1,
                     FullName = "User One",
@@ -446,7 +488,7 @@ namespace UnitTests.Identity
                     UpdateAt = DateTime.Now,
                     RoleId = 2
                 },
-                new Account
+                new AccountEntity
                 {
                     AccountId = 2,
                     FullName = "User Two",
@@ -534,7 +576,7 @@ namespace UnitTests.Identity
             var context = CreateContext();
             var service = CreateService(context);
 
-            var newAccount = new Account
+            var newAccount = new AccountEntity
             {
                 FullName = "Created User",
                 Email = "created@test.com",
@@ -568,6 +610,38 @@ namespace UnitTests.Identity
         }
 
         [Fact]
+        public async Task GetAccountResponseByEmailAsync_WithElementId_ReturnsElementName()
+        {
+            var context = CreateContext();
+            context.Elements.Add(new Element
+            {
+                ElementId = 3,
+                ElementName = "Hoa",
+                Description = "Fire",
+                LuckyNumber = "9"
+            });
+            context.Accounts.Add(new AccountEntity
+            {
+                AccountId = 1,
+                FullName = "Element User",
+                Email = "element@test.com",
+                Password = "password123",
+                ElementId = 3,
+                CreateAt = DateTime.Now,
+                UpdateAt = DateTime.Now,
+                RoleId = 2
+            });
+            context.SaveChanges();
+
+            var service = CreateService(context);
+
+            var result = await service.GetAccountResponseByEmailAsync("element@test.com");
+
+            Assert.NotNull(result);
+            Assert.Equal("Hoa", result.ElementName);
+        }
+
+        [Fact]
         public async Task GetAccountResponseByEmailAsync_NonExistentEmail_ReturnsNull()
         {
             var context = CreateContext();
@@ -576,6 +650,33 @@ namespace UnitTests.Identity
             var result = await service.GetAccountResponseByEmailAsync("nonexistent@test.com");
 
             Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task UpdateUserWalletAfterPosted_WhenPersistenceFails_RethrowsException()
+        {
+            var account = new AccountEntity
+            {
+                AccountId = 1,
+                Email = "wallet@test.com",
+                Wallet = 100m
+            };
+
+            var writeStoreMock = new Mock<IIdentityWriteStore>();
+            writeStoreMock
+                .Setup(store => store.UpdateAccountAsync(account))
+                .ThrowsAsync(new InvalidOperationException("save failed"));
+
+            var service = new IdentityAccountService(
+                Mock.Of<IIdentityReadStore>(),
+                writeStoreMock.Object,
+                Mock.Of<IJwtTokenService>(),
+                Mock.Of<IIdentityEmailSender>(),
+                Mock.Of<ILogger<IdentityAccountService>>(),
+                Mock.Of<IIdentityElementLookup>());
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                service.UpdateUserWalletAfterPosted(account, 10m));
         }
     }
 }

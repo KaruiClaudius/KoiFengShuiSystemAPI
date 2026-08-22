@@ -1,5 +1,5 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+﻿using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
+using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using Microsoft.Extensions.Logging;
 using System.Net;
 
@@ -16,20 +16,16 @@ namespace KoiFengShuiSystem.Api.Authorization
             _logger = logger;
         }
 
-        public async Task Invoke(HttpContext context, IAccountService accountService, IJwtUtils jwtUtils)
+        public async Task Invoke(HttpContext context, IAccountService accountService, IJwtTokenService jwtTokenService)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            int? accountId = null;
 
             if (!string.IsNullOrEmpty(token))
             {
                 try
                 {
-                    var accountId = jwtUtils.ValidateJwtToken(token);
-                    if (accountId != null)
-                    {
-                        // Attach user to context on successful jwt validation
-                        context.Items["Account"] = await accountService.GetByIdAsync(accountId.Value);
-                    }
+                    accountId = jwtTokenService.ValidateJwtToken(token);
                 }
                 catch (Exception ex)
                 {
@@ -37,6 +33,12 @@ namespace KoiFengShuiSystem.Api.Authorization
                     context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                     await context.Response.WriteAsync("Invalid token");
                     return;
+                }
+
+                if (accountId != null)
+                {
+                    // Attach user to context on successful jwt validation
+                    context.Items["Account"] = await accountService.GetByIdAsync(accountId.Value);
                 }
             }
 

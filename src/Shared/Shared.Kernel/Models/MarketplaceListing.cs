@@ -40,8 +40,6 @@ public class MarketplaceListing
 
     public int? ElementId { get; set; }
 
-    public virtual Account Account { get; set; } = null!;
-
     public virtual MarketCategory Category { get; set; } = null!;
 
     public virtual ICollection<ListingImage> ListingImages { get; set; } = new List<ListingImage>();

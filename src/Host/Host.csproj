@@ -9,6 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
@@ -18,6 +22,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
+    <ProjectReference Include="..\Modules\Identity\Identity.Application\Identity.Application.csproj" />
+    <ProjectReference Include="..\Modules\Identity\Identity.Api\Identity.Api.csproj" />
+    <ProjectReference Include="..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
     <ProjectReference Include="..\Shared\Shared.Kernel\Shared.Kernel.csproj" />

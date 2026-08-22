@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace KoiFengShuiSystem.DataAccess.Models;
+namespace KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 
 public class Account
 {
@@ -40,16 +40,4 @@ public class Account
     public decimal? Wallet { get; set; }
 
     public virtual Role? Role { get; set; }
-
-    public virtual ICollection<FAQ> FAQs { get; set; } = new List<FAQ>();
-
-    public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
-
-    public virtual ICollection<MarketplaceListing> MarketplaceListings { get; set; } = new List<MarketplaceListing>();
-
-    public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
-
-    public virtual ICollection<TrafficLog> TrafficLogs { get; set; } = new List<TrafficLog>();
-
-    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 }

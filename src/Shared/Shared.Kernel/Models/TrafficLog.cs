@@ -24,6 +24,4 @@ public class TrafficLog
 
     [MaxLength(10)]
     public string? RequestMethod { get; set; }
-
-    public virtual Account? Account { get; set; }
 }
