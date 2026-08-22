@@ -40,4 +40,29 @@ public class KoiFengShuiContext : DbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KoiFengShuiContext).Assembly);
     }
+
+    /// <summary>
+    /// PostgreSQL DateTime mapping strategy: every DateTime property maps to
+    /// 'timestamp without time zone'.
+    ///
+    /// Why not the Npgsql default ('timestamp with time zone'): since Npgsql 6,
+    /// timestamptz only accepts DateTime values whose Kind is UTC and throws
+    /// "Cannot write DateTime with Kind=Local" otherwise. This codebase predates that
+    /// rule and mixes DateTime.Now, DateTime.UtcNow and Unspecified kinds across many
+    /// write paths (e.g. Account.CreateAt = DateTime.Now), so adopting timestamptz
+    /// would require auditing every producer first.
+    ///
+    /// Tradeoff accepted: 'timestamp without time zone' stores wall-clock values
+    /// verbatim with no timezone conversion or DST awareness; correctness relies on
+    /// the convention that writers use UtcNow. If the codebase is later normalized to
+    /// produce UTC-only DateTimes, this override is the single place to flip to
+    /// timestamptz.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder.Properties<DateTime>().HaveColumnType("timestamp without time zone");
+        configurationBuilder.Properties<DateTime?>().HaveColumnType("timestamp without time zone");
+    }
 }

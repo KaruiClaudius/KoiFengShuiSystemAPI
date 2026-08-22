@@ -16,7 +16,7 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Element>()
-            .WithMany()
+            .WithMany(e => e.Posts)
             .HasForeignKey(d => d.ElementId);
 
         builder.HasOne(d => d.IdNavigation)

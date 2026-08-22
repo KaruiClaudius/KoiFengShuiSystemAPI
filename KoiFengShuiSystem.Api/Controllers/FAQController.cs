@@ -1,5 +1,3 @@
-﻿using Azure;
-using Azure.Core;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.Shared.Kernel.Results;

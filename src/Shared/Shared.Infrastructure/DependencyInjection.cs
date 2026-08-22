@@ -13,9 +13,9 @@ public static class DependencyInjection
         IConfiguration configuration)
     {
         services.AddDbContext<KoiFengShuiContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                b => b.MigrationsAssembly("KoiFengShuiSystem.DataAccess")));
+                b => b.MigrationsAssembly(typeof(KoiFengShuiContext).Assembly.GetName().Name)));
 
         return services;
     }

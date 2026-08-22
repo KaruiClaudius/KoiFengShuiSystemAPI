@@ -3,17 +3,17 @@ using System;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace KoiFengShuiSystem.DataAccess.Migrations
+namespace Shared.Infrastructure.Migrations
 {
     [DbContext(typeof(KoiFengShuiContext))]
-    [Migration("20260521160659_VerifyIdentityPhase6FinishNoSchemaChange")]
-    partial class VerifyIdentityPhase6FinishNoSchemaChange
+    [Migration("20260822194203_ConsolidatedBaselinePostgreSql")]
+    partial class ConsolidatedBaselinePostgreSql
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,32 +21,32 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.FAQ", b =>
                 {
                     b.Property<int>("FAQId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FAQId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FAQId"));
 
                     b.Property<int>("AccountId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Answer")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Question")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("FAQId");
 
@@ -59,15 +59,15 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("FollowId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("FollowId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("FollowId"));
 
                     b.Property<int>("AccountId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("PostId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("FollowId");
 
@@ -82,182 +82,63 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("ImageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ImageId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ImageId"));
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("ImageId");
 
                     b.ToTable("Images");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ListingImage", b =>
-                {
-                    b.Property<int>("ListingImageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ListingImageId"));
-
-                    b.Property<string>("ImageDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ImageId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MarketListingId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ListingImageId");
-
-                    b.HasIndex("ImageId");
-
-                    b.HasIndex("MarketListingId");
-
-                    b.ToTable("ListingImages");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketCategory", b =>
-                {
-                    b.Property<int>("Categoryid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Categoryid"));
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Categoryid");
-
-                    b.ToTable("MarketCategories");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", b =>
-                {
-                    b.Property<int>("ListingId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ListingId"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Color")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ElementId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ElementId1")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("TierId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("ListingId");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.HasIndex("ElementId");
-
-                    b.HasIndex("ElementId1");
-
-                    b.HasIndex("TierId");
-
-                    b.ToTable("MarketplaceListings");
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Post", b =>
                 {
                     b.Property<int>("PostId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PostId"));
 
                     b.Property<int>("AccountId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<int?>("ElementId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ElementId1")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("Id")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("PostId");
 
                     b.HasIndex("AccountId");
 
                     b.HasIndex("ElementId");
-
-                    b.HasIndex("ElementId1");
 
                     b.HasIndex("Id");
 
@@ -268,14 +149,14 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("PostType")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -286,18 +167,18 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("PostImageId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostImageId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PostImageId"));
 
                     b.Property<string>("ImageDescription")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("ImageId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("PostId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("PostImageId");
 
@@ -308,56 +189,38 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.ToTable("PostImages");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", b =>
-                {
-                    b.Property<int>("TierId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TierId"));
-
-                    b.Property<string>("TierName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.HasKey("TierId");
-
-                    b.ToTable("SubcriptionTiers");
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.TrafficLog", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("AccountId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("IpAddress")
                         .HasMaxLength(45)
-                        .HasColumnType("nvarchar(45)");
+                        .HasColumnType("character varying(45)");
 
                     b.Property<bool>("IsRegistered")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("RequestMethod")
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("character varying(10)");
 
                     b.Property<string>("RequestPath")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("UserAgent")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("character varying(255)");
 
                     b.HasKey("Id");
 
@@ -366,60 +229,18 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.ToTable("TrafficLogs");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Transaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AccountId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(10,2)");
-
-                    b.Property<int?>("ListingId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int?>("TierId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("TransactionDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AccountId");
-
-                    b.HasIndex("ListingId");
-
-                    b.HasIndex("TierId");
-
-                    b.ToTable("Transactions");
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Country", b =>
                 {
                     b.Property<int>("CountryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("CountryId"));
 
                     b.Property<string>("CountryName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("CountryId");
 
@@ -430,14 +251,14 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("DirectionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DirectionId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("DirectionId"));
 
                     b.Property<string>("DirectionName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("DirectionId");
 
@@ -448,24 +269,24 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("ElementId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ElementId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ElementId"));
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("ElementName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("LuckyNumber")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("ElementId");
 
@@ -476,20 +297,20 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("DirectionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ElementId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -504,15 +325,15 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("PondId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PondId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PondId"));
 
                     b.Property<int>("DirectionPlacement")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("ShapeId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("PondId");
 
@@ -527,30 +348,30 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("BreedId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BreedId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("BreedId"));
 
                     b.Property<string>("BreedName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("character varying(20)");
 
                     b.Property<int>("CountryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("ElementId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("BreedId");
 
@@ -561,25 +382,64 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.ToTable("KoiBreeds");
                 });
 
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.PartnerShop", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LinkUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("PartnerShops", (string)null);
+                });
+
             modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Recommendation", b =>
                 {
                     b.Property<int>("RecommendationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RecommendationId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RecommendationId"));
 
                     b.Property<int>("AccountId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("BreedId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("PondId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("RecommendationId");
 
@@ -596,22 +456,22 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("ShapeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShapeId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("ShapeId"));
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int?>("ElementId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("ShapeName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("ShapeId");
 
@@ -624,76 +484,114 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                 {
                     b.Property<int>("AccountId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AccountId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("AccountId"));
 
                     b.Property<DateTime>("CreateAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<DateTime?>("Dob")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("ElementId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ElementId1")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.Property<string>("Gender")
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                        .HasColumnType("character varying(10)");
 
                     b.Property<string>("Password")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Phone")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("ResetTokenExpiresAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ResetTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<int?>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<DateTime>("UpdateAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("Wallet")
-                        .HasColumnType("decimal(18,0)");
+                        .HasColumnType("timestamp without time zone");
 
                     b.HasKey("AccountId");
 
                     b.HasIndex("ElementId");
-
-                    b.HasIndex("ElementId1");
 
                     b.HasIndex("RoleId");
 
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ReplacedByTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("RefreshTokens", (string)null);
+                });
+
             modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Role", b =>
                 {
                     b.Property<int>("RoleId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RoleId"));
 
                     b.Property<string>("RoleName")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("RoleId");
 
@@ -726,58 +624,6 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.ListingImage", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.Image", "Image")
-                        .WithMany("ListingImages")
-                        .HasForeignKey("ImageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", "MarketListing")
-                        .WithMany("ListingImages")
-                        .HasForeignKey("MarketListingId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Image");
-
-                    b.Navigation("MarketListing");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
-                        .WithMany()
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.MarketCategory", "Category")
-                        .WithMany("MarketplaceListings")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
-                        .WithMany()
-                        .HasForeignKey("ElementId");
-
-                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
-                        .WithMany("MarketplaceListings")
-                        .HasForeignKey("ElementId1");
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", "Tier")
-                        .WithMany("MarketplaceListings")
-                        .HasForeignKey("TierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Category");
-
-                    b.Navigation("Tier");
-                });
-
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Post", b =>
                 {
                     b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
@@ -787,12 +633,8 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                         .IsRequired();
 
                     b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
-                        .WithMany()
-                        .HasForeignKey("ElementId");
-
-                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
                         .WithMany("Posts")
-                        .HasForeignKey("ElementId1");
+                        .HasForeignKey("ElementId");
 
                     b.HasOne("KoiFengShuiSystem.DataAccess.Models.PostCategory", "IdNavigation")
                         .WithMany("Posts")
@@ -827,27 +669,6 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
                         .WithMany()
                         .HasForeignKey("AccountId");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Transaction", b =>
-                {
-                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", null)
-                        .WithMany()
-                        .HasForeignKey("AccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", "Listing")
-                        .WithMany("Transactions")
-                        .HasForeignKey("ListingId");
-
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", "Tier")
-                        .WithMany("Transactions")
-                        .HasForeignKey("TierId");
-
-                    b.Navigation("Listing");
-
-                    b.Navigation("Tier");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.FengShuiDirection", b =>
@@ -946,12 +767,8 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
             modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", b =>
                 {
                     b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
-                        .WithMany()
-                        .HasForeignKey("ElementId");
-
-                    b.HasOne("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Element", null)
                         .WithMany("Accounts")
-                        .HasForeignKey("ElementId1");
+                        .HasForeignKey("ElementId");
 
                     b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Role", "Role")
                         .WithMany()
@@ -960,23 +777,20 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("KoiFengShuiSystem.Modules.Identity.Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Image", b =>
                 {
-                    b.Navigation("ListingImages");
-
                     b.Navigation("PostImages");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketCategory", b =>
-                {
-                    b.Navigation("MarketplaceListings");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.MarketplaceListing", b =>
-                {
-                    b.Navigation("ListingImages");
-
-                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.Post", b =>
@@ -989,13 +803,6 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.PostCategory", b =>
                 {
                     b.Navigation("Posts");
-                });
-
-            modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.SubcriptionTier", b =>
-                {
-                    b.Navigation("MarketplaceListings");
-
-                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.Modules.FengShui.Domain.Entities.Country", b =>
@@ -1015,8 +822,6 @@ namespace KoiFengShuiSystem.DataAccess.Migrations
                     b.Navigation("FengShuiDirections");
 
                     b.Navigation("KoiBreeds");
-
-                    b.Navigation("MarketplaceListings");
 
                     b.Navigation("Posts");
 

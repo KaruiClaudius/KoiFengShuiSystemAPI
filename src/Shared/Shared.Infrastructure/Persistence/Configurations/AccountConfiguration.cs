@@ -10,7 +10,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
     public void Configure(EntityTypeBuilder<Account> builder)
     {
         builder.HasOne<Element>()
-            .WithMany()
+            .WithMany(e => e.Accounts)
             .HasForeignKey(d => d.ElementId);
 
         builder.HasOne(d => d.Role)
