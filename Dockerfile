@@ -6,6 +6,7 @@ EXPOSE 7285
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+COPY ["global.json", "Directory.Build.props", "Directory.Packages.props", "./"]
 COPY ["src/Host/Host.csproj", "src/Host/"]
 COPY ["KoiFengShuiSystem.Api/KoiFengShuiSystem.Api.csproj", "KoiFengShuiSystem.Api/"]
 COPY ["KoiFengShuiSystem.Services/KoiFengShuiSystem.BusinessLogic.csproj", "KoiFengShuiSystem.Services/"]

@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/KoiFengShuiSystem.sln"
+                "${workspaceFolder}/src/Host/Host.csproj"
             ],
             "problemMatcher": "$msCompile"
         }
