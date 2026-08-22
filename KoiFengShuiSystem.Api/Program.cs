@@ -77,6 +77,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddResponseCaching();
 builder.Services.AddMemoryCache();
 
+// Rate limiting (per-IP fixed windows, config-driven)
+builder.Services.AddConfiguredRateLimiting(builder.Configuration);
+
 // Database context
 builder.Services.AddSharedInfrastructure(builder.Configuration);
 
@@ -168,6 +171,7 @@ app.UseAuthorization();
 app.UseMiddleware<JwtMiddleware>();
 app.UseMiddleware<TrafficLoggingMiddleware>();
 app.UseResponseCaching();
+app.UseConfiguredRateLimiter();
 
 app.MapControllers();
 

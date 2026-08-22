@@ -10,6 +10,7 @@ using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
@@ -40,6 +41,7 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
+    [EnableRateLimiting("auth")]
     [AllowAnonymous]
     [HttpPost("SignIn")]
     public async Task<IActionResult> Authenticate(AuthenticateRequest model)
@@ -54,6 +56,7 @@ public class AuthController : ControllerBase
         return Ok(result.Response);
     }
 
+    [EnableRateLimiting("auth")]
     [AllowAnonymous]
     [HttpPost("SignUp")]
     public async Task<IActionResult> Register(RegisterRequest model)
@@ -69,6 +72,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("auth")]
     [AllowAnonymous]
     [HttpPost("ForgotPassword")]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request)
@@ -95,6 +99,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("auth")]
     [AllowAnonymous]
     [HttpPost("ResetPassword")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
@@ -121,6 +126,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("auth")]
     [AllowAnonymous]
     [HttpPost("google-login")]
     public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
@@ -188,6 +194,7 @@ public class AuthController : ControllerBase
     /// already-consumed refresh token is rejected with 401 (and revokes the account's
     /// remaining tokens inside the port).
     /// </summary>
+    [EnableRateLimiting("auth")]
     [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)

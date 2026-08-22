@@ -28,7 +28,10 @@ public class ApiTestFactory : WebApplicationFactory<Program>
                 ["CloundSettings:CloundKey"] = "test-clound-key",
                 ["CloundSettings:CloundSecret"] = "test-clound-secret",
                 ["MailSettings:UserName"] = "test-mail-user",
-                ["MailSettings:Password"] = "test-mail-password"
+                ["MailSettings:Password"] = "test-mail-password",
+                ["RateLimiting:GlobalPermitPerMinute"] = "10000",
+                ["RateLimiting:AuthPermitPerMinute"] = "2",
+                ["RateLimiting:ComputePermitPerMinute"] = "2"
             });
         });
 

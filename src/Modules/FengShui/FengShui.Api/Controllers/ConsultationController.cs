@@ -1,6 +1,7 @@
 using KoiFengShuiSystem.Modules.FengShui.Application.Requests;
 using KoiFengShuiSystem.Modules.FengShui.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
 {
@@ -13,6 +14,7 @@ namespace KoiFengShuiSystem.Modules.FengShui.Api.Controllers
         {
             _consultationService = consultationService;
         }
+        [EnableRateLimiting("compute")]
         [HttpPost("fengshui")]
         public async Task<IActionResult> GetFengShuiConsultation([FromBody] FengShuiRequest request)
         {
