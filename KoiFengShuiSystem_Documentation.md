@@ -73,7 +73,7 @@ The long-term vision (detailed in the roadmap) is to evolve into a **comprehensi
 > Sections marked *(legacy)* below describe pre-refactor behaviour and remain for history.
 ## 2. Tech Stack & Architecture
 
-- **Framework:** ASP.NET Core (Minimal API + Controllers) – .NET 8
+- **Framework:** ASP.NET Core (Minimal API + Controllers) – .NET 10
 - **Architecture:** Modular Monolith
   - The application is structured as a single deployable unit composed of **loosely coupled, independently organized feature modules**. Each module owns its domain, application logic, data access, and API surface. Modules communicate through well-defined **internal contracts (interfaces / in-process messaging)** rather than direct class references, keeping boundaries clean while avoiding distributed-systems complexity.
 
@@ -696,7 +696,7 @@ All sensitive values are overridden via environment variables in production (`se
 
 ### 12.1 Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - SQL Server (local or Docker)
 - Docker (optional)
 - Cloudinary account

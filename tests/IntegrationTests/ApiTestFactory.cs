@@ -3,6 +3,8 @@ using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 
@@ -37,15 +39,11 @@ public class ApiTestFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            for (var i = services.Count - 1; i >= 0; i--)
-            {
-                var descriptor = services[i];
-                if (descriptor.ServiceType == typeof(DbContextOptions<KoiFengShuiContext>) ||
-                    descriptor.ServiceType == typeof(KoiFengShuiContext))
-                {
-                    services.RemoveAt(i);
-                }
-            }
+            // EF Core 9+/10 defers provider choice via IDbContextOptionsConfiguration<T>;
+            // both it and the resolved options must be stripped before swapping Npgsql→InMemory.
+            services.RemoveAll(typeof(DbContextOptions<KoiFengShuiContext>));
+            services.RemoveAll(typeof(IDbContextOptionsConfiguration<KoiFengShuiContext>));
+            services.RemoveAll<KoiFengShuiContext>();
 
             services.AddDbContext<KoiFengShuiContext>(options =>
                 options.UseInMemoryDatabase("TestDb"));
