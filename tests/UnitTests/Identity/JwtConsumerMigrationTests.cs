@@ -6,7 +6,6 @@ public class JwtConsumerMigrationTests
 {
     [Theory]
     [InlineData("src/Host/Middleware/JwtMiddleware.cs")]
-    [InlineData("KoiFengShuiSystem.Api/Authorization/JwtMiddleware.cs")]
     // AuthController was removed from this gate once it stopped consuming JWT services
     // directly: all issuance now routes through SessionIssuer, which inherits the gate.
     [InlineData("src/Modules/Identity/Identity.Application/Services/SessionIssuer.cs")]

@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.Api.Extensions;
+using KoiFengShuiSystem.Shared.Kernel.Modules;
 using KoiFengShuiSystem.BusinessLogic.Services;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;

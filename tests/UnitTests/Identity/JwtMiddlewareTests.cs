@@ -15,11 +15,11 @@ public class JwtMiddlewareTests
         var accountService = new Mock<IAccountService>(MockBehavior.Strict);
         var jwtTokenService = new Mock<IJwtTokenService>(MockBehavior.Strict);
         var nextCalled = false;
-        var middleware = new KoiFengShuiSystem.Api.Authorization.JwtMiddleware(_ =>
+        var middleware = new KoiFengShuiSystem.Host.Middleware.JwtMiddleware(_ =>
         {
             nextCalled = true;
             return Task.CompletedTask;
-        }, Mock.Of<ILogger<KoiFengShuiSystem.Api.Authorization.JwtMiddleware>>());
+        }, Mock.Of<ILogger<KoiFengShuiSystem.Host.Middleware.JwtMiddleware>>());
 
         jwtTokenService
             .Setup(service => service.ValidateJwtToken("bad-token"))
@@ -37,7 +37,7 @@ public class JwtMiddlewareTests
         var context = CreateContext();
         var accountService = new Mock<IAccountService>(MockBehavior.Strict);
         var jwtTokenService = new Mock<IJwtTokenService>(MockBehavior.Strict);
-        var middleware = new KoiFengShuiSystem.Api.Authorization.JwtMiddleware(_ => Task.CompletedTask, Mock.Of<ILogger<KoiFengShuiSystem.Api.Authorization.JwtMiddleware>>());
+        var middleware = new KoiFengShuiSystem.Host.Middleware.JwtMiddleware(_ => Task.CompletedTask, Mock.Of<ILogger<KoiFengShuiSystem.Host.Middleware.JwtMiddleware>>());
 
         jwtTokenService
             .Setup(service => service.ValidateJwtToken("bad-token"))

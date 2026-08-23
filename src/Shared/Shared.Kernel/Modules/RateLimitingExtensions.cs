@@ -1,8 +1,11 @@
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.RateLimiting;
 
-namespace KoiFengShuiSystem.Api.Extensions
+namespace KoiFengShuiSystem.Shared.Kernel.Modules
 {
     public static class RateLimitingExtensions
     {

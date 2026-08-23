@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35303.130
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.Api", "KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj", "{37D9681C-9011-4E36-83EB-518D7BEAD5D3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.BusinessLogic", "KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj", "{673C1C8A-D053-44EC-B262-F0C5688CB1E0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KoiFengShuiSystem.DataAccess", "KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj", "{B405B8A6-4C3A-41D3-8A3C-77E40C18C119}"
@@ -26,8 +24,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "tests\IntegrationTests\IntegrationTests.csproj", "{4F61307A-CE77-4004-A1A2-32787BE81635}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "tests\UnitTests\UnitTests.csproj", "{A99A7EDB-7D6E-47F3-B4FD-F72B4F53BD82}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "KoiFengShuiSystem.Services", "KoiFengShuiSystem.Services", "{AB626351-92B1-57C7-5FC1-A348FB637059}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "src\Host\Host.csproj", "{33F2A069-F83B-4B8B-A6DB-DC03C06B8896}"
 EndProject
@@ -73,18 +69,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Debug|x64.Build.0 = Debug|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Debug|x86.Build.0 = Debug|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Release|x64.ActiveCfg = Release|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Release|x64.Build.0 = Release|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Release|x86.ActiveCfg = Release|Any CPU
-		{37D9681C-9011-4E36-83EB-518D7BEAD5D3}.Release|x86.Build.0 = Release|Any CPU
 		{673C1C8A-D053-44EC-B262-F0C5688CB1E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{673C1C8A-D053-44EC-B262-F0C5688CB1E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{673C1C8A-D053-44EC-B262-F0C5688CB1E0}.Debug|x64.ActiveCfg = Debug|Any CPU

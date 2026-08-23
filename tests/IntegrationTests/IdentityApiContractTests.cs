@@ -146,7 +146,7 @@ public class IdentityApiContractTests : IClassFixture<IdentityApiContractTests.I
 
             // Marker type for the legacy Api assembly (its last controller,
             // UploadImageController, moved into the Community module).
-            var legacyApiAssemblyName = typeof(KoiFengShuiSystem.Api.Extensions.ModuleInstallerExtensions).Assembly.GetName().Name;
+            var legacyApiAssemblyName = typeof(KoiFengShuiSystem.Shared.Kernel.Modules.ModuleInstallerExtensions).Assembly.GetName().Name;
 
             builder.ConfigureServices(services =>
             {

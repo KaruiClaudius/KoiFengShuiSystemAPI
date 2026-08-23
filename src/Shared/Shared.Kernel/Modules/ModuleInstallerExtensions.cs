@@ -1,7 +1,9 @@
 using System.Reflection;
 using KoiFengShuiSystem.Shared.Kernel.Modules;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace KoiFengShuiSystem.Api.Extensions
+namespace KoiFengShuiSystem.Shared.Kernel.Modules
 {
     public static class ModuleInstallerExtensions
     {
