@@ -40,6 +40,44 @@ public class SessionIssuer
         };
     }
 
+    /// <summary>
+    /// Consumes the presented refresh token (rotating it inside the port) and issues the
+    /// replacement access-token pair for the owning account. Returns <c>null</c> when the
+    /// token is rejected or the account no longer exists, so callers can map that to 401
+    /// without minting anything.
+    /// </summary>
+    /// <remarks>
+    /// The account lookup is supplied by the caller (the frozen <c>IAccountService</c>
+    /// facade) so session issuance stays decoupled from account storage while all
+    /// token-pair assembly remains in this class.
+    /// </remarks>
+    public async Task<RefreshedTokensResponse?> RotateAndIssueAsync(
+        string rawRefreshToken,
+        Func<int, Task<Account?>> loadAccountAsync)
+    {
+        ArgumentNullException.ThrowIfNull(loadAccountAsync);
+
+        var rotation = await _refreshTokenPort.RotateAsync(rawRefreshToken);
+
+        if (!rotation.Success
+            || rotation.AccountId is not { } accountId
+            || rotation.NewRawToken is not { } newRawToken)
+        {
+            return null;
+        }
+
+        var account = await loadAccountAsync(accountId);
+        if (account == null)
+        {
+            return null;
+        }
+
+        return new RefreshedTokensResponse(
+            _jwtTokenService.GenerateJwtToken(account),
+            newRawToken,
+            _jwtTokenService.AccessTokenLifetimeMinutes);
+    }
+
     /// <summary>Revokes every outstanding session (refresh token) of the account.</summary>
     public Task RevokeAllForAccountAsync(int accountId)
         => _refreshTokenPort.RevokeAllForAccountAsync(accountId);

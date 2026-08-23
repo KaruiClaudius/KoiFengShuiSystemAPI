@@ -7,7 +7,9 @@ public class JwtConsumerMigrationTests
     [Theory]
     [InlineData("src/Host/Middleware/JwtMiddleware.cs")]
     [InlineData("KoiFengShuiSystem.Api/Authorization/JwtMiddleware.cs")]
-[InlineData("src/Modules/Identity/Identity.Api/Controllers/AuthController.cs")]
+    // AuthController was removed from this gate once it stopped consuming JWT services
+    // directly: all issuance now routes through SessionIssuer, which inherits the gate.
+    [InlineData("src/Modules/Identity/Identity.Application/Services/SessionIssuer.cs")]
     public void JwtConsumers_DoNotDependOnLegacyJwtUtils(string relativePath)
     {
         var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));

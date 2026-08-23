@@ -3,11 +3,8 @@ using System.Security.Claims;
 using System.Text.Json;
 using KoiFengShuiSystem.Api.Authorization;
 using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
-using KoiFengShuiSystem.Modules.Identity.Application.Responses;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
-using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -22,21 +19,18 @@ namespace KoiFengShuiSystem.Modules.Identity.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAccountService _accountService;
-    private readonly IJwtTokenService _jwtTokenService;
-    private readonly IRefreshTokenPort _refreshTokenPort;
+    private readonly SessionIssuer _sessionIssuer;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IAccountService accountService,
-        IJwtTokenService jwtTokenService,
-        IRefreshTokenPort refreshTokenPort,
+        SessionIssuer sessionIssuer,
         IHttpClientFactory httpClientFactory,
         ILogger<AuthController> logger)
     {
         _accountService = accountService;
-        _jwtTokenService = jwtTokenService;
-        _refreshTokenPort = refreshTokenPort;
+        _sessionIssuer = sessionIssuer;
         _httpClientFactory = httpClientFactory;
         _logger = logger;
     }
@@ -171,16 +165,10 @@ public class AuthController : ControllerBase
                 _logger.LogInformation("Matched existing Google login account with account ID {AccountId}", account.AccountId);
             }
 
-            var token = _jwtTokenService.GenerateJwtToken(account);
-            _logger.LogInformation("JWT token generated successfully.");
+            var session = await _sessionIssuer.IssueForAccountAsync(account);
+            _logger.LogInformation("Issued session for Google login account ID {AccountId}.", account.AccountId);
 
-            var refreshToken = await _refreshTokenPort.CreateForAccountAsync(account.AccountId);
-
-            return Ok(new AuthenticateResponse(account, token)
-            {
-                RefreshToken = refreshToken,
-                ExpiresInMinutes = _jwtTokenService.AccessTokenLifetimeMinutes
-            });
+            return Ok(session);
         }
         catch (Exception ex)
         {
@@ -204,26 +192,15 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        var rotation = await _refreshTokenPort.RotateAsync(request.RefreshToken);
-        if (!rotation.Success || rotation.AccountId is not { } accountId)
+        var refreshed = await _sessionIssuer.RotateAndIssueAsync(
+            request.RefreshToken,
+            accountId => _accountService.GetByIdAsync(accountId));
+        if (refreshed == null)
         {
             return Unauthorized();
         }
 
-        var account = await _accountService.GetByIdAsync(accountId);
-        if (account == null)
-        {
-            return Unauthorized();
-        }
-
-        var accessToken = _jwtTokenService.GenerateJwtToken(account);
-
-        return Ok(new
-        {
-            token = accessToken,
-            refreshToken = rotation.NewRawToken,
-            expiresIn = _jwtTokenService.AccessTokenLifetimeMinutes
-        });
+        return Ok(refreshed);
     }
 
     /// <summary>
@@ -238,7 +215,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
         }
 
-        await _refreshTokenPort.RevokeAllForAccountAsync(accountId.Value);
+        await _sessionIssuer.RevokeAllForAccountAsync(accountId.Value);
 
         return NoContent();
     }

@@ -19,6 +19,8 @@ public class AuthControllerTests
 {
     private static Mock<IRefreshTokenPort> CreateDefaultRefreshTokenPort() => new();
 
+    // Real SessionIssuer over the mocked ports: keeps token-pair assembly exercised
+    // end-to-end so the response-shape pins below stay meaningful after consolidation.
     private static AuthController CreateController(
         Mock<IAccountService> accountService,
         Mock<IJwtTokenService> jwtTokenService,
@@ -26,10 +28,14 @@ public class AuthControllerTests
         Mock<IHttpClientFactory>? httpClientFactory = null)
         => new(
             accountService.Object,
-            jwtTokenService.Object,
-            (refreshTokenPort ?? CreateDefaultRefreshTokenPort()).Object,
+            new SessionIssuer(
+                jwtTokenService.Object,
+                (refreshTokenPort ?? CreateDefaultRefreshTokenPort()).Object),
             (httpClientFactory ?? new Mock<IHttpClientFactory>(MockBehavior.Strict)).Object,
             Mock.Of<ILogger<AuthController>>());
+
+    private static string SerializeWireJson(object value)
+        => JsonSerializer.Serialize(value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
     [Theory]
     [InlineData(null)]
@@ -177,6 +183,10 @@ public class AuthControllerTests
     }
 
     // --- POST api/Auth/refresh ---
+    //
+    // Regression pin (captured pre-consolidation, before routing through SessionIssuer):
+    // the wire body must stay exactly { "token", "refreshToken", "expiresIn" } — camelCase
+    // names, that property order, and only those three members.
 
     [Fact]
     public async Task Refresh_WithValidRefreshToken_ReturnsRotatedTokenPairAndExpiresIn()
@@ -199,7 +209,10 @@ public class AuthControllerTests
         var result = await controller.Refresh(new RefreshTokenRequest { RefreshToken = "presented-raw-token" });
 
         var okResult = Assert.IsType<OkObjectResult>(result);
-        using var document = JsonDocument.Parse(JsonSerializer.Serialize(okResult.Value));
+        Assert.Equal(
+            """{"token":"new-access-token","refreshToken":"rotated-raw-token","expiresIn":15}""",
+            SerializeWireJson(okResult.Value!));
+        using var document = JsonDocument.Parse(SerializeWireJson(okResult.Value!));
         var root = document.RootElement;
         Assert.Equal("new-access-token", root.GetProperty("token").GetString());
         Assert.Equal("rotated-raw-token", root.GetProperty("refreshToken").GetString());
@@ -328,6 +341,11 @@ public class AuthControllerTests
     }
 
     // --- POST api/Auth/google-login ---
+    //
+    // Regression pin (captured pre-consolidation, before routing through SessionIssuer):
+    // Google login must keep returning the full AuthenticateResponse contract
+    // { id, fullName, email, token, refreshToken, expiresInMinutes } — see exact-JSON
+    // assertion in GoogleLogin_NewUser_CreatesPasswordlessAccountWithoutFabricatedData.
 
     [Fact]
     public async Task GoogleLogin_NewUser_CreatesPasswordlessAccountWithoutFabricatedData()
@@ -372,6 +390,9 @@ public class AuthControllerTests
         Assert.Null(createdAccount.Dob);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal(
+            """{"id":55,"fullName":"New User","email":"new.user@gmail.com","token":"access-token","refreshToken":"raw-refresh-token","expiresInMinutes":15}""",
+            SerializeWireJson(okResult.Value!));
         var response = Assert.IsType<AuthenticateResponse>(okResult.Value);
         Assert.Equal("access-token", response.Token);
         Assert.Equal("raw-refresh-token", response.RefreshToken);
