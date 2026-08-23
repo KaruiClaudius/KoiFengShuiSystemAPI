@@ -50,7 +50,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         // instead of throwing on the nullable cast.
                         ElementId = po.ElementId ?? 0,
                         Follows = po.Follows,
-                        Id = po.Id,
+                        Id = po.PostCategoryId,
                         Name = po.Name,
                         ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
                         AccountName = "N/A", // Account nav removed - use AccountId for lookup
@@ -94,7 +94,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                         // See GetAll: null element reads as "uncategorized".
                         ElementId = po.ElementId ?? 0,
                         Follows = po.Follows,
-                        Id = po.Id,
+                        Id = po.PostCategoryId,
                         Name = po.Name,
                         ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
                         AccountName = "N/A", // Account nav removed - use AccountId for lookup
@@ -176,7 +176,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
                 {
                     Name = request.Title,
                     Description = request.Content,
-                    Id = request.CategoryId,
+                    PostCategoryId = request.CategoryId,
                     AccountId = authorAccountId,
                     Status = MemberPostDefaultStatus,
                     CreateAt = DateTime.UtcNow,

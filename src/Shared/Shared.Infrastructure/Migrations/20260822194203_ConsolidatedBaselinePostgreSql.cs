@@ -274,7 +274,7 @@ namespace Shared.Infrastructure.Migrations
                 {
                     PostId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Id = table.Column<int>(type: "integer", nullable: false),
+                    PostCategoryId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     Description = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
                     CreateAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
@@ -298,8 +298,8 @@ namespace Shared.Infrastructure.Migrations
                         principalTable: "Elements",
                         principalColumn: "ElementId");
                     table.ForeignKey(
-                        name: "FK_Posts_PostCategories_Id",
-                        column: x => x.Id,
+                        name: "FK_Posts_PostCategories_PostCategoryId",
+                        column: x => x.PostCategoryId,
                         principalTable: "PostCategories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -446,6 +446,12 @@ namespace Shared.Infrastructure.Migrations
                 column: "ElementId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Accounts_Email",
+                table: "Accounts",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Accounts_RoleId",
                 table: "Accounts",
                 column: "RoleId");
@@ -521,9 +527,9 @@ namespace Shared.Infrastructure.Migrations
                 column: "ElementId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Posts_Id",
+                name: "IX_Posts_PostCategoryId",
                 table: "Posts",
-                column: "Id");
+                column: "PostCategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Recommendations_AccountId",

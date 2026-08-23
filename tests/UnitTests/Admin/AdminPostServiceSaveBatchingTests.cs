@@ -37,7 +37,7 @@ namespace UnitTests.Admin
             _context.Posts.Add(new Post
             {
                 PostId = 7,
-                Id = 1,
+                PostCategoryId = 1,
                 Name = "Existing",
                 Description = "Existing post",
                 Status = "Published",

@@ -46,7 +46,7 @@ namespace UnitTests.Admin
 
             var saved = await _context.Posts.SingleAsync(p => p.Name == "Koi care");
             Assert.Equal("Feed koi twice daily", saved.Description);
-            Assert.Equal(1, saved.Id);
+            Assert.Equal(1, saved.PostCategoryId);
             Assert.Equal(42, saved.AccountId);
             Assert.Equal(PostService.MemberPostDefaultStatus, saved.Status);
             Assert.True(saved.CreateAt >= beforeUtc);

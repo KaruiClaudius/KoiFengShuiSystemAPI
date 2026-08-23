@@ -19,9 +19,9 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
             .WithMany(e => e.Posts)
             .HasForeignKey(d => d.ElementId);
 
-        builder.HasOne(d => d.IdNavigation)
+        builder.HasOne(d => d.PostCategory)
             .WithMany(p => p.Posts)
-            .HasForeignKey(d => d.Id)
+            .HasForeignKey(d => d.PostCategoryId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

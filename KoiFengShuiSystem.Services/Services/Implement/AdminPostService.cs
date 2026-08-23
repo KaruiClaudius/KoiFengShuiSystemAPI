@@ -103,7 +103,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
 
                 var post = new Post
                 {
-                    Id = adminPostRequest.Id,
+                    PostCategoryId = adminPostRequest.Id,
                     Name = adminPostRequest.Name,
                     Description = adminPostRequest.Description,
                     CreateAt = DateTime.UtcNow,
@@ -178,7 +178,7 @@ namespace KoiFengShuiSystem.BusinessLogic.Services
             return new AdminPostResponse
             {
                 PostId = post.PostId,
-                Id = post.Id,
+                Id = post.PostCategoryId,
                 Name = post.Name,
                 Description = post.Description,
                 CreateAt = post.CreateAt,

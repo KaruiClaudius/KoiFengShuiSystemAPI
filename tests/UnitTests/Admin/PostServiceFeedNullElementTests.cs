@@ -32,7 +32,7 @@ namespace UnitTests.Admin
                 new Post
                 {
                     PostId = 10,
-                    Id = 1,
+                    PostCategoryId = 1,
                     Name = "Member post",
                     Description = "No element assigned",
                     Status = "Pending",
@@ -44,7 +44,7 @@ namespace UnitTests.Admin
                 new Post
                 {
                     PostId = 11,
-                    Id = 1,
+                    PostCategoryId = 1,
                     Name = "Curated post",
                     Description = "Has an element",
                     Status = "Published",

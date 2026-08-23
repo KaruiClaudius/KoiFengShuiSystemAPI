@@ -16,11 +16,11 @@ namespace KoiFengShuiSystem.DataAccess.Repositories.Implement
         public async Task<GenericRepository<Post>> GetAllByPostTypeIdAsync(int postTypeId, int pageNumber, int pageSize)
         {
             var posts = await _dbSet
-                .Where(p => p.Id == postTypeId)
+                .Where(p => p.PostCategoryId == postTypeId)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
-            var totalCount = await _dbSet.CountAsync(p => p.Id == postTypeId);
+            var totalCount = await _dbSet.CountAsync(p => p.PostCategoryId == postTypeId);
 
             return new GenericRepository<Post>(posts, totalCount);
         }

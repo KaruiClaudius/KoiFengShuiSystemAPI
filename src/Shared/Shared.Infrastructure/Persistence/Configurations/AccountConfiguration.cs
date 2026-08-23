@@ -9,6 +9,10 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
 {
     public void Configure(EntityTypeBuilder<Account> builder)
     {
+        // DB-level uniqueness closes the check-then-insert race that app-code
+        // validation alone cannot prevent.
+        builder.HasIndex(a => a.Email).IsUnique();
+
         builder.HasOne<Element>()
             .WithMany()
             .HasForeignKey(d => d.ElementId);

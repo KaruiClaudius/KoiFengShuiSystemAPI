@@ -276,7 +276,7 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
             context.Posts.Add(new Post
             {
                 PostId = id,
-                Id = 1,
+                PostCategoryId = 1,
                 Name = "Seed post",
                 Description = "Seed body",
                 Status = "Published",

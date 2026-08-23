@@ -26,7 +26,6 @@ namespace KoiFengShuiSystem.Shared.Models.Response
         public string ElementName { get; set; } // Added ElementName here
         public string AccountName { get; set; } // Added Account Name
         public ICollection<Follow> Follows { get; set; }
-        public PostCategory IdNavigation { get; set; }
 
     }
 }

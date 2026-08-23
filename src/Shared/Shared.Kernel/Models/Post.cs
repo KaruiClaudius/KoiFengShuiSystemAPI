@@ -7,7 +7,7 @@ public class Post
     [Key]
     public int PostId { get; set; }
 
-    public int Id { get; set; }
+    public int PostCategoryId { get; set; }
 
     [Required]
     [MaxLength(255)]
@@ -31,7 +31,7 @@ public class Post
 
     public virtual ICollection<Follow> Follows { get; set; } = new List<Follow>();
 
-    public virtual PostCategory IdNavigation { get; set; } = null!;
+    public virtual PostCategory PostCategory { get; set; } = null!;
 
     public virtual ICollection<PostImage> PostImages { get; set; } = new List<PostImage>();
 }

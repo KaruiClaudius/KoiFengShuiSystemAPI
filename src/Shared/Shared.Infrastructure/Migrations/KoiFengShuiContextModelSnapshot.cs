@@ -115,13 +115,13 @@ namespace Shared.Infrastructure.Migrations
                     b.Property<int?>("ElementId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Id")
-                        .HasColumnType("integer");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)");
+
+                    b.Property<int>("PostCategoryId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -137,7 +137,7 @@ namespace Shared.Infrastructure.Migrations
 
                     b.HasIndex("ElementId");
 
-                    b.HasIndex("Id");
+                    b.HasIndex("PostCategoryId");
 
                     b.ToTable("Posts");
                 });
@@ -533,6 +533,9 @@ namespace Shared.Infrastructure.Migrations
 
                     b.HasIndex("ElementId");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("RoleId");
 
                     b.ToTable("Accounts");
@@ -633,13 +636,13 @@ namespace Shared.Infrastructure.Migrations
                         .WithMany("Posts")
                         .HasForeignKey("ElementId");
 
-                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.PostCategory", "IdNavigation")
+                    b.HasOne("KoiFengShuiSystem.DataAccess.Models.PostCategory", "PostCategory")
                         .WithMany("Posts")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("PostCategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("IdNavigation");
+                    b.Navigation("PostCategory");
                 });
 
             modelBuilder.Entity("KoiFengShuiSystem.DataAccess.Models.PostImage", b =>
