@@ -11,7 +11,11 @@ namespace KoiFengShuiSystem.Modules.FengShui.Infrastructure
     {
         public void AddServices(IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped<IFengShuiReadStore, EfFengShuiReadStore>();
+            services.AddMemoryCache();
+            services.AddScoped<EfFengShuiReadStore>();
+            services.AddScoped<IFengShuiReadStore>(sp => new CachedFengShuiReadStore(
+                sp.GetRequiredService<EfFengShuiReadStore>(),
+                sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
             services.AddScoped<IPartnerShopStore, EfPartnerShopStore>();
             services.AddScoped<ICompatibilityService, CompatibilityService>();
             services.AddScoped<IConsultationService, ConsultationService>();

@@ -8,6 +8,11 @@ using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 {
+    /// <summary>
+    /// Scores a pond setup against the caller's element using a single reference-data
+    /// snapshot. All scoring and recommendation text is computed in memory; no store
+    /// call happens more than once per assessment.
+    /// </summary>
     public class CompatibilityService : ICompatibilityService
     {
         private readonly IFengShuiReadStore _readStore;
@@ -23,24 +28,28 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
 
         public async Task<CompatibilityResponse> AssessCompatibility(CompatibilityRequest request)
         {
-            var userElement = await GetElementFromDateOfBirth(request.DateOfBirth, request.IsMale);
+            var element = await GetElementFromDateOfBirth(request.DateOfBirth, request.IsMale);
 
-            if (userElement == null)
-            {
-                throw new ArgumentException($"Could not find element for date of birth {request.DateOfBirth} and gender {request.IsMale}");
-            }
+            var snapshot = await LoadReferenceData();
 
-            var directionScore = await GetDirectionCompatibilityScore(request.Direction, userElement.ElementId);
-            var shapeScore = await GetShapeCompatibilityScore(request.PondShape, userElement.ElementId);
-            var colorScores = await GetColorCompatibilityScores(request.FishColors, userElement.ElementId);
-            var quantityScore = await GetQuantityCompatibilityScore(request.FishQuantity, userElement.ElementId);
+            var directionScore = ScoreDirection(request.Direction, element.ElementId, snapshot);
+            var shapeScore = ScoreShape(request.PondShape, element.ElementId, snapshot);
+            var colorScores = ScoreColors(request.FishColors, element.ElementId, snapshot);
+            var quantityScore = ScoreQuantity(request.FishQuantity, element);
 
             var overallScore = CalculateOverallScore(directionScore, shapeScore, colorScores["TotalScore"], quantityScore);
 
-            var recommendations = await GenerateRecommendations(
-                directionScore, shapeScore, colorScores, quantityScore,
-                request.Direction, request.PondShape, request.FishColors, request.FishQuantity,
-                userElement.ElementId);
+            var recommendations = BuildRecommendations(
+                snapshot,
+                element,
+                currentDirection: request.Direction,
+                currentShape: request.PondShape,
+                currentColors: request.FishColors,
+                currentQuantity: request.FishQuantity,
+                directionScore,
+                shapeScore,
+                colorScores,
+                quantityScore);
 
             return new CompatibilityResponse
             {
@@ -74,154 +83,189 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
             }
         }
 
-        private async Task<double> GetDirectionCompatibilityScore(string direction, int elementId)
+        private sealed record ReferenceSnapshot(
+            IReadOnlyList<Direction> Directions,
+            IReadOnlyList<FengShuiDirection> FengShuiDirections,
+            IReadOnlyList<ShapeCategory> Shapes,
+            IReadOnlyList<KoiBreed> Breeds);
+
+        /// <summary>
+        /// Loads every reference table needed for one assessment. The four loads are
+        /// independent, so they run concurrently; the decorating cache makes warm calls free.
+        /// </summary>
+        private async Task<ReferenceSnapshot> LoadReferenceData()
         {
-            var directionEntity = await _readStore.GetDirectionByNameAsync(direction);
+            var directionsTask = _readStore.GetAllDirectionsAsync();
+            var fengShuiDirectionsTask = _readStore.GetAllFengShuiDirectionsWithDirectionAsync();
+            var shapesTask = _readStore.GetAllShapeCategoriesAsync();
+            var breedsTask = _readStore.GetAllKoiBreedsAsync();
+
+            await Task.WhenAll(directionsTask, fengShuiDirectionsTask, shapesTask, breedsTask);
+
+            return new ReferenceSnapshot(
+                await directionsTask,
+                await fengShuiDirectionsTask,
+                await shapesTask,
+                await breedsTask);
+        }
+
+        private static double ScoreDirection(string direction, int elementId, ReferenceSnapshot snapshot)
+        {
+            var directionEntity = snapshot.Directions.FirstOrDefault(
+                d => string.Equals(d.DirectionName, direction, StringComparison.OrdinalIgnoreCase));
 
             if (directionEntity == null)
             {
                 return 0.0;
             }
 
-            var fengShuiDirection = await _readStore.GetFengShuiDirectionAsync(directionEntity.DirectionId, elementId);
+            var compatible = snapshot.FengShuiDirections.Any(
+                f => f.DirectionId == directionEntity.DirectionId && f.ElementId == elementId);
 
-            return fengShuiDirection != null ? 100.0 : 0.0;
+            return compatible ? 100.0 : 0.0;
         }
 
-        private async Task<double> GetShapeCompatibilityScore(string shape, int elementId)
+        private static double ScoreShape(string shape, int elementId, ReferenceSnapshot snapshot)
         {
-            var shapeCategory = await _readStore.GetShapeByNameAndElementIdAsync(shape, elementId);
-            return shapeCategory != null ? 100.0 : 0.0;
+            var match = snapshot.Shapes.Any(
+                s => s.ElementId == elementId &&
+                     string.Equals(s.ShapeName, shape, StringComparison.OrdinalIgnoreCase));
+
+            return match ? 100.0 : 0.0;
         }
 
-        private async Task<Dictionary<string, double>> GetColorCompatibilityScores(List<string> colors, int elementId)
+        private Dictionary<string, double> ScoreColors(List<string> colors, int elementId, ReferenceSnapshot snapshot)
         {
-            try
+            var breedWordsByColor = ExtractBreedColorWords(elementId, snapshot);
+            var recommendedWords = breedWordsByColor
+                .SelectMany(x => x.Words)
+                .GroupBy(w => w, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .ToList();
+            var elementWords = breedWordsByColor
+                .SelectMany(x => x.Words)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            int colorCount = colors.Count;
+            double exactIndividualScore = 100.0 / colorCount;
+            double totalScore = 0;
+            int fullyCompatibleCount = 0;
+            var colorScores = new Dictionary<string, double>();
+
+            foreach (var color in colors)
             {
-                var breeds = await _readStore.GetAllKoiBreedsAsync();
-                var colorScores = new Dictionary<string, double>();
+                var cleanedColor = ColorNameCleaner.CleanColorName(color);
+                var colorWords = cleanedColor.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                double colorScore;
 
-                var recommendedColors = breeds
-                    .Where(b => b.ElementId == elementId)
-                    .SelectMany(b => ColorNameCleaner.CleanColorName(b.Color).Split(' '))
-                    .GroupBy(c => c)
-                    .OrderByDescending(g => g.Count())
-                    .Select(g => g.Key)
-                    .ToList();
+                if (colorWords.Any(w => recommendedWords.Contains(w, StringComparer.OrdinalIgnoreCase)))
+                {
+                    colorScore = exactIndividualScore;
+                    fullyCompatibleCount++;
+                    _logger.LogDebug("{Color} is fully compatible.", cleanedColor);
+                }
+                else if (colorWords.Any(w => elementWords.Contains(w, StringComparer.OrdinalIgnoreCase)))
+                {
+                    colorScore = exactIndividualScore / 2;
+                    _logger.LogDebug("{Color} is semi-compatible.", cleanedColor);
+                }
+                else
+                {
+                    colorScore = 0;
+                    _logger.LogDebug("{Color} is not compatible.", cleanedColor);
+                }
 
-                var elementColors = breeds
-                    .Where(b => b.ElementId == elementId)
-                    .SelectMany(b => ColorNameCleaner.CleanColorName(b.Color).Split(' '))
-                    .Distinct()
-                    .ToList();
+                colorScores[color] = Math.Round(colorScore, 2);
+                totalScore += colorScore;
+            }
 
-                int colorCount = colors.Count;
-                double exactIndividualScore = 100.0 / colorCount;
-                double totalScore = 0;
-                int fullyCompatibleCount = 0;
-
-                _logger.LogDebug("Recommended Colors: {Colors}", string.Join(", ", recommendedColors));
-                _logger.LogDebug("Element Colors: {Colors}", string.Join(", ", elementColors));
+            if (fullyCompatibleCount > 0 && Math.Abs(totalScore - 100) < 0.1)
+            {
+                var adjustment = (100 - totalScore) / fullyCompatibleCount;
 
                 foreach (var color in colors)
                 {
                     var cleanedColor = ColorNameCleaner.CleanColorName(color);
-                    _logger.LogDebug("Original Color: {Original}, Cleaned Color: {Cleaned}", color, cleanedColor);
-                    double colorScore;
-
-                    var colorWords = cleanedColor.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                    if (colorWords.Any(w => recommendedColors.Contains(w, StringComparer.OrdinalIgnoreCase)))
+                    if (recommendedWords.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
                     {
-                        colorScore = exactIndividualScore;
-                        fullyCompatibleCount++;
-                        _logger.LogDebug("{Color} is fully compatible.", cleanedColor);
+                        colorScores[color] = Math.Round(colorScores[color] + adjustment, 2);
                     }
-                    else if (colorWords.Any(w => elementColors.Contains(w, StringComparer.OrdinalIgnoreCase)))
-                    {
-                        colorScore = exactIndividualScore / 2;
-                        _logger.LogDebug("{Color} is semi-compatible.", cleanedColor);
-                    }
-                    else
-                    {
-                        colorScore = 0;
-                        _logger.LogDebug("{Color} is not compatible.", cleanedColor);
-                    }
-
-                    colorScores[color] = Math.Round(colorScore, 2);
-                    totalScore += colorScore;
                 }
 
-                if (fullyCompatibleCount > 0 && Math.Abs(totalScore - 100) < 0.1)
-                {
-                    double adjustment = (100 - totalScore) / fullyCompatibleCount;
-
-                    foreach (var color in colors)
-                    {
-                        var cleanedColor = ColorNameCleaner.CleanColorName(color);
-                        if (recommendedColors.Contains(cleanedColor, StringComparer.OrdinalIgnoreCase))
-                        {
-                            colorScores[color] = Math.Round(colorScores[color] + adjustment, 2);
-                        }
-                    }
-
-                    totalScore = 100;
-                }
-
-                colorScores["TotalScore"] = Math.Round(totalScore, 2);
-
-                return colorScores;
+                totalScore = 100;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error in GetColorCompatibilityScores");
-                return new Dictionary<string, double>
-                {
-                    { "TotalScore", 0.0 }
-                };
-            }
+
+            colorScores["TotalScore"] = Math.Round(totalScore, 2);
+
+            return colorScores;
         }
 
-        private async Task<double> GetQuantityCompatibilityScore(int quantity, int elementId)
+        /// <summary>
+        /// Cleans and splits each element-matched breed's colour words exactly once per
+        /// assessment; both scoring and colour recommendations reuse this result.
+        /// </summary>
+        private static List<(string OriginalColor, List<string> Words)> ExtractBreedColorWords(
+            int elementId, ReferenceSnapshot snapshot)
         {
-            int lastDigit = Math.Abs(quantity % 10);
-            string lastDigitStr = lastDigit.ToString();
-
-            var matchingElement = await _readStore.GetElementByIdAsync(elementId);
-
-            if (matchingElement == null || !matchingElement.LuckyNumber.Contains(lastDigitStr))
-            {
-                return 0.0;
-            }
-
-            return 100.0;
+            return snapshot.Breeds
+                .Where(b => b.ElementId == elementId)
+                .Select(b => (
+                    OriginalColor: b.Color ?? string.Empty,
+                    Words: ColorNameCleaner.CleanColorName(b.Color ?? string.Empty)
+                        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList()))
+                .Where(x => x.Words.Count > 0)
+                .ToList();
         }
 
-        private double CalculateOverallScore(double directionScore, double shapeScore, double breedScore, double quantityScore)
+        private static double ScoreQuantity(int quantity, Element element)
+        {
+            var lastDigit = Math.Abs(quantity % 10);
+            var luckyDigits = LuckyNumbers.ParseLastDigitTargets(element.LuckyNumber);
+
+            return luckyDigits.Contains(lastDigit) ? 100.0 : 0.0;
+        }
+
+        private static double CalculateOverallScore(double directionScore, double shapeScore, double breedScore, double quantityScore)
         {
             return (directionScore + shapeScore + breedScore + quantityScore) / 4.0;
         }
 
-        private async Task<List<string>> GenerateRecommendations(
-            double directionScore, double shapeScore, Dictionary<string, double> colorScores, double quantityScore,
-            string currentDirection, string currentShape, List<string> currentColors, int currentQuantity,
-            int elementId)
+        private List<string> BuildRecommendations(
+            ReferenceSnapshot snapshot,
+            Element element,
+            string currentDirection,
+            string currentShape,
+            List<string> currentColors,
+            int currentQuantity,
+            double directionScore,
+            double shapeScore,
+            Dictionary<string, double> colorScores,
+            double quantityScore)
         {
+            var optimalDirection = ResolveOptimalDirection(element.ElementId, snapshot);
+            var optimalShape = ResolveOptimalShape(element.ElementId, snapshot);
+            var recommendedColors = ResolveRecommendedColors(element.ElementId, snapshot, count: 3);
+            var recommendedQuantity = LuckyNumbers.RecommendedQuantity(element.LuckyNumber);
+
             var recommendations = new List<string>();
 
             if (directionScore < 50.0)
-                recommendations.Add($"Hãy cân nhắc thay đổi hướng ao của bạn từ ({currentDirection}) thành ({await GetOptimalDirection(elementId)}) để tương thích tốt hơn.");
+                recommendations.Add($"Hãy cân nhắc thay đổi hướng ao của bạn từ ({currentDirection}) thành ({optimalDirection}) để tương thích tốt hơn.");
             else if (directionScore < 75.0)
-                recommendations.Add($"Hướng của ao của bạn ({currentDirection}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc điều chỉnh nó theo hướng {await GetOptimalDirection(elementId)}.");
+                recommendations.Add($"Hướng của ao của bạn ({currentDirection}) nhìn chung là tương thích, nhưng có thể không tối ưu. Hãy cân nhắc điều chỉnh nó theo hướng {optimalDirection}.");
 
             if (shapeScore < 50.0)
-                recommendations.Add($"Hình dạng của ao của bạn ({currentShape}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc thay đổi nó thành ({await GetOptimalShape(elementId)}) để có sự hài hòa tốt hơn.");
+                recommendations.Add($"Hình dạng của ao của bạn ({currentShape}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc thay đổi nó thành ({optimalShape}) để có sự hài hòa tốt hơn.");
             else if (shapeScore < 75.0)
-                recommendations.Add($"Hình dạng ao của bạn ({currentShape}) nhìn chung là tương thích, nhưng có thể không lý tưởng. Hãy cân nhắc điều chỉnh thành ({await GetOptimalShape(elementId)}) để cải thiện sự cân bằng Phong thủy.");
+                recommendations.Add($"Hình dạng ao của bạn ({currentShape}) nhìn chung là tương thích, nhưng có thể không lý tưởng. Hãy cân nhắc điều chỉnh thành ({optimalShape}) để cải thiện sự cân bằng Phong thủy.");
 
             var totalColorScore = colorScores["TotalScore"];
             if (totalColorScore < 100.0)
             {
-                var recommendedColors = await GetRecommendedColors(elementId, 3);
                 var lowScoringColors = currentColors
                     .Where(c => colorScores.ContainsKey(c) && colorScores[c] < (100.0 / currentColors.Count))
                     .ToList();
@@ -233,121 +277,70 @@ namespace KoiFengShuiSystem.Modules.FengShui.Application.Services
             }
 
             if (quantityScore < 25.0)
-                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đáng kể đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành ({await GetRecommendedQuantity(elementId)}) hoặc chữ số có hàng đơn vị là ({await GetRecommendedQuantity(elementId)}) để cân bằng Phong thủy tốt hơn.");
+                recommendations.Add(QuantityAdvice(currentQuantity, recommendedQuantity, strong: true));
             else if (quantityScore < 50.0)
-                recommendations.Add($"Số lượng cá trong ao của bạn ({currentQuantity}) có thể ảnh hưởng đến khả năng tương thích. Hãy cân nhắc điều chỉnh số lượng thành ({await GetRecommendedQuantity(elementId)}) hoặc chữ số có hàng đơn vị là ({await GetRecommendedQuantity(elementId)}) để cải thiện sự hài hòa.");
+                recommendations.Add(QuantityAdvice(currentQuantity, recommendedQuantity, strong: false));
 
             return recommendations;
         }
 
-        private async Task<string> GetOptimalDirection(int elementId)
+        private static string QuantityAdvice(int currentQuantity, int recommendedQuantity, bool strong)
         {
-            try
+            var impact = strong
+                ? "có thể ảnh hưởng đáng kể đến khả năng tương thích"
+                : "có thể ảnh hưởng đến khả năng tương thích";
+            var goal = strong
+                ? "để cân bằng Phong thủy tốt hơn"
+                : "để cải thiện sự hài hòa";
+
+            return $"Số lượng cá trong ao của bạn ({currentQuantity}) {impact}. Hãy cân nhắc điều chỉnh số lượng thành ({recommendedQuantity}) hoặc chữ số có hàng đơn vị là ({recommendedQuantity}) {goal}.";
+        }
+
+        private static string ResolveOptimalDirection(int elementId, ReferenceSnapshot snapshot)
+        {
+            var compatibleDirectionIds = snapshot.FengShuiDirections
+                .Where(f => f.ElementId == elementId)
+                .Select(f => f.DirectionId)
+                .ToHashSet();
+
+            if (compatibleDirectionIds.Count == 0)
             {
-                var compatibleDirections = await _readStore.GetFengShuiDirectionsByElementIdAsync(elementId);
-
-                if (!compatibleDirections.Any())
-                {
-                    return "Unknown";
-                }
-
-                var directions = await _readStore.GetAllDirectionsAsync();
-                var optimalDirection = directions
-                    .Join(compatibleDirections,
-                        d => d.DirectionId,
-                        f => f.DirectionId,
-                        (d, f) => d.DirectionName)
-                    .FirstOrDefault();
-
-                return optimalDirection ?? "Unknown";
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred in GetOptimalDirection");
                 return "Unknown";
             }
+
+            var optimal = snapshot.Directions
+                .Where(d => compatibleDirectionIds.Contains(d.DirectionId))
+                .Select(d => d.DirectionName)
+                .FirstOrDefault();
+
+            return optimal ?? "Unknown";
         }
 
-        private async Task<string> GetOptimalShape(int elementId)
+        private static string ResolveOptimalShape(int elementId, ReferenceSnapshot snapshot)
         {
-            try
-            {
-                var shapeCategories = await _readStore.GetAllShapeCategoriesAsync();
-                var compatibleShapes = shapeCategories.Where(s => s.ElementId == elementId).ToList();
+            var compatibleShapes = snapshot.Shapes.Where(s => s.ElementId == elementId).ToList();
 
-                if (compatibleShapes.Any())
-                {
-                    return compatibleShapes.First().ShapeName;
-                }
-                else
-                {
-                    return shapeCategories.Any() ? shapeCategories.First().ShapeName : "Unknown";
-                }
-            }
-            catch (Exception ex)
+            if (compatibleShapes.Count > 0)
             {
-                Console.WriteLine($"An error occurred in GetOptimalShape: {ex.Message}");
-                return "Unknown";
+                return compatibleShapes[0].ShapeName ?? "Unknown";
             }
+
+            return snapshot.Shapes.Count > 0 ? snapshot.Shapes[0].ShapeName ?? "Unknown" : "Unknown";
         }
 
-        private async Task<List<string>> GetRecommendedColors(int elementId, int count)
+        private static List<string> ResolveRecommendedColors(int elementId, ReferenceSnapshot snapshot, int count)
         {
-            try
-            {
-                var breeds = await _readStore.GetAllKoiBreedsAsync();
+            var recommendedColors = snapshot.Breeds
+                .Where(b => b.ElementId == elementId && !string.IsNullOrWhiteSpace(b.Color))
+                .GroupBy(b => b.Color!.Trim())
+                .OrderByDescending(g => g.Count())
+                .Take(count)
+                .Select(g => g.Key)
+                .Where(color => !string.IsNullOrWhiteSpace(color))
+                .Distinct()
+                .ToList();
 
-                var normalizedBreeds = breeds
-                    .Where(b => b.ElementId == elementId)
-                    .Select(b => new
-                    {
-                        OriginalColor = b.Color,
-                        NormalizedColors = ColorNameCleaner.CleanColorName(b.Color)
-                            .Split(' ')
-                            .Where(c => !string.IsNullOrWhiteSpace(c))
-                            .Distinct()
-                            .ToList()
-                    })
-                    .ToList();
-
-                var recommendedColors = normalizedBreeds
-                    .GroupBy(b => b.OriginalColor)
-                    .OrderByDescending(g => g.Count())
-                    .Take(count)
-                    .Select(g => g.Key)
-                    .Where(color => !string.IsNullOrWhiteSpace(color))
-                    .Distinct()
-                    .ToList();
-
-                return recommendedColors.Any() ? recommendedColors : new List<string> { "Unknown" };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in GetRecommendedColors: {ex.Message}");
-                return new List<string> { "Unknown" };
-            }
-        }
-
-        private async Task<int> GetRecommendedQuantity(int elementId)
-        {
-            var element = await _readStore.GetElementByIdAsync(elementId);
-
-            if (element != null && !string.IsNullOrEmpty(element.LuckyNumber))
-            {
-                var luckyNumbers = element.LuckyNumber.Split(',').Select(n => n.Trim()).ToArray();
-
-                if (luckyNumbers.Length > 0)
-                {
-                    var lastNumber = luckyNumbers.Last().Trim();
-
-                    if (!string.IsNullOrEmpty(lastNumber) && int.TryParse(lastNumber, out int parsedNumber))
-                    {
-                        return Math.Abs(parsedNumber % 10);
-                    }
-                }
-            }
-
-            return 9;
+            return recommendedColors.Count > 0 ? recommendedColors : new List<string> { "Unknown" };
         }
     }
 }
