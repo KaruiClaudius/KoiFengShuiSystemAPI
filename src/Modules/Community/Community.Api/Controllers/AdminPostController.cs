@@ -1,16 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.Shared.Kernel.Security;
-using KoiFengShuiSystem.Shared.Models.Request;
-using KoiFengShuiSystem.Shared.Models.Response;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Modules.Community.Application.Responses;
+using KoiFengShuiSystem.Modules.Community.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
-namespace KoiFengShuiSystem.Api.Controllers
+namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
 {
     [ApiController]
     [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
@@ -80,7 +83,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                         }
                         imageUrls.Add(uploadResult.SecureUrl.ToString());
                     }
-                }         
+                }
                 var post = await _adminPostService.UpdateAdminPostAsync(id, request, imageUrls);
                 if (post == null)
                 {
@@ -112,7 +115,7 @@ namespace KoiFengShuiSystem.Api.Controllers
                         }
                         imageUrls.Add(uploadResult.SecureUrl.ToString());
                     }
-                }          
+                }
                 var post = await _adminPostService.CreatePostWithImagesAsync(request, imageUrls);
                 return CreatedAtAction(nameof(GetAdminPostById), new { id = post.PostId }, post);
             }

@@ -13,6 +13,8 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure
         {
             services.AddScoped<ICommunityStore, EfCommunityStore>();
             services.AddScoped<IFaqService, FaqService>();
+            services.AddScoped<IPostService, PostService>();
+            services.AddScoped<IAdminPostService, AdminPostService>();
         }
     }
 }

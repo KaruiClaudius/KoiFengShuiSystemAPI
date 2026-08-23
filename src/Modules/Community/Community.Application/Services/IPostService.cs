@@ -1,14 +1,7 @@
-﻿using KoiFengShuiSystem.Shared.Kernel.Results;
-using KoiFengShuiSystem.Common;
-using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.Shared.Models.Request;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Shared.Kernel.Results;
 
-namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
+namespace KoiFengShuiSystem.Modules.Community.Application.Services
 {
     public interface IPostService
     {
@@ -16,7 +9,6 @@ namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
         Task<IBusinessResult> GetPostById(int id);
         Task<IBusinessResult> GetPostByPostTypeId(int postTypeId, int page, int pageSize);
         Task<IBusinessResult> CreatePost(CreatePostRequest request, int authorAccountId);
-        // Helper method to compare two payments
         Task<IBusinessResult> DeletePost(int id);
         Task<IBusinessResult> Save();
     }

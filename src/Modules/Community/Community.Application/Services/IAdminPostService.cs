@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using KoiFengShuiSystem.Shared.Models.Request;
-using KoiFengShuiSystem.Shared.Models.Response;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Modules.Community.Application.Responses;
 
-namespace KoiFengShuiSystem.BusinessLogic.Services.Interface
+namespace KoiFengShuiSystem.Modules.Community.Application.Services
 {
     public interface IAdminPostService
     {

@@ -55,7 +55,7 @@ builder.Services.AddAuthorization();
 
 // Controller configuration - discover controllers from API assembly
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(KoiFengShuiSystem.Api.Controllers.PostController).Assembly)
+    .AddApplicationPart(typeof(KoiFengShuiSystem.API.Controllers.DashboardController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.FengShui.Api.Controllers.CompatibilityController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Identity.Api.IdentityApiAssemblyMarker).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Community.Api.CommunityApiAssemblyMarker).Assembly)
@@ -96,8 +96,6 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 // Service registrations
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
 builder.Services.AddScoped<ICloudService, CloudService>();

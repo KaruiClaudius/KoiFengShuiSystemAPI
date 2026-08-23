@@ -1,22 +1,12 @@
-using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.Shared.Kernel.Results;
-using KoiFengShuiSystem.DataAccess.Base;
-using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Modules.Community.Application.Services;
 using KoiFengShuiSystem.Shared.Kernel.Security;
-using KoiFengShuiSystem.Shared.Models.Request;
-using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Drawing.Printing;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
-namespace KoiFengShuiSystem.Api.Controllers
+namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

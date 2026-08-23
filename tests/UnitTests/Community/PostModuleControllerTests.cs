@@ -1,15 +1,20 @@
-using KoiFengShuiSystem.Api.Controllers;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
 using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Modules.Community.Api.Controllers;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Modules.Community.Application.Services;
 using KoiFengShuiSystem.Shared.Kernel.Results;
-using KoiFengShuiSystem.Shared.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using UnitTests.Api;
 
-namespace UnitTests.Api
+namespace UnitTests.Community
 {
-    public class PostControllerTests
+    /// <summary>
+    /// Ports the legacy PostControllerTests onto the module-owned controller
+    /// contract, keeping every asserted status-code behavior identical.
+    /// </summary>
+    public class PostModuleControllerTests
     {
         private readonly Mock<IPostService> _postServiceMock = new();
         private readonly Mock<ILogger<PostController>> _loggerMock = new();

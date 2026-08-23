@@ -1,11 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
-namespace KoiFengShuiSystem.Shared.Models.Request
+namespace KoiFengShuiSystem.Modules.Community.Application.Requests
 {
     public class AdminPostRequest
     {

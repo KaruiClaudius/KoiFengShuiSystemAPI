@@ -1,11 +1,6 @@
-﻿using KoiFengShuiSystem.DataAccess.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using KoiFengShuiSystem.DataAccess.Models;
 
-namespace KoiFengShuiSystem.Shared.Models.Response
+namespace KoiFengShuiSystem.Modules.Community.Application.Responses
 {
     public class PostResponse
     {

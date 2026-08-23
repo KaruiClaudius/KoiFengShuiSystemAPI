@@ -90,8 +90,6 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 // Service registrations
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
 builder.Services.AddScoped<ICloudService, CloudService>();

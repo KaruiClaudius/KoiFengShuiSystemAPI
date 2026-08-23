@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace KoiFengShuiSystem.Shared.Models.Request
+namespace KoiFengShuiSystem.Modules.Community.Application.Requests
 {
     /// <summary>
     /// Client-facing contract for member post creation. Deliberately excludes

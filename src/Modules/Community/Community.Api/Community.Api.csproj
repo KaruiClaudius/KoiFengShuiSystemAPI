@@ -6,6 +6,8 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <!-- ICloudService still lives in the legacy services project this phase -->
+    <ProjectReference Include="..\..\..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
     <ProjectReference Include="..\Community.Application\Community.Application.csproj" />
     <ProjectReference Include="..\Community.Infrastructure\Community.Infrastructure.csproj" />
   </ItemGroup>
