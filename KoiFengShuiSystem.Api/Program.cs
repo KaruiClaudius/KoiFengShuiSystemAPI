@@ -78,7 +78,6 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(nameof(CloundSettings)));
 // Service registrations
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
 builder.Services.AddScoped<ICloudService, CloudService>();

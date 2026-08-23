@@ -1,5 +1,7 @@
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
+using KoiFengShuiSystem.Modules.Community.Application.Responses;
+using KoiFengShuiSystem.Modules.Community.Application.Services;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -208,5 +210,73 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
             var affected = await _context.SaveChangesAsync();
             return affected > 0;
         }
+
+        // ---- Dashboard metrics ----
+
+        // Projects straight into the module read model (same JSON surface as the
+        // legacy raw Account serialization) instead of leaking Identity entities
+        // or IQueryable past the module boundary.
+        public async Task<IReadOnlyList<RecentAccountSummary>> GetAccountsCreatedSinceAsync(DateTime createdAfterUtc) =>
+            await _context.Accounts
+                .AsNoTracking()
+                .Where(a => a.CreateAt >= createdAfterUtc)
+                .OrderByDescending(a => a.CreateAt)
+                .Select(a => new RecentAccountSummary(
+                    a.AccountId,
+                    a.FullName,
+                    a.Email,
+                    a.Password,
+                    a.Dob,
+                    a.Phone,
+                    a.Gender,
+                    a.ElementId,
+                    a.RoleId,
+                    a.ResetTokenHash,
+                    a.ResetTokenExpiresAt,
+                    a.CreateAt,
+                    a.UpdateAt))
+                .ToListAsync();
+
+        public Task<int> CountDistinctRegisteredTrafficSinceAsync(DateTime timestampAfterUtc) =>
+            _context.TrafficLogs
+                .AsNoTracking()
+                .Where(log => log.IsRegistered && log.Timestamp >= timestampAfterUtc)
+                .Select(log => log.AccountId)
+                .Distinct()
+                .CountAsync();
+
+        public Task<int> CountDistinctGuestTrafficSinceAsync(DateTime timestampAfterUtc) =>
+            _context.TrafficLogs
+                .AsNoTracking()
+                .Where(log => !log.IsRegistered && log.Timestamp >= timestampAfterUtc)
+                .Select(log => log.IpAddress)
+                .Distinct()
+                .CountAsync();
+
+        public Task<int> CountPostsAsync() =>
+            _context.Posts
+                .AsNoTracking()
+                .CountAsync();
+
+        // Single grouped query joined through the required PostCategory navigation.
+        // Categories without posts never appear (posts-side grouping). The stable
+        // category-id ordering happens after materialization: the InMemory test
+        // provider cannot translate ordering over grouped results, and sorting the
+        // tiny aggregate list client-side keeps one portable query shape.
+        public async Task<IReadOnlyList<CategoryPostCount>> CountPostsByCategoryAsync()
+        {
+            var counts = await _context.Posts
+                .AsNoTracking()
+                .GroupBy(p => new { p.PostCategoryId, CategoryName = p.PostCategory.PostType })
+                .Select(g => new CategoryPostCount(g.Key.PostCategoryId, g.Key.CategoryName, g.Count()))
+                .ToListAsync();
+
+            return counts.OrderBy(c => c.CategoryId).ToList();
+        }
+
+        public Task<int> CountPendingPostsAsync() =>
+            _context.Posts
+                .AsNoTracking()
+                .CountAsync(p => p.Status == PostService.MemberPostDefaultStatus);
     }
 }

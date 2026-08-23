@@ -1,12 +1,20 @@
-﻿using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using System;
+using System.Threading.Tasks;
+using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
+using KoiFengShuiSystem.Modules.Community.Application.Responses;
 using KoiFengShuiSystem.Shared.Kernel.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
-namespace KoiFengShuiSystem.API.Controllers
+namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
 {
+    /// <summary>
+    /// Admin dashboard reporting, ported from the legacy API controller with
+    /// byte-compatible responses for the three original endpoints plus the new
+    /// content-aware summary. The legacy endpoints keep their local error handling
+    /// verbatim; the new endpoint relies on the host's global exception middleware.
+    /// </summary>
     [ApiController]
     [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
     [Route("api/[controller]")]
@@ -15,13 +23,16 @@ namespace KoiFengShuiSystem.API.Controllers
         private const string GenericErrorMessage = "An error occurred while processing your request.";
         private const string InvalidDaysMessage = "Days must be a positive integer.";
 
-        private readonly IDashboardService _dashboardService;
+        // Legacy traffic counters were hardcoded to a rolling 30-day window.
+        private const int TrafficWindowDays = 30;
+
+        private readonly ICommunityStore _store;
         private readonly ILogger<DashboardController> _logger;
 
-        public DashboardController(IDashboardService dashboardService, ILogger<DashboardController> logger)
+        public DashboardController(ICommunityStore store, ILogger<DashboardController> logger)
         {
-            _dashboardService = dashboardService;
-            _logger = logger;
+            _store = store ?? throw new ArgumentNullException(nameof(store));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         [HttpGet("new-users-count")]
@@ -29,12 +40,13 @@ namespace KoiFengShuiSystem.API.Controllers
         {
             try
             {
-                var count = await _dashboardService.CountNewUsersAsync(days);
-                return Ok(new { Count = count });
-            }
-            catch (ArgumentException)
-            {
-                return BadRequest(InvalidDaysMessage);
+                if (days <= 0)
+                {
+                    return BadRequest(InvalidDaysMessage);
+                }
+
+                var users = await _store.GetAccountsCreatedSinceAsync(DateTime.UtcNow.AddDays(-days));
+                return Ok(new { Count = users.Count });
             }
             catch (Exception ex)
             {
@@ -48,12 +60,13 @@ namespace KoiFengShuiSystem.API.Controllers
         {
             try
             {
-                var users = await _dashboardService.ListNewUsersAsync(days);
+                if (days <= 0)
+                {
+                    return BadRequest(InvalidDaysMessage);
+                }
+
+                var users = await _store.GetAccountsCreatedSinceAsync(DateTime.UtcNow.AddDays(-days));
                 return Ok(users);
-            }
-            catch (ArgumentException)
-            {
-                return BadRequest(InvalidDaysMessage);
             }
             catch (Exception ex)
             {
@@ -67,8 +80,9 @@ namespace KoiFengShuiSystem.API.Controllers
         {
             try
             {
-                var registeredUsers = await _dashboardService.GetRegisteredUsersTrafficCount();
-                var uniqueGuests = await _dashboardService.GetUniqueGuestsTrafficCount();
+                var cutoff = DateTime.UtcNow.AddDays(-TrafficWindowDays);
+                var registeredUsers = await _store.CountDistinctRegisteredTrafficSinceAsync(cutoff);
+                var uniqueGuests = await _store.CountDistinctGuestTrafficSinceAsync(cutoff);
 
                 var total = registeredUsers + uniqueGuests;
                 if (total == 0)
@@ -96,6 +110,21 @@ namespace KoiFengShuiSystem.API.Controllers
                 _logger.LogError(ex, "Dashboard traffic-distribution failed");
                 return StatusCode(500, GenericErrorMessage);
             }
+        }
+
+        /// <summary>
+        /// Content-aware report: overall post volume, its distribution across
+        /// categories (categories holding no posts are omitted), and the size of
+        /// the pending member-submission queue.
+        /// </summary>
+        [HttpGet("content-summary")]
+        public async Task<ActionResult<ContentSummaryResponse>> GetContentSummary()
+        {
+            var totalPosts = await _store.CountPostsAsync();
+            var byCategory = await _store.CountPostsByCategoryAsync();
+            var pendingCount = await _store.CountPendingPostsAsync();
+
+            return Ok(new ContentSummaryResponse(totalPosts, byCategory, pendingCount));
         }
     }
 }

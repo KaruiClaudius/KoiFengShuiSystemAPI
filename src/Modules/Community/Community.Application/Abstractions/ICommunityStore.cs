@@ -1,4 +1,5 @@
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Community.Application.Responses;
 
 namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
 {
@@ -80,5 +81,33 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
         // Backing for the rarely-used explicit save endpoint contract; reports
         // whether the pending save touched any rows.
         Task<bool> SavePostChangesAsync();
+
+        // ---- Dashboard metrics ----
+        //
+        // All read-only projections materialize module-owned DTOs; no IQueryable
+        // crosses the module boundary. Cutoffs are passed in by the caller so the
+        // windows stay deterministic and testable.
+
+        // Accounts created at or after the cutoff, newest first, mirroring the
+        // legacy new-users window query (CreateAt >= cutoff, ordered desc).
+        Task<IReadOnlyList<RecentAccountSummary>> GetAccountsCreatedSinceAsync(DateTime createdAfterUtc);
+
+        // Distinct registered-visitor accounts seen at or after the cutoff,
+        // replicating the legacy distinct-AccountId traffic counter.
+        Task<int> CountDistinctRegisteredTrafficSinceAsync(DateTime timestampAfterUtc);
+
+        // Distinct guest IP addresses seen at or after the cutoff, replicating the
+        // legacy distinct-IpAddress guest counter.
+        Task<int> CountDistinctGuestTrafficSinceAsync(DateTime timestampAfterUtc);
+
+        // Total number of posts regardless of status.
+        Task<int> CountPostsAsync();
+
+        // Posts-per-category distribution; only categories holding at least one
+        // post appear, ordered by category id for stable output.
+        Task<IReadOnlyList<CategoryPostCount>> CountPostsByCategoryAsync();
+
+        // Posts whose Status equals the member-submission default ("Pending").
+        Task<int> CountPendingPostsAsync();
     }
 }

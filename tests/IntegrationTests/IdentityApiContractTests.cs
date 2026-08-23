@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using KoiFengShuiSystem.API.Controllers;
 using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
@@ -145,7 +144,7 @@ public class IdentityApiContractTests : IClassFixture<IdentityApiContractTests.I
         {
             base.ConfigureWebHost(builder);
 
-            var legacyApiAssemblyName = typeof(DashboardController).Assembly.GetName().Name;
+            var legacyApiAssemblyName = typeof(KoiFengShuiSystem.Api.Controllers.UploadImageController).Assembly.GetName().Name;
 
             builder.ConfigureServices(services =>
             {

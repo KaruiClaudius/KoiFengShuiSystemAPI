@@ -42,9 +42,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Controller configuration - discover controllers from API assembly
+// Controller configuration - discover controllers from API assemblies.
+// The legacy assembly anchor is UploadImageController: the dashboard controller
+// moved into the Community module, but UploadImage still lives in the legacy
+// assembly and must keep routing.
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(KoiFengShuiSystem.API.Controllers.DashboardController).Assembly)
+    .AddApplicationPart(typeof(KoiFengShuiSystem.Api.Controllers.UploadImageController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.FengShui.Api.Controllers.CompatibilityController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Identity.Api.IdentityApiAssemblyMarker).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Community.Api.CommunityApiAssemblyMarker).Assembly)
@@ -84,7 +87,6 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 
 // Service registrations
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
 builder.Services.AddScoped<ICloudService, CloudService>();
