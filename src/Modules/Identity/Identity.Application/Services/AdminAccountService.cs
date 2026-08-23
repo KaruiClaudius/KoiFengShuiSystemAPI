@@ -86,10 +86,10 @@ public class AdminAccountService
             Password = _passwordHasher.Hash(adminPassword),
             FullName = string.IsNullOrWhiteSpace(adminFullName) ? "System Administrator" : adminFullName,
             RoleId = 1,
-            Dob = DateTime.Now,
+            Dob = DateTime.UtcNow,
             Gender = "male",
-            CreateAt = DateTime.Now,
-            UpdateAt = DateTime.Now,
+            CreateAt = DateTime.UtcNow,
+            UpdateAt = DateTime.UtcNow,
             Phone = "0379499630"
         };
 

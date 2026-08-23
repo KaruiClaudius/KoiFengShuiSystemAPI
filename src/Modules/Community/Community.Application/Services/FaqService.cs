@@ -35,7 +35,7 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
             {
                 Question = faqRequest.Question,
                 Answer = faqRequest.Answer,
-                CreateAt = DateTime.Now,
+                CreateAt = DateTime.UtcNow,
                 AccountId = faqRequest.AccountId
             };
 
@@ -55,7 +55,7 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
 
             faq.Question = faqRequest.Question;
             faq.Answer = faqRequest.Answer;
-            faq.CreateAt = DateTime.Now;
+            faq.CreateAt = DateTime.UtcNow;
 
             await _store.UpdateAsync(faq);
             return ToResponse(faq);

@@ -49,7 +49,7 @@ public class KoiFengShuiContext : DbContext
     /// timestamptz only accepts DateTime values whose Kind is UTC and throws
     /// "Cannot write DateTime with Kind=Local" otherwise. This codebase predates that
     /// rule and mixes DateTime.Now, DateTime.UtcNow and Unspecified kinds across many
-    /// write paths (e.g. Account.CreateAt = DateTime.Now), so adopting timestamptz
+    /// write paths historically, now standardized to UtcNow, so adopting timestamptz remains possible later
     /// would require auditing every producer first.
     ///
     /// Tradeoff accepted: 'timestamp without time zone' stores wall-clock values

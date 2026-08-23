@@ -186,7 +186,7 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
             post.Name = update.Name;
             post.Description = update.Description;
             post.Status = update.Status;
-            post.UpdateAt = DateTime.Now;
+            post.UpdateAt = DateTime.UtcNow;
 
             var uploadedUrls = update.ImageUrls ?? new List<string>();
             var existingImageUrls = post.PostImages.Select(pi => pi.Image.ImageUrl).ToList();

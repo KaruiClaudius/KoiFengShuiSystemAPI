@@ -118,17 +118,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// Logging configuration with Serilog
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
-    .Enrich.FromLogContext()
-    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-    .CreateLogger();
-
-builder.Logging.ClearProviders();
-builder.Logging.AddSerilog();
+// Logging: the "Serilog" section of appsettings*.json is the single source of truth.
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+    loggerConfiguration.ReadFrom.Configuration(context.Configuration));
 
 var app = builder.Build();
 

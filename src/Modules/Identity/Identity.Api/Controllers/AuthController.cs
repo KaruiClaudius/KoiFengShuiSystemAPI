@@ -152,8 +152,8 @@ public class AuthController : ControllerBase
                     // users authenticate through Google and receive the standard token pair.
                     // Gender/Dob stay null until the user completes their profile (see profile-status),
                     // which also keeps element derivation skipped until a real date of birth exists.
-                    CreateAt = DateTime.Now,
-                    UpdateAt = DateTime.Now,
+                    CreateAt = DateTime.UtcNow,
+                    UpdateAt = DateTime.UtcNow,
                     RoleId = 2,
                 };
                 await _accountService.CreateAsync(account);

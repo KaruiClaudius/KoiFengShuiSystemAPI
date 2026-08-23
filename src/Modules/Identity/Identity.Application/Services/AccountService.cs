@@ -104,8 +104,8 @@ public class AccountService : IAccountService
             Password = _passwordHasher.Hash(model.Password),
             Dob = model.Dob.Date,
             Phone = model.Phone,
-            CreateAt = DateTime.Now,
-            UpdateAt = DateTime.Now,
+            CreateAt = DateTime.UtcNow,
+            UpdateAt = DateTime.UtcNow,
             Gender = model.Gender,
             RoleId = 2
         };
@@ -142,7 +142,7 @@ public class AccountService : IAccountService
             account.Dob = model.Dob.Value;
         if (!string.IsNullOrEmpty(model.Gender))
             account.Gender = model.Gender;
-        account.UpdateAt = DateTime.Now;
+        account.UpdateAt = DateTime.UtcNow;
 
         // Fresh input is validated strictly; when the request carries no gender the stored
         // value drives a lenient re-derivation instead. Accounts without any date of birth
