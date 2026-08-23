@@ -77,13 +77,10 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 // Service registrations
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
-builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
-builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<UnitOfWorkRepository>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
-builder.Services.AddScoped<IElementService, ElementService>();
 
 builder.Services.AddModuleInstallersFromAssemblies(
     builder.Configuration,
