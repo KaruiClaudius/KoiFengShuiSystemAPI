@@ -145,7 +145,7 @@ public class IdentityApiContractTests : IClassFixture<IdentityApiContractTests.I
         {
             base.ConfigureWebHost(builder);
 
-            var legacyApiAssemblyName = typeof(FAQController).Assembly.GetName().Name;
+            var legacyApiAssemblyName = typeof(PostController).Assembly.GetName().Name;
 
             builder.ConfigureServices(services =>
             {

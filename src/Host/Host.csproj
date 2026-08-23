@@ -30,6 +30,9 @@
     <ProjectReference Include="..\Modules\FengShui\FengShui.Application\FengShui.Application.csproj" />
     <ProjectReference Include="..\Modules\FengShui\FengShui.Infrastructure\FengShui.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\FengShui\FengShui.Api\FengShui.Api.csproj" />
+    <ProjectReference Include="..\Modules\Community\Community.Application\Community.Application.csproj" />
+    <ProjectReference Include="..\Modules\Community\Community.Infrastructure\Community.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Community\Community.Api\Community.Api.csproj" />
   </ItemGroup>
 
 </Project>

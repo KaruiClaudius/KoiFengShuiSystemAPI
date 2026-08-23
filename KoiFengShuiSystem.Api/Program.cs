@@ -91,7 +91,6 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();

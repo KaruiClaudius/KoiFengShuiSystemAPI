@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
-namespace KoiFengShuiSystem.Shared.Models.Request
+namespace KoiFengShuiSystem.Modules.Community.Application.Requests
 {
     public class FAQRequest
     {
@@ -12,6 +12,5 @@ namespace KoiFengShuiSystem.Shared.Models.Request
         public string Answer { get; set; } = string.Empty;
 
         public int AccountId { get; set; }
-
     }
 }

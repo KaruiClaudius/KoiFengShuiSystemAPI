@@ -55,9 +55,10 @@ builder.Services.AddAuthorization();
 
 // Controller configuration - discover controllers from API assembly
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(KoiFengShuiSystem.Api.Controllers.FAQController).Assembly)
+    .AddApplicationPart(typeof(KoiFengShuiSystem.Api.Controllers.PostController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.FengShui.Api.Controllers.CompatibilityController).Assembly)
     .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Identity.Api.IdentityApiAssemblyMarker).Assembly)
+    .AddApplicationPart(typeof(KoiFengShuiSystem.Modules.Community.Api.CommunityApiAssemblyMarker).Assembly)
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
@@ -96,7 +97,6 @@ builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(name
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IPostService, PostService>();
-builder.Services.AddScoped<IFAQService, FAQService>();
 builder.Services.AddScoped<IAdminPostService, AdminPostService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
@@ -115,7 +115,8 @@ builder.Services.AddModuleInstallersFromAssemblies(
     builder.Configuration,
     typeof(Program).Assembly,
     typeof(KoiFengShuiSystem.Modules.FengShui.Infrastructure.FengShuiModuleInstaller).Assembly,
-    typeof(KoiFengShuiSystem.Modules.Identity.Infrastructure.IdentityModuleInstaller).Assembly);
+    typeof(KoiFengShuiSystem.Modules.Identity.Infrastructure.IdentityModuleInstaller).Assembly,
+    typeof(KoiFengShuiSystem.Modules.Community.Infrastructure.CommunityModuleInstaller).Assembly);
 
 builder.Services.AddHttpClient();
 

@@ -1,33 +1,20 @@
-using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.Shared.Kernel.Results;
-using KoiFengShuiSystem.DataAccess.Base;
-using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Modules.Community.Application.Services;
 using KoiFengShuiSystem.Shared.Kernel.Security;
-using KoiFengShuiSystem.Shared.Models.Request;
-using KoiFengShuiSystem.Shared.Models.Response;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Drawing.Printing;
 
-namespace KoiFengShuiSystem.Api.Controllers
+namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class FAQController : Controller
     {
-        private IFAQService _faqService;
-        private readonly ILogger<FAQController> _logger;
+        private readonly IFaqService _faqService;
 
-        public FAQController(IFAQService faqService, ILogger<FAQController> logger)
+        public FAQController(IFaqService faqService)
         {
             _faqService = faqService;
-            _logger = logger;
         }
 
         [HttpGet("GetAll")]
@@ -55,7 +42,7 @@ namespace KoiFengShuiSystem.Api.Controllers
 
         [HttpPost("Create")]
         [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
-        public async Task<IActionResult> CreateAsync([FromBody] FAQRequest faqRequest)
+        public async Task<IActionResult> Create([FromBody] FAQRequest faqRequest)
         {
             if (!ModelState.IsValid)
             {

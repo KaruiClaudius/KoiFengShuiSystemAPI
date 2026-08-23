@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using KoiFengShuiSystem.Shared.Models.Request;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
 
-namespace UnitTests.Admin
+namespace UnitTests.Community
 {
     public class FaqRequestValidationTests
     {
