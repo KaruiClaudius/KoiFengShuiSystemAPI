@@ -14,15 +14,12 @@ public class JwtTokenService : IJwtTokenService
     private const int DefaultAccessTokenMinutes = 15;
 
     private readonly AppSettings _appSettings;
+    private readonly TokenValidationParameters _tokenValidationParameters;
 
     public JwtTokenService(IOptions<AppSettings> appSettings)
     {
         _appSettings = appSettings.Value;
-
-        if (string.IsNullOrWhiteSpace(_appSettings.Secret))
-        {
-            throw new Exception("JWT secret not configured");
-        }
+        _tokenValidationParameters = TokenValidationParametersFactory.Create(_appSettings);
     }
 
     public int AccessTokenLifetimeMinutes => ResolveAccessTokenMinutes();
@@ -71,21 +68,10 @@ public class JwtTokenService : IJwtTokenService
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_appSettings.Secret!);
 
         try
         {
-            tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateIssuer = !string.IsNullOrWhiteSpace(_appSettings.Issuer),
-                ValidIssuer = _appSettings.Issuer,
-                ValidateAudience = !string.IsNullOrWhiteSpace(_appSettings.Audience),
-                ValidAudience = _appSettings.Audience,
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
-            }, out var validatedToken);
+            tokenHandler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
             return int.Parse(jwtToken.Claims.First(claim => claim.Type == "id").Value);

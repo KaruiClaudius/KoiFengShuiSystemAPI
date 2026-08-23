@@ -7,6 +7,7 @@ using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.DataAccess.Repositories.Implement;
 using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
+using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 using KoiFengShuiSystem.Host.Middleware;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure;
@@ -14,10 +15,8 @@ using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
 using KoiFengShuiSystem.Shared.Helpers.Photos;
 using KoiFengShuiSystem.Shared.Kernel.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
-using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,17 +37,7 @@ PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(builder.Configuration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["AppSettings:Secret"] ?? throw new Exception("Cannot find AppSettings:Secret"))),
-            ValidateIssuer = true,
-            ValidIssuer = builder.Configuration["AppSettings:Issuer"] ?? throw new Exception("Cannot find AppSettings:Issuer"),
-            ValidateAudience = true,
-            ValidAudience = builder.Configuration["AppSettings:Audience"] ?? throw new Exception("Cannot find AppSettings:Audience"),
-            ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero
-        };
+        options.TokenValidationParameters = TokenValidationParametersFactory.Create(builder.Configuration);
     });
 
 builder.Services.AddAuthorization();
