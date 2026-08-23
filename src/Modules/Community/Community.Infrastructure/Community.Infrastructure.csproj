@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CloudinaryDotNet" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Community.Application\Community.Application.csproj" />
+    <ProjectReference Include="..\Community.Domain\Community.Domain.csproj" />
+    <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

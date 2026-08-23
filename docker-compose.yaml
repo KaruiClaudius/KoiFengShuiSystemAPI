@@ -1,4 +1,4 @@
-version: "3.8" # Changed from "4.34.3" to a more standard version
+version: "3.8"
 services:
   fengshuiapi:
     build: .
@@ -8,13 +8,33 @@ services:
       - ASPNETCORE_URLS=https://+:7285
       - ASPNETCORE_HTTPS_PORT=7285
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;Database=KoiFengShui;User Id=sa;Password=12345;TrustServerCertificate=true
+      - ConnectionStrings__DefaultConnection=${KFS_DB_CONNECTION_STRING:-Host=postgres;Port=5432;Database=koi_fengshui;Username=koi;Password=koi_dev_pw}
     volumes:
       - ${APPDATA}/microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${USERPROFILE}/.aspnet/https:/root/.aspnet/https:ro
       - fengshuiapi-keys:/root/.aspnet/DataProtection-Keys
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=${KFS_PG_USER:-koi}
+      - POSTGRES_PASSWORD=${KFS_PG_PASSWORD:-koi_dev_pw}
+      - POSTGRES_DB=${KFS_PG_DB:-koi_fengshui}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KFS_PG_USER:-koi} -d ${KFS_PG_DB:-koi_fengshui}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   fengshuiapi-keys:
+  postgres-data:

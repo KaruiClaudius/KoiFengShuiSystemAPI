@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ---------------------------------------------------------------------------
+# Security: never commit local secrets or certificates.
+# Real values go in user secrets (dotnet user-secrets), environment variables,
+# or an untracked .env file loaded by your deployment tooling.
+# ---------------------------------------------------------------------------
+.env
+.env.*

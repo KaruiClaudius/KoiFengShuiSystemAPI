@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
+using AccountEntity = KoiFengShuiSystem.Modules.Identity.Domain.Entities.Account;
 
 namespace KoiFengShuiSystem.Api.Authorization
 {
@@ -15,7 +16,7 @@ namespace KoiFengShuiSystem.Api.Authorization
                 return;
 
             // authorization
-            var account = (Account?)context.HttpContext.Items["Account"];
+            var account = (AccountEntity?)context.HttpContext.Items["Account"];
             if (account == null)
             {
                 // not logged in or role not authorized

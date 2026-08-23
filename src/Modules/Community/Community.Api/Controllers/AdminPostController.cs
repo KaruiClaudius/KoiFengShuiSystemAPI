@@ -1,0 +1,148 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
+using KoiFengShuiSystem.Shared.Kernel.Security;
+using KoiFengShuiSystem.Modules.Community.Application.Requests;
+using KoiFengShuiSystem.Modules.Community.Application.Responses;
+using KoiFengShuiSystem.Modules.Community.Application.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
+{
+    [ApiController]
+    [Authorize(Roles = AuthorizationDefaults.Roles.Admin)]
+    [Route("api/[controller]")]
+    public class AdminPostController : ControllerBase
+    {
+        private readonly IAdminPostService _adminPostService;
+        private readonly ILogger<AdminPostController> _logger;
+        private readonly ICloudStorage _cloudStorage;
+        public AdminPostController(
+            IAdminPostService adminPostService,
+            ICloudStorage cloudStorage,
+            ILogger<AdminPostController> logger)
+        {
+            _adminPostService = adminPostService;
+            _cloudStorage = cloudStorage;
+            _logger = logger;
+        }
+
+        [HttpGet("GetAllPosts")]
+        public async Task<ActionResult<IEnumerable<AdminPostResponse>>> GetAllAdminPosts()
+        {
+            try
+            {
+                var posts = await _adminPostService.GetAllAdminPostsAsync();
+                return Ok(posts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while fetching all admin posts");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
+        [HttpGet("GetPostById/{id}")]
+        public async Task<ActionResult<AdminPostResponse>> GetAdminPostById(int id)
+        {
+            try
+            {
+                var post = await _adminPostService.GetAdminPostByIdAsync(id);
+                if (post == null)
+                {
+                    return NotFound();
+                }
+                return Ok(post);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while fetching admin post with id {id}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+        [HttpPut("UpdatePost/{id}")]
+        public async Task<ActionResult<AdminPostResponse>> UpdateAdminPost(int id, [FromForm] AdminPostRequest request)
+        {
+            try
+            {
+                var imageUrls = new List<string>();
+                if (request.Images != null && request.Images.Any())
+                {
+                    foreach (var image in request.Images)
+                    {
+                        var uploadResult = await _cloudStorage.UploadImageAsync(image);
+                        if (!uploadResult.Success)
+                        {
+                            throw new Exception("Error uploading image: " + uploadResult.Error);
+                        }
+                        imageUrls.Add(uploadResult.Url!);
+                    }
+                }
+                var post = await _adminPostService.UpdateAdminPostAsync(id, request, imageUrls);
+                if (post == null)
+                {
+                    return NotFound();
+                }
+                return Ok(post);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while updating admin post with id {id}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
+        [HttpPost("CreatePostWithImages")]
+        public async Task<ActionResult<AdminPostResponse>> CreatePostWithImages([FromForm] AdminPostRequest request)
+        {
+            try
+            {
+                var imageUrls = new List<string>();
+                if (request.Images != null && request.Images.Any())
+                {
+                    foreach (var image in request.Images)
+                    {
+                        var uploadResult = await _cloudStorage.UploadImageAsync(image);
+                        if (!uploadResult.Success)
+                        {
+                            throw new Exception("Error uploading image: " + uploadResult.Error);
+                        }
+                        imageUrls.Add(uploadResult.Url!);
+                    }
+                }
+                var post = await _adminPostService.CreatePostWithImagesAsync(request, imageUrls);
+                return CreatedAtAction(nameof(GetAdminPostById), new { id = post.PostId }, post);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while creating admin post with images");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
+        [HttpDelete("DeletePostWithAllRelated/{postId}")]
+        public async Task<ActionResult> DeletePostWithAllRelated(int postId)
+        {
+            try
+            {
+                var result = await _adminPostService.DeletePostWithAllRelatedAsync(postId);
+                if (!result)
+                {
+                    return NotFound();
+                }
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error occurred while deleting post and all related data for post id {postId}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+    }
+}

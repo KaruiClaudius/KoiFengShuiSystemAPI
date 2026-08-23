@@ -8,7 +8,6 @@ namespace KoiFengShuiSystem.Common
 {
     public class Const
     {
-        public static string APIEndPoint = "https://localhost:7155/api/";
         #region Error Codes
 
         public static int ERROR_EXCEPTION = -4;
@@ -21,8 +20,6 @@ namespace KoiFengShuiSystem.Common
         public static string SUCCESS_CREATE_MSG = "Save data success";
         public static int SUCCESS_READ_CODE = 1;
         public static string SUCCESS_READ_MSG = "Get data success";
-        public static int SUCCESS_UPDATE_CODE = 1;
-        public static string SUCCESS_UPDATE_MSG = "Update data success";
         public static int SUCCESS_DELETE_CODE = 1;
         public static string SUCCESS_DELETE_MSG = "Delete data success";
 
@@ -35,10 +32,6 @@ namespace KoiFengShuiSystem.Common
         public static string FAIL_CREATE_MSG = "Save data fail";
         public static int FAIL_READ_CODE = -1;
         public static string FAIL_READ_MSG = "Get data fail";
-        public static int FAIL_UPDATE_CODE = -1;
-        public static string FAIL_UPDATE_MSG = "Update data fail";
-        public static int FAIL_DELETE_CODE = -1;
-        public static string FAIL_DELETE_MSG = "Delete data fail";
 
         #endregion
 
