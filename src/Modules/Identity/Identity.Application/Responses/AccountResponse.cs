@@ -16,5 +16,11 @@ public class AccountResponse
 
     public int? RoleId { get; set; }
 
+    /// <summary>
+    /// Ngũ-hành element id derived from birth year/gender (council Q7); null for
+    /// accounts without a derivable element. Pair with <see cref="ElementName"/>.
+    /// </summary>
+    public int? ElementId { get; set; }
+
     public string? ElementName { get; set; }
 }

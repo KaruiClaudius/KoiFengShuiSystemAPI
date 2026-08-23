@@ -12,7 +12,7 @@ public class RegisterRequest
     public string? Email { get; set; }
 
     [Required]
-    [MinLength(6)]
+    [MinLength(8)]
     public string? Password { get; set; }
 
     [Required]

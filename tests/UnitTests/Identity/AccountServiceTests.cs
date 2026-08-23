@@ -1,3 +1,4 @@
+using KoiFengShuiSystem.Modules.Identity.Application;
 using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
 using KoiFengShuiSystem.Modules.Identity.Application.Responses;
@@ -523,7 +524,7 @@ namespace UnitTests.Identity
         }
 
         [Fact]
-        public async Task RegisterAsync_DuplicateEmail_ThrowsApplicationException()
+        public async Task RegisterAsync_DuplicateEmail_ThrowsEmailTakenException()
         {
             var context = CreateContextWithSeedData();
             var service = CreateService(context);
@@ -537,7 +538,7 @@ namespace UnitTests.Identity
                 Gender = "male"
             };
 
-            var ex = await Assert.ThrowsAsync<ApplicationException>(() => service.RegisterAsync(request));
+            var ex = await Assert.ThrowsAsync<EmailTakenException>(() => service.RegisterAsync(request));
             Assert.Contains("already taken", ex.Message);
         }
 

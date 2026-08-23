@@ -2,7 +2,9 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using KoiFengShuiSystem.Modules.Identity.Application;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
+using KoiFengShuiSystem.Modules.Identity.Application.Responses;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Shared.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -43,7 +45,9 @@ public class AuthController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new { message = result.ErrorMessage });
+            // Council D1: { code, message } - code is authoritative, message stays
+            // during transition so legacy string-matching clients keep working.
+            return BadRequest(new { code = result.ErrorCode, message = result.ErrorMessage });
         }
 
         return Ok(result.Response);
@@ -58,6 +62,10 @@ public class AuthController : ControllerBase
         {
             var account = await _accountService.RegisterAsync(model);
             return Ok(account);
+        }
+        catch (EmailTakenException ex)
+        {
+            return BadRequest(new { code = AuthErrorCodes.EmailTaken, message = ex.Message });
         }
         catch (ApplicationException ex)
         {

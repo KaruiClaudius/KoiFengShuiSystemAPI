@@ -59,12 +59,12 @@ public class AccountService : IAccountService
 
         if (account == null)
         {
-            return new AuthenticationResult { ErrorMessage = "Email not found." };
+            return new AuthenticationResult { ErrorMessage = "Email not found.", ErrorCode = AuthErrorCodes.AccountNotFound };
         }
 
         if (!VerifyCurrentPassword(account, model.Password))
         {
-            return new AuthenticationResult { ErrorMessage = "Incorrect password." };
+            return new AuthenticationResult { ErrorMessage = "Incorrect password.", ErrorCode = AuthErrorCodes.InvalidPassword };
         }
 
         var upgradedToHash = UpgradeLegacyStoredPassword(account, model.Password!);
@@ -93,7 +93,7 @@ public class AccountService : IAccountService
     public async Task<Account> RegisterAsync(RegisterRequest model)
     {
         if (await _readStore.GetAccountByEmailAsync(model.Email ?? string.Empty) != null)
-            throw new ApplicationException("Email '" + model.Email + "' is already taken");
+            throw new EmailTakenException(model.Email!);
         if (string.IsNullOrEmpty(model.Password))
             throw new ArgumentException("Password is required", nameof(model));
 
@@ -246,6 +246,7 @@ public class AccountService : IAccountService
             Phone = account.Phone,
             Dob = account.Dob ?? DateTime.MinValue,
             Gender = account.Gender,
+            ElementId = account.ElementId,
             ElementName = elementName
         };
     }

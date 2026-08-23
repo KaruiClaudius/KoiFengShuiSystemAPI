@@ -8,6 +8,6 @@ public class ResetPasswordRequest
     public string? Token { get; set; }
 
     [Required]
-    [MinLength(6)]
+    [MinLength(8)]
     public string? NewPassword { get; set; }
 }

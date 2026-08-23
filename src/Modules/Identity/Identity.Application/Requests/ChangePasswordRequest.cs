@@ -8,6 +8,6 @@ public class ChangePasswordRequest
     public string? CurrentPassword { get; set; }
 
     [Required]
-    [MinLength(6)]
+    [MinLength(8)]
     public string? NewPassword { get; set; }
 }

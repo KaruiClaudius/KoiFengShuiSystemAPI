@@ -6,5 +6,8 @@ public class AuthenticationResult
 
     public string? ErrorMessage { get; set; }
 
+    /// <summary>Stable machine-readable code (council D1); see <see cref="AuthErrorCodes"/>.</summary>
+    public string? ErrorCode { get; set; }
+
     public bool Success => ErrorMessage == null;
 }

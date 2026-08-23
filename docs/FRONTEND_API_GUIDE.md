@@ -19,6 +19,9 @@
 | 7 | **RFC 7807 problem details on unhandled errors** | Error parsing changes: read `title` / `detail` / `traceId`. |
 | 8 | **Rate limiting** | Auth + consultation endpoints return **HTTP 429** when spammed — handle it in UX. |
 | 9 | Marketplace / transactions / wallet **removed** | Delete those screens and wallet balances everywhere. |
+| 10 | **Auth error codes** (council D1) | Sign-in/sign-up failures return `{ "code": "…", "message": "…" }` — branch on `code`, never on message strings. See §3.1. |
+| 11 | **Password minimum = 8** (council D7) | Server rejects shorter passwords on SignUp / change-password / reset. Align your forms. |
+| 12 | **Upload returns `imageId`** + new `GET api/Post/categories` + `imageUrls` on public post responses (council D9–D11) | Submission form and blog detail are unblocked. Public feeds/detail are **Approved-only** now. |
 
 ---
 
@@ -57,7 +60,7 @@ Legend: 🔓 anonymous · 🔒 any authenticated member · 👑 admin only
   "token": "<jwt>", "refreshToken": "<opaque>",
   "expiresInMinutes": 15
 }
-// 400 { "message": "…" }   ·   429 on burst (>10/min/IP)
+// 400 { "code": "ACCOUNT_NOT_FOUND" | "INVALID_PASSWORD", "message": "…" }   ·   429 ⇒ RATE_LIMITED
 ```
 
 #### 🔓 POST `SignUp`
@@ -65,7 +68,8 @@ Legend: 🔓 anonymous · 🔒 any authenticated member · 👑 admin only
 { "fullName": "An Nguyễn", "email": "user@example.com", "password": "…",
   "dob": "1999-04-12T00:00:00Z", "phone": "09…", "gender": "male" }
 ```
-`gender` accepts `male | nam | m | female | nữ | nu | f` (case/space-insensitive); blank defaults female-derived; garbage → 400. Response = same shape as `SignIn`.
+`password` must be **≥ 8 characters**. `gender` accepts `male | nam | m | female | nữ | nu | f` (case/space-insensitive); blank defaults female-derived; garbage → 400.
+Duplicate email → `400 { "code": "EMAIL_TAKEN", "message": … }`. Response = same shape as `SignIn`.
 
 #### 🔓 POST `google-login`
 ```json
@@ -97,7 +101,7 @@ Response is deliberately neutral (no account enumeration). Email contains a link
 { "token": "<raw token from link>", "newPassword": "…" }
 // 200 · 400 { "message": "Invalid or expired reset token." }
 ```
-On success all existing sessions for the account are revoked.
+`newPassword` must be **≥ 8 characters**. On success all existing sessions for the account are revoked.
 
 #### 🔒 GET `profile-status`
 ```json
@@ -125,9 +129,9 @@ Ownership rule: a member may only touch their own id; admins bypass. Violations 
 // AccountResponse
 { "accountId": 7, "fullName": "An Nguyễn", "email": "user@example.com",
   "dob": "1999-04-12T00:00:00", "phone": "09…", "gender": "male",
-  "roleId": 2, "elementName": "Thủy" }
+  "roleId": 2, "elementId": 2, "elementName": "Thủy" }
 ```
-`elementName` is null until the user has a real DOB (feng shui derivation runs server-side).
+`elementId`/`elementName` are null until the user has a real DOB (feng shui derivation runs server-side). Prefer `elementId` when present; fall back to name mapping otherwise.
 
 ### 2.3 Feng Shui engine
 
@@ -189,11 +193,19 @@ Legacy envelope:
 #### Public posts — `api/Post`
 | Route | Access | Notes |
 |---|---|---|
-| GET `GetAll` | 🔓 | feed of all visible posts |
-| GET `GetAllByPostType/{postTypeId}?page=1&pageSize=N` | 🔓 | paginated slice |
-| GET `Details/{id}` | 🔓 | raw entity incl. images |
+| GET `GetAll` | 🔓 | feed of **Approved** posts only |
+| GET `GetAllByPostType/{postTypeId}?page=1&pageSize=N` | 🔓 | paginated slice, Approved only |
+| GET `Details/{id}` | 🔓/👑 | Approved only; **404 for non-approved** unless admin token (admin bypass reads the full queue) |
+| GET `categories` ✨ | 🔓 | category constants — see below |
 | POST `Create` | 🔒 | member submission — see below |
 | DELETE `Delete/{id}` | 👑 | |
+
+#### 🔓 GET `api/Post/categories` ✨ (council D10)
+```json
+{ "status": 1, "message": "…",
+  "data": [ { "categoryId": 1, "categoryName": "…" }, … ] }
+```
+Consume this instead of hardcoding post-type ids. Interim defaults until wired: blog = `3`, community = `1`.
 
 Member create request — server **ignores** any status/author fields you try to send:
 ```json
@@ -204,13 +216,14 @@ Created posts land with `status: "Pending"` and appear to members as *awaiting a
 admins publish them via the AdminPost endpoints.
 
 ```json
-// PostResponse (feed items)
+// PostResponse (feed + Details items)
 { "postId": 12, "id": 3,              // ⚠️ "id" here = category id (legacy wire name)
   "name": "Koi mới của tôi",          //    post title lives in "name"
   "description": "Vừa thả…", "createAt": "…", "updateAt": "…",
   "accountId": 7, "accountName": "An Nguyễn",
   "elementId": 1,                     // 0 = uncategorized/member post without element
-  "elementName": null, "status": "Pending" }
+  "elementName": null, "status": "Approved",
+  "imageUrls": ["https://res.cloudinary.com/….jpg"] }   // ✨ council D11; [] when none
 ```
 
 #### Admin posts — `api/AdminPost` (👑 class-level)
@@ -240,9 +253,9 @@ GET `GetAll`, GET `Details/{id}` public · POST/PUT/DELETE admin.
 `multipart/form-data`, field `file`. Legacy envelope response:
 ```json
 { "status": 1, "message": "Upload file success.",
-  "data": { "url": "https://res.cloudinary.com/….jpg", "message": "Upload file success." } }
+  "data": { "imageId": 41, "url": "https://res.cloudinary.com/….jpg", "message": "Upload file success." } }
 ```
-Use returned `data.url` → collect ids via post creation flows.
+`imageId` ✨ (council D9) is the id to send in post creation `imageIds[]`; `url` is unchanged for legacy adapters.
 
 #### Dashboard — `api/Dashboard` (👑)
 
@@ -275,6 +288,25 @@ Mapping: `ArgumentException→400` · `KeyNotFoundException→404` · `InvalidOp
 Many older controllers still return ad-hoc shapes (`{ message }`, plain strings, legacy envelopes) — treat `problem+json` content-type as authoritative where present, else fall back to `message`/string body.
 
 **Rate limiting:** exceeding limits yields bare **429** (auth ≈10/min/IP, consultation ≈30/min/IP, global 120/min). Back off and retry; don't hammer refresh.
+
+### 3.1 Auth error codes ✨ (council D1)
+
+Auth failures return `400 { "code", "message" }`. **`code` is authoritative** — the human
+readable `message` ships only during the transition so legacy clients keep working and will
+eventually disappear. Never string-match messages.
+
+| Code | Meaning | Emitted by |
+|---|---|---|
+| `ACCOUNT_NOT_FOUND` | No account with that email | SignIn |
+| `INVALID_PASSWORD` | Wrong password | SignIn |
+| `EMAIL_TAKEN` | Email already registered | SignUp |
+| `RATE_LIMITED` | Too many requests | any 429 response (status-code convention, not a body field) |
+
+```json
+// example
+{ "code": "INVALID_PASSWORD", "message": "Incorrect password." }
+```
+Treat unknown codes as generic failure; new codes may be added in minor releases.
 
 ---
 
