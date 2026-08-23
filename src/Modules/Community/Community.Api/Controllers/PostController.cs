@@ -74,6 +74,22 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
             return Ok(categoriesResponse);
         }
 
+        [HttpGet("my-posts")]
+        [Authorize]
+        public async Task<IActionResult> GetMyPosts([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            // Council Q11: identity strictly from the token - a spoofed account id
+            // cannot widen the result. accountId 0 (missing claim) reads empty.
+            var authorAccountId = ParseAccountId(User);
+            var postResponse = await _postService.GetMyPosts(authorAccountId, page, pageSize);
+
+            if (postResponse.Data == null)
+            {
+                return NotFound(postResponse);
+            }
+            return Ok(postResponse);
+        }
+
         // No per-account ownership check exists in PostService.DeletePost yet,
         // so deletion is restricted to admins until author tracking lands.
         [HttpDelete("Delete/{id}")]

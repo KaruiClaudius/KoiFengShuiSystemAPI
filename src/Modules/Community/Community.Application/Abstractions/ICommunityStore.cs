@@ -56,6 +56,13 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
         // Category rows backing GET /api/Post/categories (council D10).
         Task<IReadOnlyList<PostCategory>> GetPostCategoriesAsync();
 
+        // Caller-owned posts across ALL statuses (Pending + Approved) backing
+        // GET /api/Post/my-posts (council Q11). Deliberately bypasses the public
+        // Approved-only filter: members always see their own queue. Ordered by
+        // updateAt descending - this surface is new and carries no legacy
+        // unordered-pagination contract.
+        Task<IReadOnlyList<Post>> GetPostsByAccountIdAsync(int accountId, int page, int pageSize);
+
         // Element-name join table used by the public feed mapping.
         Task<IReadOnlyDictionary<int, string>> GetElementNamesAsync();
 

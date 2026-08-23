@@ -269,7 +269,7 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
         }
     }
 
-    private void SeedPost(int id, string status = ICommunityStore.ApprovedStatus)
+    private void SeedPost(int id, string status = ICommunityStore.ApprovedStatus, int accountId = 1)
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<KoiFengShuiContext>();
@@ -282,7 +282,7 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
                 Name = "Seed post",
                 Description = "Seed body",
                 Status = status,
-                AccountId = 1,
+                AccountId = accountId,
                 ElementId = 1,
                 CreateAt = DateTime.UtcNow,
                 UpdateAt = DateTime.UtcNow
@@ -342,6 +342,39 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
         var categories = body.GetProperty("data").EnumerateArray().ToArray();
         Assert.Contains(categories, c => c.GetProperty("categoryId").GetInt32() == 1);
         Assert.Contains(categories, c => c.GetProperty("categoryName").ValueKind == JsonValueKind.String);
+    }
+
+    // --- Council Q11 pins: member own-submission visibility ---
+
+    [Fact]
+    public async Task Member_MyPosts_ReturnsOwnQueue_IncludingPending_AndNeverOthers()
+    {
+        // roleId 2 mints AccountId 102; seed one owned pending post and one
+        // foreign pending post - the caller must see only their own.
+        SeedPost(3, status: "Pending", accountId: 102);
+        SeedPost(4, status: "Pending", accountId: 999);
+
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 2);
+
+        var response = await client.GetAsync("/api/Post/my-posts");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var ids = body.GetProperty("data").EnumerateArray()
+            .Select(r => r.GetProperty("postId").GetInt32()).ToArray();
+        Assert.Contains(3, ids);
+        Assert.DoesNotContain(4, ids);
+    }
+
+    [Fact]
+    public async Task MyPosts_RequiresAuthentication()
+    {
+        using var client = NewClient();
+
+        var response = await client.GetAsync("/api/Post/my-posts");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     public class SecurityMatrixFactory : ApiTestFactory

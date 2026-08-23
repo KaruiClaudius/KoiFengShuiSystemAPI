@@ -118,6 +118,26 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
             }
         }
 
+        public async Task<IBusinessResult> GetMyPosts(int accountId, int page, int pageSize)
+        {
+            try
+            {
+                // Council Q11: own-queue visibility. No Approved filter here -
+                // members see their Pending submissions alongside approved ones.
+                // accountId 0 (missing claim) matches nothing -> empty success
+                // envelope rather than a leak.
+                var posts = await _store.GetPostsByAccountIdAsync(accountId, page, pageSize);
+                var elementDict = await _store.GetElementNamesAsync();
+                var postResponses = posts.Select(po => MapToResponse(po, elementDict)).ToList();
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, postResponses);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "PostService.GetMyPosts failed for accountId={AccountId}", accountId);
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve your posts.");
+            }
+        }
+
         public async Task<IBusinessResult> CreatePost(CreatePostRequest request, int authorAccountId)
         {
             try

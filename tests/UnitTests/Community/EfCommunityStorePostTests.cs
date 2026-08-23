@@ -252,6 +252,42 @@ namespace UnitTests.Community
             Assert.Null(await _store.GetPostByIdAsync(9));
         }
 
+        [Fact]
+        public async Task GetPostsByAccountIdAsync_ReturnsOwnPendingAndApproved_NewestFirst()
+        {
+            // Council Q11: own-queue visibility bypasses the Approved-only filter.
+            var baseTime = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+            _context.Posts.Add(new Post { PostId = 20, PostCategoryId = 1, Name = "Mine approved", Description = "d", Status = ICommunityStore.ApprovedStatus, AccountId = 42, CreateAt = baseTime, UpdateAt = baseTime });
+            _context.Posts.Add(new Post { PostId = 21, PostCategoryId = 1, Name = "Mine pending", Description = "d", Status = "Pending", AccountId = 42, CreateAt = baseTime, UpdateAt = baseTime.AddDays(1) });
+            _context.Posts.Add(new Post { PostId = 22, PostCategoryId = 1, Name = "Theirs pending", Description = "d", Status = "Pending", AccountId = 43, CreateAt = baseTime, UpdateAt = baseTime.AddDays(2) });
+            _context.SaveChanges();
+
+            var page = await _store.GetPostsByAccountIdAsync(42, page: 1, pageSize: 10);
+
+            Assert.Equal(new[] { 21, 20 }, page.Select(p => p.PostId)); // updateAt desc, other account excluded
+        }
+
+        [Fact]
+        public async Task GetPostsByAccountIdAsync_Paginates_AndLoadsImages()
+        {
+            var baseTime = new DateTime(2026, 8, 1, 0, 0, 0, DateTimeKind.Utc);
+            for (var i = 0; i < 5; i++)
+            {
+                _context.Posts.Add(new Post { PostId = 30 + i, PostCategoryId = 1, Name = $"Owned {i}", Description = "d", Status = "Pending", AccountId = 42, CreateAt = baseTime, UpdateAt = baseTime.AddDays(i) });
+            }
+            _context.SaveChanges();
+            SeedImageLinks(30, ("mine-a", "shot"));
+
+            var pageOne = await _store.GetPostsByAccountIdAsync(42, page: 1, pageSize: 3);
+            var pageTwo = await _store.GetPostsByAccountIdAsync(42, page: 2, pageSize: 3);
+
+            Assert.Equal(3, pageOne.Count);
+            Assert.Equal(2, pageTwo.Count);
+            Assert.Empty(pageOne.Select(p => p.PostId).Intersect(pageTwo.Select(p => p.PostId)));
+            var withImage = pageTwo.Single(p => p.PostId == 30);
+            Assert.Equal("mine-a", withImage.PostImages.Single().Image.ImageUrl);
+        }
+
         private Post NewAdminPost(string name) => new()
         {
             PostCategoryId = 1,

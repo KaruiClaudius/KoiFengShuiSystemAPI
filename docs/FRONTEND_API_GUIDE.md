@@ -197,8 +197,20 @@ Legacy envelope:
 | GET `GetAllByPostType/{postTypeId}?page=1&pageSize=N` | 🔓 | paginated slice, Approved only |
 | GET `Details/{id}` | 🔓/👑 | Approved only; **404 for non-approved** unless admin token (admin bypass reads the full queue) |
 | GET `categories` ✨ | 🔓 | category constants — see below |
+| GET `my-posts` ✨ 🔒 | 🔒 | caller's own queue (Pending **and** Approved) for the "my submissions" view — see below |
 | POST `Create` | 🔒 | member submission — see below |
 | DELETE `Delete/{id}` | 👑 | |
+
+#### 🔒 GET `api/Post/my-posts?page=1&pageSize=50` ✨ (council Q11)
+```json
+{ "status": 1, "message": "…",
+  "data": [ { ...PostResponse..., "status": "Pending", "imageUrls": [...] }, … ] }
+```
+Identity comes from the token only — there is no account-id parameter, so no
+cross-account reads are possible. Returns the caller's posts in **all** statuses
+(newest first). No `rejectionReason` exists; statuses are `Pending | Approved` today.
+Static list — refetch when the member opens the view; no polling contract.
+"Đang chờ duyệt" = items with `status === "Pending"`.
 
 #### 🔓 GET `api/Post/categories` ✨ (council D10)
 ```json

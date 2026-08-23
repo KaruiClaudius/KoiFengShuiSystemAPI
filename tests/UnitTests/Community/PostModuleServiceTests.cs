@@ -300,6 +300,52 @@ namespace UnitTests.Community
             Assert.Null(result.Data);
         }
 
+        // ---- My posts (council Q11) ----
+
+        [Fact]
+        public async Task GetMyPosts_MapsCallerQueueThroughPostResponse()
+        {
+            var owned = CreateEntity(70, name: "Mine pending", elementId: null);
+            owned.Status = "Pending";
+            _storeMock
+                .Setup(s => s.GetPostsByAccountIdAsync(42, 1, 50))
+                .ReturnsAsync(new List<Post> { owned });
+            _storeMock
+                .Setup(s => s.GetElementNamesAsync())
+                .ReturnsAsync(new Dictionary<int, string> { [1] = "Metal" });
+
+            var service = CreatePostService();
+
+            var result = await service.GetMyPosts(42, page: 1, pageSize: 50);
+
+            Assert.True(result.Success, result.Message);
+            var responses = Assert.IsType<List<PostResponse>>(result.Data);
+            var row = Assert.Single(responses);
+            Assert.Equal(70, row.PostId);
+            Assert.Equal("Pending", row.Status);
+            Assert.Empty(row.ImageUrls);
+        }
+
+        [Fact]
+        public async Task GetMyPosts_MissingClaimId_ReturnsEmptySuccessEnvelope()
+        {
+            // accountId 0 (missing claim path) matches nothing -> empty list, not an error.
+            _storeMock
+                .Setup(s => s.GetPostsByAccountIdAsync(0, 1, 50))
+                .ReturnsAsync(new List<Post>());
+            _storeMock
+                .Setup(s => s.GetElementNamesAsync())
+                .ReturnsAsync(new Dictionary<int, string>());
+
+            var service = CreatePostService();
+
+            var result = await service.GetMyPosts(0, page: 1, pageSize: 50);
+
+            Assert.True(result.Success, result.Message);
+            var responses = Assert.IsType<List<PostResponse>>(result.Data);
+            Assert.Empty(responses);
+        }
+
         // ---- Delete ----
 
         [Fact]

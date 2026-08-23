@@ -98,6 +98,18 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
                 .OrderBy(c => c.Id)
                 .ToListAsync();
 
+        public async Task<IReadOnlyList<Post>> GetPostsByAccountIdAsync(int accountId, int page, int pageSize) =>
+            await _context.Posts
+                .AsNoTracking()
+                .Where(p => p.AccountId == accountId)
+                .OrderByDescending(p => p.UpdateAt)
+                .ThenByDescending(p => p.PostId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
+                .ToListAsync();
+
         // ---- Posts: mutations and validation ----
 
         public async Task<bool> PostCategoryExistsAsync(int categoryId) =>
