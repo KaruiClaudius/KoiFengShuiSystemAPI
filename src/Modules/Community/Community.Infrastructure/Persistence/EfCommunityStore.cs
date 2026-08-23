@@ -91,6 +91,16 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
                 .Where(i => imageIds.Contains(i.ImageId))
                 .ToListAsync();
 
+        // Mirrors the legacy ImageService.SaveImagesAsync pair (repository
+        // CreateAsync + rows-affected check): a successful save always affects
+        // at least one row, so true is the only success outcome.
+        public async Task<bool> AddImageAsync(string imageUrl)
+        {
+            await _context.Images.AddAsync(new Image { ImageUrl = imageUrl });
+            var affected = await _context.SaveChangesAsync();
+            return affected > 0;
+        }
+
         public async Task AddPostAsync(Post post)
         {
             _context.Posts.Add(post);

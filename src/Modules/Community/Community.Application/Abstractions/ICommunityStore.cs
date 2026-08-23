@@ -54,6 +54,10 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
 
         Task<IReadOnlyList<Image>> GetImagesByIdsAsync(IReadOnlyCollection<int> imageIds);
 
+        // Persists a standalone Image row holding the uploaded url; reports
+        // whether the save touched any rows (legacy SaveImagesAsync contract).
+        Task<bool> AddImageAsync(string imageUrl);
+
         // Persists the post together with whatever PostImages the caller attached,
         // in a single save. Adding the post root explicitly keeps zero-image posts
         // persisted (restored-behavior fix).

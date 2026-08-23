@@ -12,7 +12,6 @@ using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 using KoiFengShuiSystem.Shared.Helpers;
 using KoiFengShuiSystem.Shared.Infrastructure;
 using KoiFengShuiSystem.Shared.Infrastructure.Persistence;
-using KoiFengShuiSystem.Shared.Helpers.Photos;
 using KoiFengShuiSystem.Shared.Kernel.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
@@ -75,12 +74,9 @@ builder.Services.AddSharedInfrastructure(builder.Configuration);
 // AppSettings and MailSettings configuration
 builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailSettings"));
-builder.Services.Configure<CloundSettings>(builder.Configuration.GetSection(nameof(CloundSettings)));
 // Service registrations
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
-builder.Services.AddScoped<ICloudService, CloudService>();
 builder.Services.AddScoped<ICompatibilityService, CompatibilityService>();
 builder.Services.AddScoped<IConsultationService, ConsultationService>();
 builder.Services.AddScoped(typeof(GenericRepository<>));
@@ -88,8 +84,6 @@ builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<UnitOfWorkRepository>();
 builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 builder.Services.AddScoped<IElementService, ElementService>();
-
-builder.Services.AddScoped<CloudService>();
 
 builder.Services.AddModuleInstallersFromAssemblies(
     builder.Configuration,

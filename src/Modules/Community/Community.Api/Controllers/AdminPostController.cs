@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
+using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
 using KoiFengShuiSystem.Shared.Kernel.Security;
 using KoiFengShuiSystem.Modules.Community.Application.Requests;
 using KoiFengShuiSystem.Modules.Community.Application.Responses;
@@ -22,14 +22,14 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
     {
         private readonly IAdminPostService _adminPostService;
         private readonly ILogger<AdminPostController> _logger;
-        private readonly ICloudService _cloudService;
+        private readonly ICloudStorage _cloudStorage;
         public AdminPostController(
             IAdminPostService adminPostService,
-            ICloudService cloudService,
+            ICloudStorage cloudStorage,
             ILogger<AdminPostController> logger)
         {
             _adminPostService = adminPostService;
-            _cloudService = cloudService;
+            _cloudStorage = cloudStorage;
             _logger = logger;
         }
 
@@ -76,12 +76,12 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
                 {
                     foreach (var image in request.Images)
                     {
-                        var uploadResult = await _cloudService.UploadImageAsync(image);
-                        if (uploadResult.Error != null)
+                        var uploadResult = await _cloudStorage.UploadImageAsync(image);
+                        if (!uploadResult.Success)
                         {
-                            throw new Exception("Error uploading image: " + uploadResult.Error.Message);
+                            throw new Exception("Error uploading image: " + uploadResult.Error);
                         }
-                        imageUrls.Add(uploadResult.SecureUrl.ToString());
+                        imageUrls.Add(uploadResult.Url!);
                     }
                 }
                 var post = await _adminPostService.UpdateAdminPostAsync(id, request, imageUrls);
@@ -108,12 +108,12 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
                 {
                     foreach (var image in request.Images)
                     {
-                        var uploadResult = await _cloudService.UploadImageAsync(image);
-                        if (uploadResult.Error != null)
+                        var uploadResult = await _cloudStorage.UploadImageAsync(image);
+                        if (!uploadResult.Success)
                         {
-                            throw new Exception("Error uploading image: " + uploadResult.Error.Message);
+                            throw new Exception("Error uploading image: " + uploadResult.Error);
                         }
-                        imageUrls.Add(uploadResult.SecureUrl.ToString());
+                        imageUrls.Add(uploadResult.Url!);
                     }
                 }
                 var post = await _adminPostService.CreatePostWithImagesAsync(request, imageUrls);
