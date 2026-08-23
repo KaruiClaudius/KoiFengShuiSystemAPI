@@ -32,6 +32,9 @@ PlaceholderConfigurationGuard.Validate(builder.Configuration, builder.Environmen
 PlaceholderConfigurationGuard.ValidateJwtSecret(builder.Configuration);
 PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(builder.Configuration);
 
+// Fail fast outside development when the admin seed password is missing or a placeholder
+PlaceholderConfigurationGuard.ValidateAdminSeed(builder.Configuration, builder.Environment.EnvironmentName);
+
 // Authentication and Authorization
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -170,6 +173,15 @@ app.UseResponseCaching();
 app.UseConfiguredRateLimiter();
 
 app.MapControllers();
+
+// Seed the guarded administrator account before accepting traffic. Deliberate decision:
+// a database failure while seeding aborts startup loudly instead of degrading silently,
+// because the admin system depends on this account being provisioned — no catch-and-continue.
+using (var scope = app.Services.CreateScope())
+{
+    var adminAccountService = scope.ServiceProvider.GetRequiredService<AdminAccountService>();
+    await adminAccountService.EnsureAdminAccountExistsAsync();
+}
 
 app.Run();
 

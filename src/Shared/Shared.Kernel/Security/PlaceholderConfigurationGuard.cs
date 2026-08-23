@@ -15,6 +15,8 @@ public static class PlaceholderConfigurationGuard
 
     public const string AudienceConfigurationKey = "AppSettings:Audience";
 
+    public const string AdminSeedPasswordConfigurationKey = "AdminAccount:Password";
+
     private const int MinimumJwtSecretLength = 32;
 
     /// <summary>
@@ -66,6 +68,34 @@ public static class PlaceholderConfigurationGuard
         throw new InvalidOperationException(
             $"Configuration key(s) {string.Join(", ", offendingKeys)} must be set to non-empty values. " +
             "Every issued token carries these values and JwtBearer rejects tokens without a matching issuer/audience.");
+    }
+
+    /// <summary>
+    /// Fails fast outside development when the seeded-administrator password is absent or
+    /// still a placeholder. The application seeds an admin account from this value at
+    /// startup; without this check a production host would either crash mid-seed or, worse,
+    /// provision the administrator with well-known placeholder credentials. Development is
+    /// lenient: the seeding service itself skips placeholder credentials with a warning.
+    /// </summary>
+    public static void ValidateAdminSeed(IConfiguration configuration, string environmentName)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        if (string.Equals(environmentName, DevelopmentEnvironmentName, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var password = configuration[AdminSeedPasswordConfigurationKey];
+
+        if (!string.IsNullOrWhiteSpace(password) && !password.StartsWith(PlaceholderPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(
+            $"Configuration key '{AdminSeedPasswordConfigurationKey}' must be set to a real credential value before starting outside development. " +
+            "The application seeds an administrator account from this value at startup and refuses to seed a missing or ROTATE_ME placeholder password.");
     }
 
     public static void Validate(IConfiguration configuration, string environmentName, ILogger? logger = null)

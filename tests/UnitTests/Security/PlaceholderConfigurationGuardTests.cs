@@ -160,6 +160,54 @@ public class PlaceholderConfigurationGuardTests
         PlaceholderConfigurationGuard.ValidateJwtIssuerAudience(configuration);
     }
 
+    // --- ValidateAdminSeed ---
+
+    [Fact]
+    public void ValidateAdminSeed_Production_MissingPassword_ThrowsInvalidOperationExceptionNamingTheKey()
+    {
+        var configuration = BuildConfig(("AdminAccount:Email", "admin@prod.example"), ("AdminAccount:Password", ""));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateAdminSeed(configuration, "Production"));
+
+        Assert.Contains("AdminAccount:Password", exception.Message);
+        Assert.Contains("seed", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateAdminSeed_Production_PlaceholderPassword_ThrowsInvalidOperationException()
+    {
+        var configuration = BuildConfig(("AdminAccount:Password", PlaceholderValue));
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            PlaceholderConfigurationGuard.ValidateAdminSeed(configuration, "Production"));
+
+        Assert.Contains("AdminAccount:Password", exception.Message);
+    }
+
+    [Fact]
+    public void ValidateAdminSeed_Production_RealPassword_Passes()
+    {
+        var configuration = BuildConfig(
+            ("AdminAccount:Email", "admin@prod.example"),
+            ("AdminAccount:Password", "S3cure-Real-Password"));
+
+        PlaceholderConfigurationGuard.ValidateAdminSeed(configuration, "Production");
+    }
+
+    [Fact]
+    public void ValidateAdminSeed_Development_MissingOrPlaceholderPassword_DoesNotThrow()
+    {
+        var missingPassword = BuildConfig(("AdminAccount:Password", ""));
+        PlaceholderConfigurationGuard.ValidateAdminSeed(missingPassword, "Development");
+
+        var placeholderPassword = BuildConfig(("AdminAccount:Password", PlaceholderValue));
+        PlaceholderConfigurationGuard.ValidateAdminSeed(placeholderPassword, "Development");
+
+        var sectionAbsent = BuildConfig();
+        PlaceholderConfigurationGuard.ValidateAdminSeed(sectionAbsent, "Development");
+    }
+
     private static IConfiguration BuildConfig(params (string Key, string? Value)[] settings) =>
         new ConfigurationBuilder()
             .AddInMemoryCollection(settings.Select(s => new KeyValuePair<string, string?>(s.Key, s.Value)))
