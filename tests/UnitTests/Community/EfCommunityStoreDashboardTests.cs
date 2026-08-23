@@ -87,16 +87,14 @@ namespace UnitTests.Community
 
             var user = Assert.Single(await _store.GetAccountsCreatedSinceAsync(Now.AddDays(-2)));
 
+            // Credential fields stay on the entity (seeded above) but are never projected.
             Assert.Equal("Ada Lovelace", user.FullName);
             Assert.Equal("ada@test.local", user.Email);
-            Assert.Equal("hash", user.Password);
             Assert.Equal(new DateTime(1990, 12, 10), user.Dob);
             Assert.Equal("0123456789", user.Phone);
             Assert.Equal("female", user.Gender);
             Assert.Equal(3, user.ElementId);
             Assert.Equal(2, user.RoleId);
-            Assert.Equal("token-hash", user.ResetTokenHash);
-            Assert.Equal(Now.AddDays(1), user.ResetTokenExpiresAt);
             Assert.Equal(Now.AddDays(-1), user.CreateAt);
             Assert.Equal(Now.AddHours(-1), user.UpdateAt);
         }

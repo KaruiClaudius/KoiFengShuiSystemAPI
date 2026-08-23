@@ -24,6 +24,7 @@ public class DashboardApiContractTests : IClassFixture<DashboardApiContractTests
     {
         _factory = factory;
         SeedContent();
+        SeedAccountWithCredentialMaterial();
     }
 
     [Fact]
@@ -85,6 +86,28 @@ public class DashboardApiContractTests : IClassFixture<DashboardApiContractTests
         }
     }
 
+    // Defense in depth: the new-users-list projection must strip credential
+    // material even when the stored account carries a live password hash and an
+    // active reset token. The email assertion proves the seeded row actually
+    // flowed through the endpoint, so the absence checks are not vacuous.
+    [Fact]
+    public async Task NewUsersList_AdminToken_NeverReturnsCredentialMaterial()
+    {
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 1);
+
+        var response = await client.GetAsync("/api/Dashboard/new-users-list?days=30");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Contains("leaky-seed@test.local", body);
+        Assert.DoesNotContain("leaky-bcrypt-hash", body);
+        Assert.DoesNotContain("leaky-token-hash", body);
+        Assert.DoesNotContain("password", body, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("resettoken", body, StringComparison.OrdinalIgnoreCase);
+    }
+
     private HttpClient NewClient() => _factory.CreateClient();
 
     private void AuthorizeAs(HttpClient client, int roleId)
@@ -98,6 +121,30 @@ public class DashboardApiContractTests : IClassFixture<DashboardApiContractTests
             RoleId = roleId
         });
         client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+    }
+
+    // High id, inside the default 30-day window, carrying credential material a
+    // leaky projection would happily serialize.
+    private void SeedAccountWithCredentialMaterial()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<KoiFengShuiContext>();
+
+        if (!context.Accounts.Any(account => account.AccountId == 7750))
+        {
+            context.Accounts.Add(new Account
+            {
+                AccountId = 7750,
+                FullName = "Leaky Seed",
+                Email = "leaky-seed@test.local",
+                Password = "leaky-bcrypt-hash",
+                ResetTokenHash = "leaky-token-hash",
+                ResetTokenExpiresAt = DateTime.UtcNow.AddDays(1),
+                CreateAt = DateTime.UtcNow,
+                UpdateAt = DateTime.UtcNow
+            });
+            context.SaveChanges();
+        }
     }
 
     // Idempotent seed on high ids so collisions with other fixtures stay impossible.

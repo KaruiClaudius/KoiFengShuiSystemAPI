@@ -211,10 +211,7 @@ namespace UnitTests.Community
             null,
             null,
             null,
-            null,
             2,
-            null,
-            null,
             DateTime.UtcNow.AddDays(-1),
             DateTime.UtcNow);
     }

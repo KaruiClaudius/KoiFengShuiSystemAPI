@@ -213,9 +213,10 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
 
         // ---- Dashboard metrics ----
 
-        // Projects straight into the module read model (same JSON surface as the
-        // legacy raw Account serialization) instead of leaking Identity entities
-        // or IQueryable past the module boundary.
+        // Projects straight into the module read model (safe profile fields only;
+        // credential columns such as Password and the reset-token pair are never
+        // selected) instead of leaking Identity entities or IQueryable past the
+        // module boundary.
         public async Task<IReadOnlyList<RecentAccountSummary>> GetAccountsCreatedSinceAsync(DateTime createdAfterUtc) =>
             await _context.Accounts
                 .AsNoTracking()
@@ -225,14 +226,11 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
                     a.AccountId,
                     a.FullName,
                     a.Email,
-                    a.Password,
                     a.Dob,
                     a.Phone,
                     a.Gender,
                     a.ElementId,
                     a.RoleId,
-                    a.ResetTokenHash,
-                    a.ResetTokenExpiresAt,
                     a.CreateAt,
                     a.UpdateAt))
                 .ToListAsync();

@@ -3,24 +3,22 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Responses
     /// <summary>
     /// Read model backing GET api/Dashboard/new-users-list.
     ///
-    /// The legacy endpoint serialized the raw Identity Account entity, so this record
-    /// mirrors that JSON surface property-for-property (names, declaration order,
-    /// nullability, types) to keep response bodies byte-compatible for existing
-    /// admin consumers. Do not reorder or rename members; the shape is pinned by
-    /// RecentAccountSummaryShapeTests.
+    /// Safe admin-profile projection of an Identity Account. Credential material
+    /// (Password hash, reset-token hash/expiry) is deliberately excluded: secrets
+    /// must never transit an API response, even an admin-only one. Remaining
+    /// members keep the legacy Account property names and declaration order so
+    /// non-sensitive consumers see the familiar surface minus the dropped fields;
+    /// the shape is pinned by DashboardResponseShapeTests.
     /// </summary>
     public sealed record RecentAccountSummary(
         int AccountId,
         string FullName,
         string Email,
-        string? Password,
         DateTime? Dob,
         string? Phone,
         string? Gender,
         int? ElementId,
         int? RoleId,
-        string? ResetTokenHash,
-        DateTime? ResetTokenExpiresAt,
         DateTime CreateAt,
         DateTime UpdateAt);
 
