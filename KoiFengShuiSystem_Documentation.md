@@ -1,7 +1,7 @@
 # KoiFengShuiSystem – Complete Project Documentation
 
-> **Version:** 2.0
-> **Last updated:** April 2026
+> **Version:** 3.0
+> **Last updated:** August 2026
 > **Status:** Production / Active Development
 > **Purpose:** A single source of truth for the entire KoiFengShuiSystem platform.
 
@@ -62,6 +62,15 @@ The long-term vision (detailed in the roadmap) is to evolve into a **comprehensi
 
 ---
 
+
+> **⚠️ Architecture status (2026-08-23):** The modular-monolith transition is COMPLETE.
+> The legacy layered projects (`Api`, `BusinessLogic`, `DataAccess`, `Common`) **no longer
+> exist** - everything lives under `src/`. By product decision the **payment gateways
+> (PayOS/VnPay), marketplace/shop, subscription tiers, and account wallet were REMOVED**;
+> external purchasing is served by the lightweight Partner Shops directory. The database
+> is **PostgreSQL** (consolidated baseline under `src/Shared/Shared.Infrastructure`).
+> Auth was rebuilt: bcrypt hashing, rotating refresh tokens, rate limiting, RFC 7807 errors.
+> Sections marked *(legacy)* below describe pre-refactor behaviour and remain for history.
 ## 2. Tech Stack & Architecture
 
 - **Framework:** ASP.NET Core (Minimal API + Controllers) – .NET 8
@@ -81,10 +90,10 @@ The long-term vision (detailed in the roadmap) is to evolve into a **comprehensi
 
   Modules are registered via `IModuleInstaller` convention; each module wires its own DI, EF entities, and route groups at startup.
 
-- **Database:** SQL Server + Entity Framework Core (Code First, one shared DbContext with per-module `IEntityTypeConfiguration` files)
-- **In-Process Messaging:** MediatR (commands, queries, domain events between modules)
+- **Database:** PostgreSQL + Entity Framework Core (Npgsql; consolidated baseline migration under src/Shared/Shared.Infrastructure; single shared DbContext)
+- **In-Process Messaging:** direct module contracts via DI-registered interfaces (no MediatR)
 - **Authentication:** JWT Bearer tokens, Google OAuth
-- **Payment Gateway:** PayOS (Vietnamese domestic provider)
+- **Payments/Shop:** removed by product decision (Partner Shops directory replaces the marketplace)
 - **Cloud Storage:** Cloudinary (images)
 - **Caching:** MemoryCache (built-in), Redis planned
 - **Documentation:** Swagger / OpenAPI
@@ -521,7 +530,7 @@ Remaining tables follow the same pattern; see `PROJECT_DOCUMENTATION.md` for the
 | POST | `/api/posts/{id}/follow` | User | Toggle follow |
 | GET | `/api/posts/{id}/followers` | Public | Get follower list |
 
-### 6.8 Marketplace
+### 6.8 Marketplace - REMOVED (replaced by Partner Shops directory, route api/partner-shops)
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -534,7 +543,7 @@ Remaining tables follow the same pattern; see `PROJECT_DOCUMENTATION.md` for the
 | GET | `/api/marketplace/tiers` | Public | Subscription tiers info |
 | POST | `/api/marketplace/listings/{id}/images` | Owner | Upload images |
 
-### 6.9 Transactions & Subscriptions
+### 6.9 Transactions & Subscriptions — REMOVED (payments discontinued)
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
@@ -734,7 +743,7 @@ docker-compose up -d
 
 - **Container registry:** Build Docker image, push to Docker Hub / Azure Container Registry.
 - **Orchestration:** Deployable on Azure App Service, AWS ECS, or Kubernetes.
-- **Database:** Use Azure SQL or managed SQL Server.
+- **Database:** Managed PostgreSQL.
 - **Background services:** `TransactionSyncService` runs inside the same Host process. Because the architecture is a modular monolith, extracting it to a separate worker process later requires only moving the `Marketplace.Infrastructure` background job project — no distributed messaging changes needed.
 
 ---
