@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using KoiFengShuiSystem.DataAccess.Models;
+using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
 using KoiFengShuiSystem.Modules.FengShui.Domain.Entities;
 using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
@@ -26,6 +27,7 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
         SeedCategory(1);
         SeedFaq(1);
         SeedPost(1);
+        SeedPost(2, status: "Pending");
     }
 
     private HttpClient NewClient() => _factory.CreateClient(new WebApplicationFactoryClientOptions
@@ -267,7 +269,7 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
         }
     }
 
-    private void SeedPost(int id)
+    private void SeedPost(int id, string status = ICommunityStore.ApprovedStatus)
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<KoiFengShuiContext>();
@@ -279,7 +281,7 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
                 PostCategoryId = 1,
                 Name = "Seed post",
                 Description = "Seed body",
-                Status = "Published",
+                Status = status,
                 AccountId = 1,
                 ElementId = 1,
                 CreateAt = DateTime.UtcNow,
@@ -287,6 +289,59 @@ public class SecurityMatrixTests : IClassFixture<SecurityMatrixTests.SecurityMat
             });
             context.SaveChanges();
         }
+    }
+
+    // --- Council agreement pins (D2/D10): public surfaces never leak Pending ---
+
+    [Fact]
+    public async Task Anonymous_FeedEndpoints_ExcludePendingPosts()
+    {
+        using var client = NewClient();
+
+        var all = await client.GetFromJsonAsync<JsonElement>("/api/Post/GetAll");
+        var feed = await client.GetFromJsonAsync<JsonElement>("/api/Post/GetAllByPostType/1");
+
+        Assert.DoesNotContain(all.GetProperty("data").EnumerateArray(),
+            row => row.GetProperty("postId").GetInt32() == 2);
+        Assert.DoesNotContain(feed.GetProperty("data").EnumerateArray(),
+            row => row.GetProperty("postId").GetInt32() == 2);
+    }
+
+    [Fact]
+    public async Task Anonymous_Details_ReturnsNotFound_ForPendingPost()
+    {
+        using var client = NewClient();
+
+        var response = await client.GetAsync("/api/Post/Details/2");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Admin_Details_Bypass_ReadsPendingPost()
+    {
+        // Council D2 promise: admin role keeps full-queue visibility on Details.
+        using var client = NewClient();
+        AuthorizeAs(client, roleId: 1);
+
+        var response = await client.GetAsync("/api/Post/Details/2");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Categories_Endpoint_IsPublic_AndListsCategories()
+    {
+        using var client = NewClient();
+        SeedCategory(1);
+
+        var response = await client.GetAsync("/api/Post/categories");
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var categories = body.GetProperty("data").EnumerateArray().ToArray();
+        Assert.Contains(categories, c => c.GetProperty("categoryId").GetInt32() == 1);
+        Assert.Contains(categories, c => c.GetProperty("categoryName").ValueKind == JsonValueKind.String);
     }
 
     public class SecurityMatrixFactory : ApiTestFactory

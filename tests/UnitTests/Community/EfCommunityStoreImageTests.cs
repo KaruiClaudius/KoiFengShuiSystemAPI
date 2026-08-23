@@ -27,22 +27,24 @@ namespace UnitTests.Community
         public void Dispose() => _context.Dispose();
 
         [Fact]
-        public async Task AddImageAsync_PersistsRowWithUrl_AndReportsSuccess()
+        public async Task AddImageAsync_PersistsRowWithUrl_AndReturnsGeneratedId()
         {
             var result = await _store.AddImageAsync("https://res.cloudinary.com/demo/koi.png");
 
-            Assert.True(result);
+            Assert.True(result > 0);
             var stored = await _context.Images.SingleAsync();
             Assert.Equal("https://res.cloudinary.com/demo/koi.png", stored.ImageUrl);
+            Assert.Equal(stored.ImageId, result);
         }
 
         [Fact]
-        public async Task AddImageAsync_CalledTwice_CreatesTwoIndependentRows()
+        public async Task AddImageAsync_CalledTwice_CreatesTwoIndependentRows_WithDistinctIds()
         {
-            await _store.AddImageAsync("https://res.cloudinary.com/demo/a.jpg");
-            await _store.AddImageAsync("https://res.cloudinary.com/demo/b.jpg");
+            var firstId = await _store.AddImageAsync("https://res.cloudinary.com/demo/a.jpg");
+            var secondId = await _store.AddImageAsync("https://res.cloudinary.com/demo/b.jpg");
 
             Assert.Equal(2, await _context.Images.CountAsync());
+            Assert.NotEqual(firstId, secondId);
         }
     }
 }

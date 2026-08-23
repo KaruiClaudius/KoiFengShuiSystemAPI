@@ -43,19 +43,14 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
 
                 if (uploadFile.Success)
                 {
-                    // Save the image URL in the database
-                    var saveResult = await _communityStore.AddImageAsync(uploadFile.Url!);
-                    if (saveResult)
+                    // Save the image URL in the database; the generated row key is
+                    // part of the response (council D9 - imageId for post creation).
+                    var imageId = await _communityStore.AddImageAsync(uploadFile.Url!);
+                    return new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage, new UploadImageResponse
                     {
-                        return new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage, new UploadImageResponse
-                        {
-                            Url = uploadFile.Url,
-                        });
-                    }
-                    else
-                    {
-                        return new BusinessResult(ResponseCodes.FailCreateCode, ResponseCodes.FailCreateMessage);
-                    }
+                        ImageId = imageId,
+                        Url = uploadFile.Url,
+                    });
                 }
                 else
                 {

@@ -44,7 +44,7 @@ namespace UnitTests.Community
                 PostCategoryId = 1,
                 Name = "Existing",
                 Description = "Existing post",
-                Status = "Published",
+                Status = ICommunityStore.ApprovedStatus,
                 AccountId = 1,
                 CreateAt = DateTime.UtcNow,
                 UpdateAt = DateTime.UtcNow
@@ -181,7 +181,7 @@ namespace UnitTests.Community
                     PostCategoryId = 2,
                     Name = $"Bulk {i}",
                     Description = "d",
-                    Status = "Pending",
+                    Status = ICommunityStore.ApprovedStatus,
                     AccountId = 1,
                     CreateAt = DateTime.UtcNow,
                     UpdateAt = DateTime.UtcNow
@@ -198,13 +198,58 @@ namespace UnitTests.Community
         }
 
         [Fact]
-        public async Task GetPostByIdAsync_ReturnsRawEntityForDetailsEndpoint()
+        public async Task GetPostsByPostTypeAsync_ExcludesNonApprovedPosts()
         {
+            _context.Posts.Add(new Post
+            {
+                PostCategoryId = 3,
+                Name = "Hidden pending",
+                Description = "d",
+                Status = "Pending",
+                AccountId = 1,
+                CreateAt = DateTime.UtcNow,
+                UpdateAt = DateTime.UtcNow
+            });
+            _context.SaveChanges();
+
+            var page = await _store.GetPostsByPostTypeAsync(3, page: 1, pageSize: 10);
+
+            Assert.Empty(page);
+        }
+
+        [Fact]
+        public async Task GetPostByIdAsync_ReturnsApprovedPostWithImagesLoaded()
+        {
+            // Council D2/D11: public detail reads Approved-only and loads image
+            // navigation so the service can project ImageUrls.
+            SeedImageLinks(7, ("detail-a", "first"), ("detail-b", "second"));
+
             var found = await _store.GetPostByIdAsync(7);
 
             Assert.NotNull(found);
             Assert.Equal("Existing", found!.Name);
+            Assert.Equal(2, found.PostImages.Count);
+            Assert.All(found.PostImages, pi => Assert.False(string.IsNullOrEmpty(pi.Image.ImageUrl)));
             Assert.Null(await _store.GetPostByIdAsync(404));
+        }
+
+        [Fact]
+        public async Task GetPostByIdAsync_NonApprovedStatus_ReadsAsNull()
+        {
+            _context.Posts.Add(new Post
+            {
+                PostId = 9,
+                PostCategoryId = 1,
+                Name = "Awaiting moderation",
+                Description = "d",
+                Status = "Pending",
+                AccountId = 1,
+                CreateAt = DateTime.UtcNow,
+                UpdateAt = DateTime.UtcNow
+            });
+            _context.SaveChanges();
+
+            Assert.Null(await _store.GetPostByIdAsync(9));
         }
 
         private Post NewAdminPost(string name) => new()

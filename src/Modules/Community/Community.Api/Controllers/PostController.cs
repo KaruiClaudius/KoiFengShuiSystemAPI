@@ -49,12 +49,29 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
         [HttpGet("Details/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var postResponse = await _postService.GetPostById(id);
+            // Council D2: public detail is Approved-only; admins read the full
+            // queue through the dedicated bypass instead of the filtered path.
+            var isAdmin = User.IsInRole(AuthorizationDefaults.Roles.Admin);
+            var postResponse = isAdmin
+                ? await _postService.GetPostByIdForAdmin(id)
+                : await _postService.GetPostById(id);
+
             if (postResponse.Data == null)
             {
                 return NotFound(postResponse);
             }
             return Ok(postResponse);
+        }
+
+        [HttpGet("categories")]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categoriesResponse = await _postService.GetCategories();
+            if (categoriesResponse.Data == null)
+            {
+                return NotFound(categoriesResponse);
+            }
+            return Ok(categoriesResponse);
         }
 
         // No per-account ownership check exists in PostService.DeletePost yet,

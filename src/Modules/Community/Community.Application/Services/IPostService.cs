@@ -8,6 +8,14 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
         Task<IBusinessResult> GetAll();
         Task<IBusinessResult> GetPostById(int id);
         Task<IBusinessResult> GetPostByPostTypeId(int postTypeId, int page, int pageSize);
+
+        // Council D10: category rows for the public GET /api/Post/categories surface.
+        Task<IBusinessResult> GetCategories();
+
+        // Council D2: admin-role bypass for Details/{id} - reads the full queue
+        // (any status) with images, unlike the Approved-only public path.
+        Task<IBusinessResult> GetPostByIdForAdmin(int id);
+
         Task<IBusinessResult> CreatePost(CreatePostRequest request, int authorAccountId);
         Task<IBusinessResult> DeletePost(int id);
         Task<IBusinessResult> Save();

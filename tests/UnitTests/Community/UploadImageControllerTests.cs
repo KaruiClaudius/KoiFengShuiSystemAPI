@@ -65,7 +65,7 @@ namespace UnitTests.Community
         }
 
         [Fact]
-        public async Task UploadFile_Success_PersistsUrl_AndReturnsEnvelopeWithData()
+        public async Task UploadFile_Success_PersistsUrl_AndReturnsEnvelopeWithImageIdAndUrl()
         {
             const string url = "https://res.cloudinary.com/demo/koi.png";
             _cloudStorageMock
@@ -73,7 +73,7 @@ namespace UnitTests.Community
                 .ReturnsAsync(new CloudUploadResult(true, url, null));
             _storeMock
                 .Setup(s => s.AddImageAsync(url))
-                .ReturnsAsync(true);
+                .ReturnsAsync(42);
 
             var controller = CreateController();
 
@@ -82,11 +82,12 @@ namespace UnitTests.Community
             Assert.Equal(ResponseCodes.SuccessCreateCode, result.Status);
             Assert.Equal(ResponseCodes.SuccessCreateMessage, result.Message);
             var data = Assert.IsType<UploadImageResponse>(result.Data);
+            Assert.Equal(42, data.ImageId);
             Assert.Equal(url, data.Url);
         }
 
         [Fact]
-        public async Task UploadFile_StoreReportsFailure_ReturnsFailEnvelope()
+        public async Task UploadFile_StoreThrows_ReturnsFailEnvelope()
         {
             const string url = "https://res.cloudinary.com/demo/koi.png";
             _cloudStorageMock
@@ -94,7 +95,7 @@ namespace UnitTests.Community
                 .ReturnsAsync(new CloudUploadResult(true, url, null));
             _storeMock
                 .Setup(s => s.AddImageAsync(url))
-                .ReturnsAsync(false);
+                .ThrowsAsync(new InvalidOperationException("database unavailable"));
 
             var controller = CreateController();
 

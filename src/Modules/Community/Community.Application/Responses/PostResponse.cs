@@ -22,5 +22,10 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Responses
         public string AccountName { get; set; } // Added Account Name
         public ICollection<Follow> Follows { get; set; }
 
+        /// <summary>
+        /// Image urls attached to the post (council D11: public blog detail renders
+        /// in one call). Empty when the post has no images.
+        /// </summary>
+        public List<string> ImageUrls { get; set; } = [];
     }
 }

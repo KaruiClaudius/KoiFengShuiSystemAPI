@@ -61,19 +61,59 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
         {
             try
             {
-                // The legacy Details endpoint serialized the raw Post entity (not a
-                // PostResponse), so the stored entity is returned as-is to keep the
-                // response body byte-identical.
+                // Council D11: public detail maps through PostResponse (same shape as
+                // the feed endpoints) so blog detail renders in one call - including
+                // ImageUrls. Non-approved posts read as null upstream (D2) and surface
+                // here as the standard no-data warning -> 404 at the controller.
                 var post = await _store.GetPostByIdAsync(id);
                 if (post == null)
                 {
                     return new BusinessResult(ResponseCodes.WarningNoDataCode, ResponseCodes.FailReadMessage);
                 }
-                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, post);
+                var elementDict = await _store.GetElementNamesAsync();
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, MapToResponse(post, elementDict));
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "PostService.GetPostById failed for id={PostId}", id);
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve post.");
+            }
+        }
+
+        public async Task<IBusinessResult> GetCategories()
+        {
+            try
+            {
+                var categories = await _store.GetPostCategoriesAsync();
+                var responses = categories
+                    .Select(c => new PostCategoryResponse(c.Id, c.PostType))
+                    .ToList();
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, responses);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "PostService.GetCategories failed");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve post categories.");
+            }
+        }
+
+        public async Task<IBusinessResult> GetPostByIdForAdmin(int id)
+        {
+            try
+            {
+                // Admin bypass (council D2): full queue visibility with images,
+                // regardless of status. Non-existent ids read as null -> no-data.
+                var post = await _store.GetAdminPostByIdWithImagesAsync(id);
+                if (post == null)
+                {
+                    return new BusinessResult(ResponseCodes.WarningNoDataCode, ResponseCodes.FailReadMessage);
+                }
+                var elementDict = await _store.GetElementNamesAsync();
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, MapToResponse(post, elementDict));
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "PostService.GetPostByIdForAdmin failed for id={PostId}", id);
                 return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve post.");
             }
         }
@@ -187,6 +227,10 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
             ElementName = po.ElementId.HasValue && elementDict.TryGetValue(po.ElementId.Value, out var en) ? en : null,
             AccountName = "N/A", // Account nav removed - use AccountId for lookup
             Status = po.Status,
+            ImageUrls = po.PostImages?
+                .Where(pi => pi?.Image != null)
+                .Select(pi => pi.Image.ImageUrl)
+                .ToList() ?? [],
         };
     }
 }

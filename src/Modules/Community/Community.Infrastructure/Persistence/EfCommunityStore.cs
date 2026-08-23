@@ -54,12 +54,17 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
         }
 
         // ---- Posts: public reads ----
+        //
+        // Public contract (council D2/D11): Approved-only + image navigation loaded.
+        // No ordering: the legacy GetAllWithElementAsync was a plain ToListAsync, so
+        // element names are still resolved separately by the service.
 
-        // No ordering and no includes: the legacy GetAllWithElementAsync was a plain
-        // ToListAsync, so element names were resolved separately by the service.
         public async Task<IReadOnlyList<Post>> GetAllPostsAsync() =>
             await _context.Posts
                 .AsNoTracking()
+                .Where(p => p.Status == ICommunityStore.ApprovedStatus)
+                .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
                 .ToListAsync();
 
         // Skip/Take without OrderBy replicates the legacy pagination query shape,
@@ -67,9 +72,11 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
         public async Task<IReadOnlyList<Post>> GetPostsByPostTypeAsync(int postTypeId, int page, int pageSize) =>
             await _context.Posts
                 .AsNoTracking()
-                .Where(p => p.PostCategoryId == postTypeId)
+                .Where(p => p.PostCategoryId == postTypeId && p.Status == ICommunityStore.ApprovedStatus)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
                 .ToListAsync();
 
         public async Task<IReadOnlyDictionary<int, string>> GetElementNamesAsync() =>
@@ -78,7 +85,18 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
                 .ToDictionaryAsync(e => e.ElementId, e => e.ElementName);
 
         public async Task<Post?> GetPostByIdAsync(int id) =>
-            await _context.Posts.AsNoTracking().FirstOrDefaultAsync(p => p.PostId == id);
+            await _context.Posts
+                .AsNoTracking()
+                .Where(p => p.Status == ICommunityStore.ApprovedStatus)
+                .Include(p => p.PostImages)
+                    .ThenInclude(pi => pi.Image)
+                .FirstOrDefaultAsync(p => p.PostId == id);
+
+        public async Task<IReadOnlyList<PostCategory>> GetPostCategoriesAsync() =>
+            await _context.PostCategories
+                .AsNoTracking()
+                .OrderBy(c => c.Id)
+                .ToListAsync();
 
         // ---- Posts: mutations and validation ----
 
@@ -91,14 +109,15 @@ namespace KoiFengShuiSystem.Modules.Community.Infrastructure.Persistence
                 .Where(i => imageIds.Contains(i.ImageId))
                 .ToListAsync();
 
-        // Mirrors the legacy ImageService.SaveImagesAsync pair (repository
-        // CreateAsync + rows-affected check): a successful save always affects
-        // at least one row, so true is the only success outcome.
-        public async Task<bool> AddImageAsync(string imageUrl)
+        // Persists a standalone Image row holding the uploaded url and returns the
+        // generated ImageId (council D9). EF assigns the key during SaveChangesAsync;
+        // a save that fails throws, so a returned id is always nonzero.
+        public async Task<int> AddImageAsync(string imageUrl)
         {
-            await _context.Images.AddAsync(new Image { ImageUrl = imageUrl });
-            var affected = await _context.SaveChangesAsync();
-            return affected > 0;
+            var image = new Image { ImageUrl = imageUrl };
+            await _context.Images.AddAsync(image);
+            await _context.SaveChangesAsync();
+            return image.ImageId;
         }
 
         public async Task AddPostAsync(Post post)

@@ -18,6 +18,12 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
 
     public interface ICommunityStore
     {
+        /// <summary>
+        /// Server-side status a post must carry before public surfaces may show it.
+        /// Council agreement D2: public endpoints never leak Pending posts.
+        /// </summary>
+        const string ApprovedStatus = "Approved";
+
         // ---- FAQs ----
 
         Task<IReadOnlyList<FAQ>> GetAllAsync();
@@ -31,19 +37,24 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
         Task<bool> DeleteAsync(int id);
 
         // ---- Posts: public reads ----
+        //
+        // Council agreement (D2 + D11): every public read is Approved-only and loads
+        // the image navigation so PostResponse can carry ImageUrls. The legacy
+        // "plain ToListAsync, no includes" shape was intentionally replaced by this
+        // contract - admin surfaces keep unrestricted access via the Admin* methods.
 
-        // Full post list feeding the public endpoints. Deliberately no ordering or
-        // includes: replicates the legacy GetAllWithElementAsync query shape.
+        // Full post list feeding the public endpoints.
         Task<IReadOnlyList<Post>> GetAllPostsAsync();
 
         // Category-filtered page using Skip/Take without ordering, matching the
         // legacy repository so row placement stays identical.
         Task<IReadOnlyList<Post>> GetPostsByPostTypeAsync(int postTypeId, int page, int pageSize);
 
-        // Raw entity lookup backing Details/{id}; the controller serializes this
-        // entity directly, so the shape (unloaded navigations excluded as null)
-        // must not gain includes.
+        // Public Details/{id} lookup; non-approved posts read as null so callers 404.
         Task<Post?> GetPostByIdAsync(int id);
+
+        // Category rows backing GET /api/Post/categories (council D10).
+        Task<IReadOnlyList<PostCategory>> GetPostCategoriesAsync();
 
         // Element-name join table used by the public feed mapping.
         Task<IReadOnlyDictionary<int, string>> GetElementNamesAsync();
@@ -54,9 +65,10 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Abstractions
 
         Task<IReadOnlyList<Image>> GetImagesByIdsAsync(IReadOnlyCollection<int> imageIds);
 
-        // Persists a standalone Image row holding the uploaded url; reports
-        // whether the save touched any rows (legacy SaveImagesAsync contract).
-        Task<bool> AddImageAsync(string imageUrl);
+        // Persists a standalone Image row holding the uploaded url and returns the
+        // generated ImageId (council D9: upload responses must carry the id so
+        // member post creation can reference imageIds[]).
+        Task<int> AddImageAsync(string imageUrl);
 
         // Persists the post together with whatever PostImages the caller attached,
         // in a single save. Adding the post root explicitly keeps zero-image posts

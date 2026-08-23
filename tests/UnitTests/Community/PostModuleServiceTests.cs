@@ -261,21 +261,27 @@ namespace UnitTests.Community
         // ---- Details passthrough ----
 
         [Fact]
-        public async Task GetPostById_ExistingId_ReturnsRawEntityInEnvelope()
+        public async Task GetPostById_ExistingId_ReturnsPostResponseInEnvelope()
         {
-            // The legacy Details endpoint serialized the raw Post entity; the
-            // envelope Data must stay the entity itself for byte-identical JSON.
+            // Council D11: public detail maps through the same PostResponse shape
+            // as the feed endpoints (raw-entity serialization retired).
             var stored = CreateEntity(7);
             _storeMock
                 .Setup(s => s.GetPostByIdAsync(7))
                 .ReturnsAsync(stored);
+            _storeMock
+                .Setup(s => s.GetElementNamesAsync())
+                .ReturnsAsync(new Dictionary<int, string> { [1] = "Metal" });
 
             var service = CreatePostService();
 
             var result = await service.GetPostById(7);
 
             Assert.True(result.Success, result.Message);
-            Assert.Same(stored, result.Data);
+            var response = Assert.IsType<PostResponse>(result.Data);
+            Assert.Equal(7, response.PostId);
+            Assert.Equal("Metal", response.ElementName);
+            Assert.Empty(response.ImageUrls);
         }
 
         [Fact]
