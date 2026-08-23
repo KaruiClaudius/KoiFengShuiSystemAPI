@@ -111,18 +111,27 @@ namespace UnitTests.Identity
 
             var logger = new Mock<ILogger<AccountService>>();
 
+            var passwordHasher = Mock.Of<IPasswordHasher>(h => h.Hash(It.IsAny<string>()) == "hashed");
+            var sessionIssuer = new SessionIssuer(Mock.Of<IJwtTokenService>(), Mock.Of<IRefreshTokenPort>());
+            var passwordResetService = new PasswordResetService(
+                readStore.Object,
+                writeStore.Object,
+                Mock.Of<IPasswordResetTokenProvider>(),
+                passwordHasher,
+                Mock.Of<IIdentityEmailSender>(),
+                sessionIssuer,
+                new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(),
+                Mock.Of<ILogger<PasswordResetService>>());
+
             var service = new AccountService(
                 readStore.Object,
                 writeStore.Object,
-                Mock.Of<IJwtTokenService>(),
-                Mock.Of<IIdentityEmailSender>(),
                 logger.Object,
                 lookup.Object,
                 elementCalculator ?? new FengShuiElementCalculator(),
-                Mock.Of<IPasswordHasher>(h => h.Hash(It.IsAny<string>()) == "hashed"),
-                Mock.Of<IPasswordResetTokenProvider>(),
-                new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build(),
-                Mock.Of<IRefreshTokenPort>());
+                passwordHasher,
+                passwordResetService,
+                sessionIssuer);
 
             return new ServiceHarness(service, readStore, writeStore, lookup, logger);
         }

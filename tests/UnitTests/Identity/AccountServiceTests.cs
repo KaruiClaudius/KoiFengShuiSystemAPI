@@ -142,18 +142,28 @@ namespace UnitTests.Identity
             var logger = Mock.Of<ILogger<IdentityAccountService>>();
             var port = refreshTokenPort ?? Mock.Of<IRefreshTokenPort>();
 
-            return new IdentityAccountService(
-                new EfIdentityReadStore(ctx),
-                new EfIdentityWriteStore(ctx),
-                jwt,
+            var readStore = new EfIdentityReadStore(ctx);
+            var writeStore = new EfIdentityWriteStore(ctx);
+            var sessionIssuer = new SessionIssuer(jwt, port);
+            var passwordResetService = new PasswordResetService(
+                readStore,
+                writeStore,
+                tokenProvider,
+                hasher,
                 email,
+                sessionIssuer,
+                config,
+                Mock.Of<ILogger<PasswordResetService>>());
+
+            return new IdentityAccountService(
+                readStore,
+                writeStore,
                 logger,
                 lookup,
                 new KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui.FengShuiElementCalculator(),
                 hasher,
-                tokenProvider,
-                config,
-                port);
+                passwordResetService,
+                sessionIssuer);
         }
 
         private static IConfiguration CreateConfiguration(string baseUrl)
@@ -175,37 +185,39 @@ namespace UnitTests.Identity
         [InlineData(5)]
         [InlineData(6)]
         [InlineData(7)]
-        [InlineData(8)]
-        [InlineData(9)]
-        [InlineData(10)]
         public void Constructor_NullDependency_ThrowsArgumentNullException(int nullDependencyIndex)
         {
             var ctx = CreateContext();
 
             IIdentityReadStore readStore = new EfIdentityReadStore(ctx);
             IIdentityWriteStore writeStore = new EfIdentityWriteStore(ctx);
-            IJwtTokenService jwtTokenService = CreateJwtTokenService();
-            IIdentityEmailSender identityEmailSender = Mock.Of<IIdentityEmailSender>();
             ILogger<IdentityAccountService> logger = Mock.Of<ILogger<IdentityAccountService>>();
             IIdentityElementLookup elementLookup = new EfIdentityElementLookup(ctx);
             KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui.FengShuiElementCalculator elementCalculator = new();
             IPasswordHasher passwordHasher = new BcryptPasswordHasher();
-            IPasswordResetTokenProvider tokenProvider = new SecurePasswordResetTokenProvider();
-            IConfiguration configuration = CreateConfiguration("http://localhost:3000");
-            IRefreshTokenPort refreshTokenPort = Mock.Of<IRefreshTokenPort>();
+
+            SessionIssuer sessionIssuer = new(
+                CreateJwtTokenService(),
+                Mock.Of<IRefreshTokenPort>());
+            PasswordResetService passwordResetService = new(
+                readStore,
+                writeStore,
+                new SecurePasswordResetTokenProvider(),
+                passwordHasher,
+                Mock.Of<IIdentityEmailSender>(),
+                sessionIssuer,
+                CreateConfiguration("http://localhost:3000"),
+                Mock.Of<ILogger<PasswordResetService>>());
 
             var ex = Assert.Throws<ArgumentNullException>(() => new IdentityAccountService(
                 nullDependencyIndex == 0 ? null! : readStore,
                 nullDependencyIndex == 1 ? null! : writeStore,
-                nullDependencyIndex == 2 ? null! : jwtTokenService,
-                nullDependencyIndex == 3 ? null! : identityEmailSender,
-                nullDependencyIndex == 4 ? null! : logger,
-                nullDependencyIndex == 5 ? null! : elementLookup,
-                nullDependencyIndex == 6 ? null! : elementCalculator,
-                nullDependencyIndex == 7 ? null! : passwordHasher,
-                nullDependencyIndex == 8 ? null! : tokenProvider,
-                nullDependencyIndex == 9 ? null! : configuration,
-                nullDependencyIndex == 10 ? null! : refreshTokenPort));
+                nullDependencyIndex == 2 ? null! : logger,
+                nullDependencyIndex == 3 ? null! : elementLookup,
+                nullDependencyIndex == 4 ? null! : elementCalculator,
+                nullDependencyIndex == 5 ? null! : passwordHasher,
+                nullDependencyIndex == 6 ? null! : passwordResetService,
+                nullDependencyIndex == 7 ? null! : sessionIssuer));
 
             Assert.NotNull(ex.ParamName);
         }
@@ -216,18 +228,29 @@ namespace UnitTests.Identity
             var ctx = CreateContext();
             var logger = Mock.Of<ILogger<IdentityAccountService>>();
 
-            var service = new IdentityAccountService(
-                new EfIdentityReadStore(ctx),
-                new EfIdentityWriteStore(ctx),
-                CreateJwtTokenService(),
+            var readStore = new EfIdentityReadStore(ctx);
+            var writeStore = new EfIdentityWriteStore(ctx);
+            var hasher = new BcryptPasswordHasher();
+            var sessionIssuer = new SessionIssuer(CreateJwtTokenService(), Mock.Of<IRefreshTokenPort>());
+            var passwordResetService = new PasswordResetService(
+                readStore,
+                writeStore,
+                new SecurePasswordResetTokenProvider(),
+                hasher,
                 Mock.Of<IIdentityEmailSender>(),
+                sessionIssuer,
+                CreateConfiguration("http://localhost:3000"),
+                Mock.Of<ILogger<PasswordResetService>>());
+
+            var service = new IdentityAccountService(
+                readStore,
+                writeStore,
                 logger,
                 new EfIdentityElementLookup(ctx),
                 new KoiFengShuiSystem.Modules.Identity.Infrastructure.FengShui.FengShuiElementCalculator(),
-                new BcryptPasswordHasher(),
-                new SecurePasswordResetTokenProvider(),
-                CreateConfiguration("http://localhost:3000"),
-                Mock.Of<IRefreshTokenPort>());
+                hasher,
+                passwordResetService,
+                sessionIssuer);
 
             Assert.NotNull(service);
         }

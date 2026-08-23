@@ -2,65 +2,55 @@ using KoiFengShuiSystem.Modules.Identity.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Identity.Application.Requests;
 using KoiFengShuiSystem.Modules.Identity.Application.Responses;
 using KoiFengShuiSystem.Modules.Identity.Domain.Entities;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace KoiFengShuiSystem.Modules.Identity.Application.Services;
 
+/// <summary>
+/// Account facade: CRUD/profile flows, password change and gender-to-element derivation
+/// glue. Authentication/session issuance is delegated to <see cref="SessionIssuer"/> and
+/// the self-service password reset flow to <see cref="PasswordResetService"/>.
+/// </summary>
 public class AccountService : IAccountService
 {
-    private const int ResetTokenLifetimeMinutes = 15;
-    private const string DefaultFrontendBaseUrl = "http://localhost:3000";
     private const string BcryptHashPrefix = "$2";
 
     private readonly IIdentityReadStore _readStore;
     private readonly IIdentityWriteStore _writeStore;
-    private readonly IJwtTokenService _jwtTokenService;
-    private readonly IIdentityEmailSender _identityEmailSender;
     private readonly ILogger<AccountService> _logger;
     private readonly IIdentityElementLookup _elementLookup;
     private readonly IElementCalculator _elementCalculator;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IPasswordResetTokenProvider _passwordResetTokenProvider;
-    private readonly IConfiguration _configuration;
-    private readonly IRefreshTokenPort _refreshTokenPort;
+    private readonly PasswordResetService _passwordResetService;
+    private readonly SessionIssuer _sessionIssuer;
 
     public AccountService(
         IIdentityReadStore readStore,
         IIdentityWriteStore writeStore,
-        IJwtTokenService jwtTokenService,
-        IIdentityEmailSender identityEmailSender,
         ILogger<AccountService> logger,
         IIdentityElementLookup elementLookup,
         IElementCalculator elementCalculator,
         IPasswordHasher passwordHasher,
-        IPasswordResetTokenProvider passwordResetTokenProvider,
-        IConfiguration configuration,
-        IRefreshTokenPort refreshTokenPort)
+        PasswordResetService passwordResetService,
+        SessionIssuer sessionIssuer)
     {
         ArgumentNullException.ThrowIfNull(readStore);
         ArgumentNullException.ThrowIfNull(writeStore);
-        ArgumentNullException.ThrowIfNull(jwtTokenService);
-        ArgumentNullException.ThrowIfNull(identityEmailSender);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(elementLookup);
         ArgumentNullException.ThrowIfNull(elementCalculator);
         ArgumentNullException.ThrowIfNull(passwordHasher);
-        ArgumentNullException.ThrowIfNull(passwordResetTokenProvider);
-        ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentNullException.ThrowIfNull(refreshTokenPort);
+        ArgumentNullException.ThrowIfNull(passwordResetService);
+        ArgumentNullException.ThrowIfNull(sessionIssuer);
 
         _readStore = readStore;
         _writeStore = writeStore;
-        _jwtTokenService = jwtTokenService;
-        _identityEmailSender = identityEmailSender;
         _logger = logger;
         _elementLookup = elementLookup;
         _elementCalculator = elementCalculator;
         _passwordHasher = passwordHasher;
-        _passwordResetTokenProvider = passwordResetTokenProvider;
-        _configuration = configuration;
-        _refreshTokenPort = refreshTokenPort;
+        _passwordResetService = passwordResetService;
+        _sessionIssuer = sessionIssuer;
     }
 
     public async Task<AuthenticationResult> AuthenticateAsync(AuthenticateRequest model)
@@ -91,13 +81,7 @@ public class AccountService : IAccountService
             await _writeStore.SaveChangesAsync();
         }
 
-        var token = _jwtTokenService.GenerateJwtToken(account);
-        var refreshToken = await _refreshTokenPort.CreateForAccountAsync(account.AccountId);
-        var response = new AuthenticateResponse(account, token)
-        {
-            RefreshToken = refreshToken,
-            ExpiresInMinutes = _jwtTokenService.AccessTokenLifetimeMinutes
-        };
+        var response = await _sessionIssuer.IssueForAccountAsync(account);
 
         return new AuthenticationResult { Response = response };
     }
@@ -191,64 +175,9 @@ public class AccountService : IAccountService
 
     public async Task<Account?> GetAccountByEmailAsync(string email) => await _readStore.GetAccountByEmailAsync(email);
 
-    public async Task<bool> ForgotPasswordAsync(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return true;
-        }
+    public Task<bool> ForgotPasswordAsync(string email) => _passwordResetService.ForgotPasswordAsync(email);
 
-        var account = await _readStore.GetAccountByEmailAsync(email);
-        if (account == null)
-        {
-            _logger.LogInformation("Password reset requested for an unknown email; no action taken");
-            return true;
-        }
-
-        var token = _passwordResetTokenProvider.Generate();
-        account.ResetTokenHash = _passwordResetTokenProvider.Hash(token);
-        account.ResetTokenExpiresAt = DateTime.UtcNow.AddMinutes(ResetTokenLifetimeMinutes);
-
-        await _writeStore.UpdateAccountAsync(account);
-        await _writeStore.SaveChangesAsync();
-
-        var resetLink = BuildResetLink(token);
-
-        return await _identityEmailSender.SendPasswordResetEmailAsync(email, account.FullName, resetLink);
-    }
-
-    public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
-    {
-        if (request == null || string.IsNullOrWhiteSpace(request.Token) || string.IsNullOrEmpty(request.NewPassword))
-        {
-            return false;
-        }
-
-        var tokenHash = _passwordResetTokenProvider.Hash(request.Token);
-        var account = await _readStore.GetAccountByResetTokenHashAsync(tokenHash);
-
-        if (account == null)
-        {
-            return false;
-        }
-
-        if (account.ResetTokenExpiresAt is not { } expiresAt || expiresAt <= DateTime.UtcNow)
-        {
-            return false;
-        }
-
-        account.Password = _passwordHasher.Hash(request.NewPassword);
-        account.ResetTokenHash = null;
-        account.ResetTokenExpiresAt = null;
-
-        await _writeStore.UpdateAccountAsync(account);
-        await _writeStore.SaveChangesAsync();
-
-        // A password reset invalidates every outstanding session of the account.
-        await _refreshTokenPort.RevokeAllForAccountAsync(account.AccountId);
-
-        return true;
-    }
+    public Task<bool> ResetPasswordAsync(ResetPasswordRequest request) => _passwordResetService.ResetPasswordAsync(request);
 
     public async Task UpdateUserPasswordAsync(Account account, string newPassword)
     {
@@ -337,7 +266,7 @@ public class AccountService : IAccountService
             await _writeStore.SaveChangesAsync();
 
             // A password change invalidates every outstanding session of the account.
-            await _refreshTokenPort.RevokeAllForAccountAsync(accountId);
+            await _sessionIssuer.RevokeAllForAccountAsync(accountId);
 
             return true;
         }
@@ -384,20 +313,6 @@ public class AccountService : IAccountService
 
         account.Password = _passwordHasher.Hash(verifiedPassword);
         return true;
-    }
-
-    private string BuildResetLink(string token)
-    {
-        var baseUrl = _configuration["AppSettings:FrontendBaseUrl"];
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            _logger.LogWarning(
-                "AppSettings:FrontendBaseUrl is not configured; falling back to {DefaultBaseUrl} for password-reset links. Configure it to point at the frontend origin.",
-                DefaultFrontendBaseUrl);
-            baseUrl = DefaultFrontendBaseUrl;
-        }
-
-        return $"{baseUrl.TrimEnd('/')}/reset-password?token={Uri.EscapeDataString(token)}";
     }
 
     private async Task<int> GetElementIdFromDateOfBirth(int yearOfBirth, string? gender, int accountId, bool fromUserInput)

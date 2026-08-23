@@ -54,4 +54,32 @@ public class IdentityModuleInstallerTests
             descriptor.ServiceType == typeof(AdminAccountService) &&
             descriptor.ImplementationType == typeof(AdminAccountService));
     }
+
+    [Fact]
+    public void AddServices_RegistersSessionIssuerAsScoped()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+
+        new IdentityModuleInstaller().AddServices(services, configuration);
+
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(SessionIssuer) &&
+            descriptor.ImplementationType == typeof(SessionIssuer) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+    }
+
+    [Fact]
+    public void AddServices_RegistersPasswordResetServiceAsScoped()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder().Build();
+
+        new IdentityModuleInstaller().AddServices(services, configuration);
+
+        Assert.Contains(services, descriptor =>
+            descriptor.ServiceType == typeof(PasswordResetService) &&
+            descriptor.ImplementationType == typeof(PasswordResetService) &&
+            descriptor.Lifetime == ServiceLifetime.Scoped);
+    }
 }
