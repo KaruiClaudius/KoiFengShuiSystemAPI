@@ -1,4 +1,4 @@
-﻿using KoiFengShuiSystem.Shared.Helpers;
+using KoiFengShuiSystem.Shared.Helpers;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using System;
@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
 
-namespace KoiFengShuiSystem.BusinessLogic.Services.Implement
+namespace KoiFengShuiSystem.Modules.Identity.Infrastructure.Email
 {
     public class EmailService
     {

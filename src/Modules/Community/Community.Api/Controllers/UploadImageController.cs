@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Shared.Kernel;
 using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Community.Application.Requests;
 using KoiFengShuiSystem.Modules.Community.Application.Responses;
@@ -33,7 +33,7 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
         {
             if (req.File == null || req.File.Length == 0)
             {
-                return new BusinessResult(Const.FAIL_CREATE_CODE, Const.FAIL_CREATE_MSG);
+                return new BusinessResult(ResponseCodes.FailCreateCode, ResponseCodes.FailCreateMessage);
             }
 
             try
@@ -47,24 +47,24 @@ namespace KoiFengShuiSystem.Modules.Community.Api.Controllers
                     var saveResult = await _communityStore.AddImageAsync(uploadFile.Url!);
                     if (saveResult)
                     {
-                        return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG, new UploadImageResponse
+                        return new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage, new UploadImageResponse
                         {
                             Url = uploadFile.Url,
                         });
                     }
                     else
                     {
-                        return new BusinessResult(Const.FAIL_CREATE_CODE, Const.FAIL_CREATE_MSG);
+                        return new BusinessResult(ResponseCodes.FailCreateCode, ResponseCodes.FailCreateMessage);
                     }
                 }
                 else
                 {
-                    return new BusinessResult(Const.FAIL_CREATE_CODE, "Upload file error: " + uploadFile.Error);
+                    return new BusinessResult(ResponseCodes.FailCreateCode, "Upload file error: " + uploadFile.Error);
                 }
             }
             catch (Exception)
             {
-                return new BusinessResult(Const.FAIL_CREATE_CODE, Const.FAIL_CREATE_MSG);
+                return new BusinessResult(ResponseCodes.FailCreateCode, ResponseCodes.FailCreateMessage);
             }
         }
     }

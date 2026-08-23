@@ -19,12 +19,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\KoiFengShuiSystem.Api\KoiFengShuiSystem.Api.csproj" />
-    <ProjectReference Include="..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.Api\Identity.Api.csproj" />
     <ProjectReference Include="..\Modules\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj" />
     <ProjectReference Include="..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
-    <ProjectReference Include="..\..\KoiFengShuiSystem.DataAccess\KoiFengShuiSystem.DataAccess.csproj" />
     <ProjectReference Include="..\Shared\Shared.Kernel\Shared.Kernel.csproj" />
     <ProjectReference Include="..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\FengShui\FengShui.Application\FengShui.Application.csproj" />

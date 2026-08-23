@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Shared.Kernel;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Community.Application.Requests;
@@ -290,7 +290,7 @@ namespace UnitTests.Community
             var result = await service.GetPostById(999);
 
             Assert.False(result.Success);
-            Assert.Equal(Const.WARNING_NO_DATA_CODE, result.Status);
+            Assert.Equal(ResponseCodes.WarningNoDataCode, result.Status);
             Assert.Null(result.Data);
         }
 

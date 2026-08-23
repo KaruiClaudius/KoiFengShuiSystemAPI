@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Shared.Kernel;
 using KoiFengShuiSystem.Modules.Community.Api.Controllers;
 using KoiFengShuiSystem.Modules.Community.Application.Requests;
 using KoiFengShuiSystem.Modules.Community.Application.Services;
@@ -26,7 +26,7 @@ namespace UnitTests.Community
         {
             _postServiceMock
                 .Setup(s => s.CreatePost(It.IsAny<CreatePostRequest>(), It.IsAny<int>()))
-                .ReturnsAsync(new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG));
+                .ReturnsAsync(new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage));
 
             var controller = CreateController();
 
@@ -40,7 +40,7 @@ namespace UnitTests.Community
         {
             _postServiceMock
                 .Setup(s => s.CreatePost(It.IsAny<CreatePostRequest>(), It.IsAny<int>()))
-                .ReturnsAsync(new BusinessResult(Const.FAIL_CREATE_CODE, Const.FAIL_CREATE_MSG));
+                .ReturnsAsync(new BusinessResult(ResponseCodes.FailCreateCode, ResponseCodes.FailCreateMessage));
 
             var controller = CreateController();
 
@@ -54,7 +54,7 @@ namespace UnitTests.Community
         {
             _postServiceMock
                 .Setup(s => s.CreatePost(It.IsAny<CreatePostRequest>(), It.IsAny<int>()))
-                .ReturnsAsync(new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG));
+                .ReturnsAsync(new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage));
 
             var controller = CreateController();
             TestClaimsPrincipalFactory.AttachAccountId(controller, 42);
@@ -69,7 +69,7 @@ namespace UnitTests.Community
         {
             _postServiceMock
                 .Setup(s => s.CreatePost(It.IsAny<CreatePostRequest>(), It.IsAny<int>()))
-                .ReturnsAsync(new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG));
+                .ReturnsAsync(new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage));
 
             var controller = CreateController();
 

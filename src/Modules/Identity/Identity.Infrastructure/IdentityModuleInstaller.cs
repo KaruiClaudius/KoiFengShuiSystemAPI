@@ -23,6 +23,7 @@ public class IdentityModuleInstaller : IModuleInstaller
         services.AddScoped<IPasswordResetTokenProvider, SecurePasswordResetTokenProvider>();
         services.AddScoped<IRefreshTokenPort, EfRefreshTokenPort>();
         services.AddScoped<IIdentityEmailSender, LegacyIdentityEmailSender>();
+        services.AddScoped<EmailService>();
         services.AddScoped<SessionIssuer>();
         services.AddScoped<PasswordResetService>();
         services.AddScoped<IAccountService, AccountService>();

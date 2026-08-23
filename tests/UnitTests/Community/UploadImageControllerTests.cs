@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Shared.Kernel;
 using KoiFengShuiSystem.Modules.Community.Api.Controllers;
 using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Community.Application.Requests;
@@ -29,8 +29,8 @@ namespace UnitTests.Community
 
             var result = await controller.UploadFile(new UploadFileRequest());
 
-            Assert.Equal(Const.FAIL_CREATE_CODE, result.Status);
-            Assert.Equal(Const.FAIL_CREATE_MSG, result.Message);
+            Assert.Equal(ResponseCodes.FailCreateCode, result.Status);
+            Assert.Equal(ResponseCodes.FailCreateMessage, result.Message);
             Assert.Null(result.Data);
             _cloudStorageMock.Verify(c => c.UploadImageAsync(It.IsAny<IFormFile>()), Times.Never);
         }
@@ -45,7 +45,7 @@ namespace UnitTests.Community
                 File = CreateFormFile("avatar.png", "image/png", length: 0)
             });
 
-            Assert.Equal(Const.FAIL_CREATE_CODE, result.Status);
+            Assert.Equal(ResponseCodes.FailCreateCode, result.Status);
             _cloudStorageMock.Verify(c => c.UploadImageAsync(It.IsAny<IFormFile>()), Times.Never);
         }
 
@@ -60,7 +60,7 @@ namespace UnitTests.Community
 
             var result = await controller.UploadFile(ValidRequest());
 
-            Assert.Equal(Const.FAIL_CREATE_CODE, result.Status);
+            Assert.Equal(ResponseCodes.FailCreateCode, result.Status);
             Assert.Equal("Upload file error: Image invalid", result.Message);
         }
 
@@ -79,8 +79,8 @@ namespace UnitTests.Community
 
             var result = await controller.UploadFile(ValidRequest());
 
-            Assert.Equal(Const.SUCCESS_CREATE_CODE, result.Status);
-            Assert.Equal(Const.SUCCESS_CREATE_MSG, result.Message);
+            Assert.Equal(ResponseCodes.SuccessCreateCode, result.Status);
+            Assert.Equal(ResponseCodes.SuccessCreateMessage, result.Message);
             var data = Assert.IsType<UploadImageResponse>(result.Data);
             Assert.Equal(url, data.Url);
         }
@@ -100,8 +100,8 @@ namespace UnitTests.Community
 
             var result = await controller.UploadFile(ValidRequest());
 
-            Assert.Equal(Const.FAIL_CREATE_CODE, result.Status);
-            Assert.Equal(Const.FAIL_CREATE_MSG, result.Message);
+            Assert.Equal(ResponseCodes.FailCreateCode, result.Status);
+            Assert.Equal(ResponseCodes.FailCreateMessage, result.Message);
         }
 
         [Fact]
@@ -115,8 +115,8 @@ namespace UnitTests.Community
 
             var result = await controller.UploadFile(ValidRequest());
 
-            Assert.Equal(Const.FAIL_CREATE_CODE, result.Status);
-            Assert.Equal(Const.FAIL_CREATE_MSG, result.Message);
+            Assert.Equal(ResponseCodes.FailCreateCode, result.Status);
+            Assert.Equal(ResponseCodes.FailCreateMessage, result.Message);
         }
 
         private static UploadFileRequest ValidRequest() => new()

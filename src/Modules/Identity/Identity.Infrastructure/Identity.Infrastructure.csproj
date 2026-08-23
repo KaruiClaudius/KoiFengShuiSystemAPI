@@ -4,12 +4,15 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="MimeKit" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Identity.Application\Identity.Application.csproj" />
     <ProjectReference Include="..\Identity.Domain\Identity.Domain.csproj" />
     <ProjectReference Include="..\..\FengShui\FengShui.Domain\FengShui.Domain.csproj" />
-    <ProjectReference Include="..\..\..\..\KoiFengShuiSystem.Services\KoiFengShuiSystem.BusinessLogic.csproj" />
     <ProjectReference Include="..\..\..\..\KoiFengShuiSystem.Shared\KoiFengShuiSystem.Shared.csproj" />
     <ProjectReference Include="..\..\..\Shared\Shared.Infrastructure\Shared.Infrastructure.csproj" />
   </ItemGroup>

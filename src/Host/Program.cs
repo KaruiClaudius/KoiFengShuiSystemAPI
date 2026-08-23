@@ -1,11 +1,4 @@
 using KoiFengShuiSystem.Shared.Kernel.Modules;
-using KoiFengShuiSystem.BusinessLogic.Services;
-using KoiFengShuiSystem.BusinessLogic.Services.Implement;
-using KoiFengShuiSystem.BusinessLogic.Services.Interface;
-using KoiFengShuiSystem.DataAccess.Base;
-using KoiFengShuiSystem.DataAccess.Models;
-using KoiFengShuiSystem.DataAccess.Repositories.Implement;
-using KoiFengShuiSystem.DataAccess.Repositories.Interface;
 using KoiFengShuiSystem.Modules.Identity.Application.Services;
 using KoiFengShuiSystem.Modules.Identity.Infrastructure.Security;
 using KoiFengShuiSystem.Host.Middleware;
@@ -86,11 +79,6 @@ builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("MailS
 
 // Service registrations
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IAdminPostImageService, AdminPostImageService>();
-builder.Services.AddScoped(typeof(GenericRepository<>));
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<UnitOfWorkRepository>();
-builder.Services.AddScoped<IUnitOfWorkRepository, UnitOfWorkRepository>();
 
 builder.Services.AddModuleInstallersFromAssemblies(
     builder.Configuration,

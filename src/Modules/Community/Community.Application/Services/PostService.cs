@@ -1,4 +1,4 @@
-using KoiFengShuiSystem.Common;
+using KoiFengShuiSystem.Shared.Kernel;
 using KoiFengShuiSystem.DataAccess.Models;
 using KoiFengShuiSystem.Modules.Community.Application.Abstractions;
 using KoiFengShuiSystem.Modules.Community.Application.Requests;
@@ -32,12 +32,12 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 var posts = await _store.GetAllPostsAsync();
                 var elementDict = await _store.GetElementNamesAsync();
                 var postResponses = posts.Select(po => MapToResponse(po, elementDict)).ToList();
-                return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, postResponses);
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, postResponses);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "PostService.GetAll failed");
-                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to retrieve posts.");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve posts.");
             }
         }
 
@@ -48,12 +48,12 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 var posts = await _store.GetPostsByPostTypeAsync(postTypeId, pageNumber, pageSize);
                 var elementDict = await _store.GetElementNamesAsync();
                 var postResponses = posts.Select(po => MapToResponse(po, elementDict)).ToList();
-                return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, postResponses);
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, postResponses);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "PostService.GetPostByPostTypeId failed for postTypeId={PostTypeId}", postTypeId);
-                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to retrieve posts.");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve posts.");
             }
         }
 
@@ -67,14 +67,14 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 var post = await _store.GetPostByIdAsync(id);
                 if (post == null)
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.FAIL_READ_MSG);
+                    return new BusinessResult(ResponseCodes.WarningNoDataCode, ResponseCodes.FailReadMessage);
                 }
-                return new BusinessResult(Const.SUCCESS_READ_CODE, Const.SUCCESS_READ_MSG, post);
+                return new BusinessResult(ResponseCodes.SuccessReadCode, ResponseCodes.SuccessReadMessage, post);
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "PostService.GetPostById failed for id={PostId}", id);
-                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to retrieve post.");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to retrieve post.");
             }
         }
 
@@ -85,7 +85,7 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 var categoryExists = await _store.PostCategoryExistsAsync(request.CategoryId);
                 if (!categoryExists)
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, "The provided CategoryId does not exist.");
+                    return new BusinessResult(ResponseCodes.WarningNoDataCode, "The provided CategoryId does not exist.");
                 }
 
                 var postImages = new List<PostImage>();
@@ -95,7 +95,7 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                     var images = await _store.GetImagesByIdsAsync(distinctImageIds);
                     if (images.Count != distinctImageIds.Count)
                     {
-                        return new BusinessResult(Const.WARNING_NO_DATA_CODE, "One or more of the provided ImageIds do not exist.");
+                        return new BusinessResult(ResponseCodes.WarningNoDataCode, "One or more of the provided ImageIds do not exist.");
                     }
 
                     postImages.AddRange(images.Select(image => new PostImage
@@ -124,11 +124,11 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 }
 
                 await _store.AddPostAsync(post);
-                return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG);
+                return new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage);
             }
             catch (Exception)
             {
-                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to create post.");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to create post.");
             }
         }
 
@@ -139,14 +139,14 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 var deleted = await _store.DeletePostAsync(id);
                 if (!deleted)
                 {
-                    return new BusinessResult(Const.WARNING_NO_DATA_CODE, Const.WARNING_NO_DATA__MSG);
+                    return new BusinessResult(ResponseCodes.WarningNoDataCode, ResponseCodes.WarningNoDataMessage);
                 }
-                return new BusinessResult(Const.SUCCESS_DELETE_CODE, Const.SUCCESS_DELETE_MSG);
+                return new BusinessResult(ResponseCodes.SuccessDeleteCode, ResponseCodes.SuccessDeleteMessage);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "PostService.DeletePost failed for id={PostId}", id);
-                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to delete post.");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to delete post.");
             }
         }
 
@@ -157,17 +157,17 @@ namespace KoiFengShuiSystem.Modules.Community.Application.Services
                 var saved = await _store.SavePostChangesAsync();
                 if (saved)
                 {
-                    return new BusinessResult(Const.SUCCESS_CREATE_CODE, Const.SUCCESS_CREATE_MSG);
+                    return new BusinessResult(ResponseCodes.SuccessCreateCode, ResponseCodes.SuccessCreateMessage);
                 }
                 else
                 {
-                    return new BusinessResult(Const.FAIL_CREATE_CODE, Const.FAIL_CREATE_MSG);
+                    return new BusinessResult(ResponseCodes.FailCreateCode, ResponseCodes.FailCreateMessage);
                 }
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "PostService.Save failed");
-                return new BusinessResult(Const.ERROR_EXCEPTION, "Failed to save changes.");
+                return new BusinessResult(ResponseCodes.ErrorException, "Failed to save changes.");
             }
         }
 
